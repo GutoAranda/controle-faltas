@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.gutoaranda.controlefaltas",
+        "sha256_cert_fingerprints": ["A2:24:66:06:43:FC:3F:30:A0:39:22:B7:A3:03:69:D9:31:3E:07:ED:94:6F:FA:C8:A3:95:A1:43:47:B8:8E:E1"]
+      }
+    }]
