@@ -385,9 +385,6 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     #lista-notas .card > .bloco-bim { grid-column: auto; }
 
     /* agenda: eventos futuros em duas colunas */
-    #lista-eventos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
-    #lista-eventos > .card { margin-bottom: 0; }
-    #lista-eventos > .vazio, #lista-eventos > details.passadas { grid-column: 1 / -1; }
 
     nav.abas button { font-size: 11px; padding: 10px 2px 11px; gap: 4px; }
     nav.abas button svg { width: 24px; height: 24px; }
@@ -557,10 +554,21 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
           <div id="conta-logado" hidden>
             <p class="muted" style="margin:12px 0 4px">Conectado como <strong id="conta-usuario"></strong></p>
             <p class="sutil num" id="conta-status" style="margin:0 0 8px"></p>
+            <div id="conta-upgrade" hidden>
+              <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático.</p>
+              <div class="acoes-dados" style="margin-top:0">
+                <button class="primary small" id="btn-assinar-essencial" type="button">Assinar o Essencial — R$ 15</button>
+                <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
+              </div>
+              <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
+            </div>
             <div class="acoes-dados">
               <button class="small" id="btn-sync-agora">Sincronizar agora</button>
               <button class="small" id="btn-sair">Sair</button>
             </div>
+            <div style="border-top:1px solid var(--line); margin:14px 0 10px"></div>
+            <button class="small ghost-danger" id="btn-excluir-conta" type="button">Excluir minha conta…</button>
+            <p class="sutil" style="margin:6px 0 0">Apaga sua conta e tudo que está na nuvem, sem volta. Os dados deste aparelho continuam aqui.</p>
           </div>
         </div>
       </details>
@@ -702,7 +710,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       <details class="menu-sec">
         <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Versão 2.2 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
+          <p class="muted" style="margin:12px 0 4px">Versão 2.5 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
             <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
             <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
@@ -1299,12 +1307,6 @@ function preencherFiltroFaltas(sel, valorAtual) {
     [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome))
       .map(m => `<option value="${m.id}" ${m.id === valorAtual ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
 }
-function preencherFiltro(sel, valorAtual) {
-  sel.innerHTML = '<option value="">Todas as matérias</option>' +
-    [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome))
-      .map(m => `<option value="${m.id}" ${m.id === valorAtual ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
-}
-
 function cardFalta(f) {
   const mat = materiaPorId(f.materiaId);
   const conteudos = conteudosDaFalta(f);
@@ -1400,7 +1402,7 @@ document.getElementById('form-falta').addEventListener('submit', ev => {
 /* ─────────── render: agenda ─────────── */
 function renderAgenda() {
   preencherSelectMaterias(document.getElementById('evento-materia'));
-  preencherFiltro(document.getElementById('filtro-evento'), filtroEventoMat);
+  preencherFiltroFaltas(document.getElementById('filtro-evento'), filtroEventoMat);
   const alvo = document.getElementById('lista-eventos');
   const hoje = hojeISO();
   document.querySelector('#aba-agenda .filtro').style.display = db.eventos.length ? '' : 'none';
@@ -1408,7 +1410,11 @@ function renderAgenda() {
     alvo.innerHTML = '<div class="vazio">Nenhuma prova ou atividade cadastrada.</div>';
     return;
   }
-  const visiveis = db.eventos.filter(e => !filtroEventoMat || e.materiaId === filtroEventoMat);
+  if (!filtroEventoMat) {
+    alvo.innerHTML = '<div class="vazio">Escolha uma matéria (ou todas) para ver provas e atividades.<br>Assim a tela mostra só o que você pediu. 😌</div>';
+    return;
+  }
+  const visiveis = db.eventos.filter(e => filtroEventoMat === '__todas' || e.materiaId === filtroEventoMat);
   const futuros = visiveis.filter(e => !e.feita && e.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
   const passados = visiveis.filter(e => e.feita || e.data < hoje).sort((a, b) => b.data.localeCompare(a.data));
 
@@ -1467,6 +1473,7 @@ document.getElementById('form-evento').addEventListener('submit', ev => {
     descricao: document.getElementById('evento-descricao').value.trim(),
     feita: false
   });
+  if (!filtroEventoMat) filtroEventoMat = materiaId;
   salvar(); renderTudo();
   ev.target.reset();
   toast('Adicionado à agenda');
@@ -1980,6 +1987,7 @@ function renderConta() {
   }
   deslogado.hidden = true;
   logado.hidden = false;
+  document.getElementById('conta-upgrade').hidden = planoNuvem !== 'gratis';
   resumo.textContent = usuarioNuvem.email;
   document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
   document.getElementById('nuvem-ind').hidden = planoNuvem === 'gratis';
@@ -2282,6 +2290,67 @@ document.getElementById('btn-sync-agora').addEventListener('click', async () => 
   const ok = await empurrarNuvem();
   toast(ok ? 'Sincronizado!' : 'Não foi possível sincronizar — verifique a conexão.');
 });
+
+/* ─────────── assinar o Essencial (Mercado Pago) ─────────── */
+document.getElementById('btn-assinar-essencial').addEventListener('click', async () => {
+  if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
+  const btn = document.getElementById('btn-assinar-essencial');
+  btn.disabled = true; btn.textContent = 'Gerando cobrança…';
+  try {
+    const { data, error } = await nuvem.functions.invoke('criar-cobranca');
+    if (error || !data || !data.url) {
+      toast('O pagamento automático está chegando — por enquanto, fale com o suporte pra ativar seu plano.');
+      return;
+    }
+    document.getElementById('btn-ja-paguei').hidden = false;
+    window.open(data.url, '_blank', 'noopener');
+    toast('Pague pelo Mercado Pago (Pix ou cartão) e volte aqui — seu plano ativa sozinho.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Assinar o Essencial — R$ 15';
+  }
+});
+
+document.getElementById('btn-ja-paguei').addEventListener('click', async () => {
+  await puxarNuvem();
+  toast(planoNuvem === 'gratis'
+    ? 'Pagamento ainda não confirmado — o Pix leva alguns segundos. Tente de novo já já.'
+    : 'Plano Essencial ativo. Bem-vindo! 💚');
+});
+
+/* ─────────── excluir conta (LGPD) ─────────── */
+document.getElementById('btn-excluir-conta').addEventListener('click', async () => {
+  if (!usuarioNuvem || !nuvemDisponivel()) return;
+  if (!confirm('Excluir sua conta do Faltaê?\n\nApaga o login, os dados sincronizados e as grades que você publicou. Essa ação não tem volta.')) return;
+  if (!confirm('Última confirmação: excluir a conta ' + usuarioNuvem.email + ' definitivamente?')) return;
+  const { data, error } = await nuvem.functions.invoke('excluir-conta', { method: 'POST' });
+  if (error || !data || !data.ok) {
+    toast('Não deu pra excluir agora — tente mais tarde ou peça pelo formulário de Sugestões.');
+    return;
+  }
+  await nuvem.auth.signOut().catch(() => {});
+  usuarioNuvem = null;
+  planoNuvem = 'gratis';
+  localStorage.removeItem('controleFaltas.plano');
+  localStorage.removeItem('controleFaltas.ultimaSync');
+  renderConta();
+  toast('Conta excluída. Seus dados continuam salvos neste aparelho.');
+});
+
+/* retorno do pagamento (?pagamento=ok) */
+const retornoPagamento = new URLSearchParams(location.search).get('pagamento');
+if (retornoPagamento) {
+  history.replaceState(null, '', location.pathname);
+  if (retornoPagamento === 'ok') {
+    setTimeout(async () => {
+      await puxarNuvem();
+      toast(planoNuvem === 'gratis'
+        ? 'Pagamento recebido! A confirmação leva alguns segundos — use "Já paguei" no Menu › Conta.'
+        : 'Plano Essencial ativo. Bem-vindo! 💚');
+    }, 1500);
+  } else if (retornoPagamento === 'erro') {
+    toast('O pagamento não foi concluído — tente de novo quando quiser.');
+  }
+}
 
 (async function iniciarConta() {
   renderConta();
