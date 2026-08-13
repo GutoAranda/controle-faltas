@@ -18,6 +18,24 @@
       "short_name": "Hoje",
       "url": "./?hoje=1",
       "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Registrar falta",
+      "short_name": "Faltas",
+      "url": "./?aba=faltas",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Provas e agenda",
+      "short_name": "Agenda",
+      "url": "./?aba=agenda",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Minhas notas",
+      "short_name": "Notas",
+      "url": "./?aba=notas",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
