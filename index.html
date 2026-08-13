@@ -352,6 +352,51 @@
   #sheet .opcoes .ico.data { font-size: 11px; font-weight: 800; letter-spacing: -.02em; }
   #sheet .opcoes .perigo .ico { background: var(--danger-soft); color: var(--danger); }
 
+  /* ── tablet e telas maiores ── */
+  @media (min-width: 768px) {
+    main, header.app .inner, nav.abas .inner { max-width: 760px; }
+    main { padding: 16px 28px 24px; }
+    header.app .inner { padding: 16px 28px 12px; }
+    header.app h1 { font-size: 24px; }
+    header.app h1 svg { width: 30px; height: 30px; }
+    header.app .contexto { font-size: 13px; }
+
+    h2 { font-size: 12.5px; margin-top: 30px; }
+    .card { padding: 18px; border-radius: 16px; }
+    .card h3 { font-size: 17px; }
+    .muted { font-size: 14px; }
+    .sutil { font-size: 13px; }
+    .vazio { padding: 30px 20px; font-size: 15px; }
+
+    .tiles { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .tile { padding: 16px 10px 14px; }
+    .tile .valor { font-size: 28px; }
+
+    /* situação por matéria em duas colunas */
+    #inicio-materias { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+    #inicio-materias .card { margin-bottom: 0; height: 100%; box-sizing: border-box; }
+    #inicio-materias .vazio { grid-column: 1 / -1; }
+
+    /* notas: bimestres lado a lado dentro do card */
+    #lista-notas .card { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; align-items: start; }
+    #lista-notas .card > * { grid-column: 1 / -1; }
+    #lista-notas .card > .bloco-bim { grid-column: auto; }
+
+    nav.abas button { font-size: 11px; padding: 10px 2px 11px; gap: 4px; }
+    nav.abas button svg { width: 24px; height: 24px; }
+
+    #sheet { border-radius: 18px; bottom: 20px; transform: translateY(calc(105% + 40px)); border: 1px solid var(--line); }
+    #toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+    .menu-lista { gap: 10px; }
+    details.menu-sec > summary { padding: 17px 18px; }
+    details.menu-sec .corpo-menu { padding: 4px 18px 18px; }
+  }
+
+  @media (min-width: 1100px) {
+    main, header.app .inner, nav.abas .inner { max-width: 880px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -482,6 +527,35 @@
     <h2>Menu</h2>
     <div class="menu-lista">
 
+      <details class="menu-sec" id="menu-conta">
+        <summary><span class="ico-menu">👤</span> Conta e sincronização <span class="sutil num" id="conta-resumo" style="margin-left:6px"></span></summary>
+        <div class="corpo-menu">
+          <div id="conta-deslogado">
+            <p class="muted" style="margin:12px 0 8px">Crie uma conta para sincronizar suas faltas, provas e notas entre o celular e o computador — recurso do plano Essencial.</p>
+            <form class="painel" id="form-conta">
+              <label class="campo">Email
+                <input type="email" id="conta-email" autocomplete="email" placeholder="voce@email.com" required>
+              </label>
+              <label class="campo">Senha
+                <input type="password" id="conta-senha" autocomplete="current-password" minlength="6" placeholder="mínimo 6 caracteres" required>
+              </label>
+              <div class="acoes-dados" style="margin-top:10px">
+                <button class="primary" type="submit" id="btn-entrar">Entrar</button>
+                <button class="small" type="button" id="btn-criar-conta">Criar conta</button>
+              </div>
+            </form>
+          </div>
+          <div id="conta-logado" hidden>
+            <p class="muted" style="margin:12px 0 4px">Conectado como <strong id="conta-usuario"></strong></p>
+            <p class="sutil num" id="conta-status" style="margin:0 0 8px"></p>
+            <div class="acoes-dados">
+              <button class="small" id="btn-sync-agora">Sincronizar agora</button>
+              <button class="small" id="btn-sair">Sair</button>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <details class="menu-sec" id="menu-materias">
         <summary><span class="ico-menu">📖</span> Minhas matérias <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
@@ -527,7 +601,7 @@
       <details class="menu-sec">
         <summary><span class="ico-menu">💾</span> Backup dos dados</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando — e use-o para levar tudo para outro aparelho.</p>
+          <p class="muted" style="margin:12px 0 4px">Sem conta, seus dados ficam salvos apenas neste aparelho — exporte um backup de vez em quando. Com conta Essencial, a sincronização já cuida disso, mas o backup continua sendo uma boa garantia extra.</p>
           <p class="sutil num" id="backup-info" style="margin:0 0 4px"></p>
           <div class="acoes-dados">
             <button class="small" id="btn-exportar">Exportar backup</button>
@@ -550,7 +624,7 @@
       <details class="menu-sec">
         <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Versão 2.0 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam neste aparelho e não são coletados.</p>
+          <p class="muted" style="margin:12px 0 4px">Versão 2.1 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
             <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
             <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
@@ -598,6 +672,7 @@
   </div>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0" crossorigin="anonymous"></script>
 <script>
 'use strict';
 
@@ -615,7 +690,8 @@ function carregar() {
     return { ...novoBanco(), ...db };
   } catch { return novoBanco(); }
 }
-function salvar() { localStorage.setItem(CHAVE, JSON.stringify(db)); }
+function salvarLocal() { localStorage.setItem(CHAVE, JSON.stringify(db)); }
+function salvar() { salvarLocal(); agendarSync(); }
 
 let db = carregar();
 
@@ -1590,6 +1666,10 @@ function renderMaterias() {
 
 document.getElementById('form-materia').addEventListener('submit', ev => {
   ev.preventDefault();
+  if (planoNuvem === 'gratis' && db.materias.length >= LIMITE_MATERIAS_GRATIS) {
+    toast(`O plano grátis vai até ${LIMITE_MATERIAS_GRATIS} matérias. O Essencial libera matérias ilimitadas + sincronização.`);
+    return;
+  }
   db.materias.push({
     id: uid(),
     nome: document.getElementById('materia-nome').value.trim(),
@@ -1705,4 +1785,169 @@ if (new URLSearchParams(location.search).get('hoje')) {
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => { /* sem SW (ex.: hospedagem sem suporte) — o app segue funcionando */ });
 }
+
+/* ─────────── conta e sincronização (nuvem) ─────────── */
+const NUVEM_URL = 'https://ejdvolbpqrvtuemunzto.supabase.co';
+const NUVEM_CHAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZHZvbGJwcXJ2dHVlbXVuenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODc5NjcsImV4cCI6MjEwMjE2Mzk2N30.yNVdaz0cxJ06rPuxFIGxqVMztx-CKLe6Q8qw1Vc2NcY';
+const LIMITE_MATERIAS_GRATIS = 6;
+
+let nuvem = null;
+let usuarioNuvem = null;
+let planoNuvem = localStorage.getItem('controleFaltas.plano') || 'gratis';
+let timerSync = null;
+
+function nuvemDisponivel() {
+  if (nuvem) return true;
+  if (!window.supabase) return false; // offline ou CDN bloqueado — app segue 100% local
+  nuvem = window.supabase.createClient(NUVEM_URL, NUVEM_CHAVE);
+  return true;
+}
+
+function bancoVazio(banco) {
+  if (!banco || !Array.isArray(banco.materias)) return true;
+  return !banco.materias.length && !(banco.faltas || []).length && !(banco.eventos || []).length;
+}
+
+function agendarSync() {
+  if (!usuarioNuvem || planoNuvem === 'gratis') return;
+  clearTimeout(timerSync);
+  timerSync = setTimeout(empurrarNuvem, 2000);
+}
+
+async function empurrarNuvem() {
+  if (!usuarioNuvem || planoNuvem === 'gratis' || !nuvemDisponivel()) return false;
+  const { data, error } = await nuvem.from('dados_usuario')
+    .update({ dados: db, atualizado_em: new Date().toISOString() })
+    .eq('user_id', usuarioNuvem.id)
+    .select('atualizado_em');
+  if (error || !data || !data.length) return false;
+  localStorage.setItem('controleFaltas.ultimaSync', data[0].atualizado_em);
+  renderConta();
+  return true;
+}
+
+async function puxarNuvem() {
+  if (!usuarioNuvem || !nuvemDisponivel()) return;
+  const { data, error } = await nuvem.from('dados_usuario')
+    .select('dados, plano, atualizado_em')
+    .eq('user_id', usuarioNuvem.id)
+    .maybeSingle();
+  if (error) return;
+
+  if (!data) {
+    // primeiro acesso desta conta: cria a linha na nuvem
+    await nuvem.from('dados_usuario').insert({ user_id: usuarioNuvem.id, dados: db });
+    renderConta();
+    return;
+  }
+
+  planoNuvem = data.plano || 'gratis';
+  localStorage.setItem('controleFaltas.plano', planoNuvem);
+  if (planoNuvem === 'gratis') { renderConta(); return; }
+
+  const ultimaSync = localStorage.getItem('controleFaltas.ultimaSync') || '';
+  if (!bancoVazio(data.dados) && (bancoVazio(db) || (data.atualizado_em && data.atualizado_em > ultimaSync))) {
+    db = { ...novoBanco(), ...data.dados };
+    salvarLocal();
+    localStorage.setItem('controleFaltas.ultimaSync', data.atualizado_em);
+    renderTudo();
+    toast('Dados sincronizados da nuvem');
+  } else {
+    await empurrarNuvem();
+  }
+  renderConta();
+}
+
+function traduzErroAuth(error) {
+  const m = ((error && error.message) || '').toLowerCase();
+  if (m.includes('invalid login')) return 'Email ou senha incorretos.';
+  if (m.includes('already registered')) return 'Este email já tem conta — use o botão Entrar.';
+  if (m.includes('not confirmed')) return 'Confirme seu email antes de entrar (veja sua caixa de entrada).';
+  if (m.includes('at least 6') || m.includes('password should')) return 'A senha precisa ter pelo menos 6 caracteres.';
+  if (m.includes('invalid') && m.includes('email')) return 'Email inválido.';
+  if (m.includes('rate limit') || m.includes('too many') || m.includes('seconds')) return 'Muitas tentativas — aguarde um instante e tente de novo.';
+  if (m.includes('fetch')) return 'Sem conexão — tente de novo quando estiver online.';
+  return 'Não deu certo: ' + ((error && error.message) || 'erro desconhecido');
+}
+
+function renderConta() {
+  const deslogado = document.getElementById('conta-deslogado');
+  const logado = document.getElementById('conta-logado');
+  const resumo = document.getElementById('conta-resumo');
+  if (!usuarioNuvem) {
+    deslogado.hidden = false;
+    logado.hidden = true;
+    resumo.textContent = '';
+    return;
+  }
+  deslogado.hidden = true;
+  logado.hidden = false;
+  resumo.textContent = usuarioNuvem.email;
+  document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
+  const nomePlano = planoNuvem === 'pro' ? 'Pro' : (planoNuvem === 'essencial' ? 'Essencial' : 'Grátis');
+  const ultima = localStorage.getItem('controleFaltas.ultimaSync');
+  document.getElementById('conta-status').textContent =
+    'Plano ' + nomePlano + (planoNuvem === 'gratis'
+      ? ' · sincronização disponível no plano Essencial'
+      : (ultima ? ' · sincronizado em ' + new Date(ultima).toLocaleString('pt-BR') : ' · ainda não sincronizado'));
+}
+
+async function aposLogin(user) {
+  usuarioNuvem = user;
+  renderConta();
+  await puxarNuvem();
+}
+
+document.getElementById('form-conta').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if (!nuvemDisponivel()) { toast('Sem conexão — tente de novo quando estiver online.'); return; }
+  const email = document.getElementById('conta-email').value.trim();
+  const senha = document.getElementById('conta-senha').value;
+  const { data, error } = await nuvem.auth.signInWithPassword({ email, password: senha });
+  if (error) { toast(traduzErroAuth(error)); return; }
+  toast('Bem-vindo de volta!');
+  aposLogin(data.user);
+});
+
+document.getElementById('btn-criar-conta').addEventListener('click', async () => {
+  if (!nuvemDisponivel()) { toast('Sem conexão — tente de novo quando estiver online.'); return; }
+  const email = document.getElementById('conta-email').value.trim();
+  const senha = document.getElementById('conta-senha').value;
+  if (!email || senha.length < 6) { toast('Preencha email e senha (mínimo 6 caracteres).'); return; }
+  const { data, error } = await nuvem.auth.signUp({ email, password: senha });
+  if (error) { toast(traduzErroAuth(error)); return; }
+  if (!data.session) { toast('Conta criada! Confirme seu email para entrar.'); return; }
+  toast('Conta criada!');
+  aposLogin(data.user);
+});
+
+document.getElementById('btn-sair').addEventListener('click', async () => {
+  if (!confirm('Sair da conta? Seus dados continuam salvos neste aparelho.')) return;
+  if (nuvemDisponivel()) await nuvem.auth.signOut();
+  usuarioNuvem = null;
+  planoNuvem = 'gratis';
+  localStorage.removeItem('controleFaltas.plano');
+  localStorage.removeItem('controleFaltas.ultimaSync');
+  renderConta();
+  toast('Você saiu da conta.');
+});
+
+document.getElementById('btn-sync-agora').addEventListener('click', async () => {
+  if (planoNuvem === 'gratis') { toast('Sincronização é um recurso do plano Essencial.'); return; }
+  const ok = await empurrarNuvem();
+  toast(ok ? 'Sincronizado!' : 'Não foi possível sincronizar — verifique a conexão.');
+});
+
+(async function iniciarConta() {
+  renderConta();
+  if (!nuvemDisponivel()) return;
+  try {
+    const { data } = await nuvem.auth.getSession();
+    if (data.session) {
+      usuarioNuvem = data.session.user;
+      renderConta();
+      puxarNuvem();
+    }
+  } catch { /* offline — segue local */ }
+})();
 </script>
