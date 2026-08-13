@@ -382,6 +382,11 @@
     #lista-notas .card > * { grid-column: 1 / -1; }
     #lista-notas .card > .bloco-bim { grid-column: auto; }
 
+    /* agenda: eventos futuros em duas colunas */
+    #lista-eventos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+    #lista-eventos > .card { margin-bottom: 0; }
+    #lista-eventos > .vazio, #lista-eventos > details.passadas { grid-column: 1 / -1; }
+
     nav.abas button { font-size: 11px; padding: 10px 2px 11px; gap: 4px; }
     nav.abas button svg { width: 24px; height: 24px; }
 
@@ -408,7 +413,7 @@
       <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#4056C7"/><circle cx="60" cy="60" r="39" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="8"/><path d="M 60 21 A 39 39 0 1 1 21 60" fill="none" stroke="#FFF" stroke-width="8" stroke-linecap="round"/><path d="M46 46 74 74 M74 46 46 74" stroke="#A3E635" stroke-width="11" stroke-linecap="round"/></svg>
       <span>falta<span class="e">ê</span></span>
     </h1>
-    <div class="contexto"><strong id="hoje"></strong><br><span id="semana"></span></div>
+    <div class="contexto"><strong id="hoje"></strong><br><span id="semana"></span><span id="nuvem-ind" hidden title="Sincronização ativa"> · ☁️</span></div>
   </div>
 </header>
 
@@ -1878,12 +1883,14 @@ function renderConta() {
     deslogado.hidden = false;
     logado.hidden = true;
     resumo.textContent = '';
+    document.getElementById('nuvem-ind').hidden = true;
     return;
   }
   deslogado.hidden = true;
   logado.hidden = false;
   resumo.textContent = usuarioNuvem.email;
   document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
+  document.getElementById('nuvem-ind').hidden = planoNuvem === 'gratis';
   const nomePlano = planoNuvem === 'pro' ? 'Pro' : (planoNuvem === 'essencial' ? 'Essencial' : 'Grátis');
   const ultima = localStorage.getItem('controleFaltas.ultimaSync');
   document.getElementById('conta-status').textContent =
@@ -1898,15 +1905,26 @@ async function aposLogin(user) {
   await puxarNuvem();
 }
 
+function botoesConta(carregando, rotulo) {
+  const entrar = document.getElementById('btn-entrar');
+  const criar = document.getElementById('btn-criar-conta');
+  entrar.disabled = criar.disabled = carregando;
+  entrar.textContent = carregando && rotulo === 'entrar' ? 'Entrando…' : 'Entrar';
+  criar.textContent = carregando && rotulo === 'criar' ? 'Criando…' : 'Criar conta';
+}
+
 document.getElementById('form-conta').addEventListener('submit', async ev => {
   ev.preventDefault();
   if (!nuvemDisponivel()) { toast('Sem conexão — tente de novo quando estiver online.'); return; }
   const email = document.getElementById('conta-email').value.trim();
   const senha = document.getElementById('conta-senha').value;
-  const { data, error } = await nuvem.auth.signInWithPassword({ email, password: senha });
-  if (error) { toast(traduzErroAuth(error)); return; }
-  toast('Bem-vindo de volta!');
-  aposLogin(data.user);
+  botoesConta(true, 'entrar');
+  try {
+    const { data, error } = await nuvem.auth.signInWithPassword({ email, password: senha });
+    if (error) { toast(traduzErroAuth(error)); return; }
+    toast('Bem-vindo de volta!');
+    await aposLogin(data.user);
+  } finally { botoesConta(false); }
 });
 
 document.getElementById('btn-criar-conta').addEventListener('click', async () => {
@@ -1914,12 +1932,28 @@ document.getElementById('btn-criar-conta').addEventListener('click', async () =>
   const email = document.getElementById('conta-email').value.trim();
   const senha = document.getElementById('conta-senha').value;
   if (!email || senha.length < 6) { toast('Preencha email e senha (mínimo 6 caracteres).'); return; }
-  const { data, error } = await nuvem.auth.signUp({ email, password: senha });
-  if (error) { toast(traduzErroAuth(error)); return; }
-  if (!data.session) { toast('Conta criada! Confirme seu email para entrar.'); return; }
-  toast('Conta criada!');
-  aposLogin(data.user);
+  botoesConta(true, 'criar');
+  try {
+    const { data, error } = await nuvem.auth.signUp({ email, password: senha });
+    if (error) { toast(traduzErroAuth(error)); return; }
+    if (!data.session) { toast('Conta criada! Confirme seu email para entrar.'); return; }
+    toast('Conta criada!');
+    await aposLogin(data.user);
+  } finally { botoesConta(false); }
 });
+
+/* volta pro app (troca de aparelho/aba): puxa novidades da nuvem, no máximo a cada 30s */
+let ultimaPuxada = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (!usuarioNuvem || planoNuvem === 'gratis') return;
+  if (Date.now() - ultimaPuxada < 30000) return;
+  ultimaPuxada = Date.now();
+  puxarNuvem();
+});
+
+/* internet voltou: reenvia o que ficou pendente */
+window.addEventListener('online', () => agendarSync());
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
   if (!confirm('Sair da conta? Seus dados continuam salvos neste aparelho.')) return;
