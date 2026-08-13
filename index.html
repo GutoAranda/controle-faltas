@@ -1,7 +1,7 @@
-<title>Controle de Faltas</title>
+<title>Faltaê — não reprove por falta</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Controle suas faltas, veja o conteúdo perdido e acompanhe provas.">
+<meta name="description" content="Faltaê: controle suas faltas, veja o conteúdo que perdeu, acompanhe provas e notas. O app que não deixa você reprovar por falta.">
 <meta name="theme-color" content="#4056C7">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -299,7 +299,7 @@
 
 <header class="app">
   <div class="inner">
-    <h1>Controle de Faltas</h1>
+    <h1>falta<span style="color:var(--accent)">ê</span></h1>
     <div class="contexto"><strong id="hoje"></strong><br><span id="semana"></span></div>
   </div>
 </header>
@@ -435,6 +435,7 @@
     <div class="card">
       <p class="muted" style="margin:0 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando — e use-o para levar tudo para outro aparelho.</p>
       <p class="sutil num" id="backup-info" style="margin:0 0 4px"></p>
+      <p class="sutil" style="margin:6px 0 0"><a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> · <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a></p>
       <div class="acoes-dados">
         <button class="small" id="btn-exportar">Exportar backup</button>
         <button class="small" id="btn-importar">Importar backup</button>
@@ -558,6 +559,31 @@ function conteudosDaFalta(f) {
   return db.aulas.filter(a => a.materiaId === f.materiaId && a.data === f.data);
 }
 
+const nf = n => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function resumoNotas(mat) {
+  const avs = mat.avaliacoes || [];
+  if (!avs.length) return null;
+  const mediaMin = mat.mediaMin != null ? mat.mediaMin : 6;
+  const lanc = avs.filter(a => a.nota != null && a.nota !== '');
+  const pesoTotal = avs.reduce((s, a) => s + (a.peso || 1), 0);
+  const pesoLanc = lanc.reduce((s, a) => s + (a.peso || 1), 0);
+  const pontos = lanc.reduce((s, a) => s + a.nota * (a.peso || 1), 0);
+  const pesoPend = pesoTotal - pesoLanc;
+  const mediaAtual = pesoLanc ? pontos / pesoLanc : null;
+  const fechada = pesoPend === 0;
+  const mediaFinal = fechada ? pontos / pesoTotal : null;
+  const precisa = !fechada ? (mediaMin * pesoTotal - pontos) / pesoPend : null;
+  let status;
+  if (fechada) status = mediaFinal >= mediaMin
+    ? { cls: 'ok', txt: `média final ${nf(mediaFinal)} — aprovado 🎉` }
+    : { cls: 'danger', txt: `média final ${nf(mediaFinal)} — abaixo de ${nf(mediaMin)}` };
+  else if (precisa <= 0) status = { cls: 'ok', txt: `média ${nf(mediaMin)} já garantida 🎉` };
+  else if (precisa > 10) status = { cls: 'danger', txt: `precisa de ${nf(precisa)} — impossível atingir ${nf(mediaMin)}` };
+  else status = { cls: precisa >= 7 ? 'warn' : 'accent', txt: `precisa de ${nf(precisa)} nas pendentes` };
+  return { mediaMin, lanc, pendentes: avs.length - lanc.length, mediaAtual, precisa, fechada, mediaFinal, status };
+}
+
 function infoSemestre() {
   if (!db.aulas.length) return null;
   const datas = db.aulas.map(a => a.data).sort();
@@ -655,6 +681,11 @@ function abrirSheetMateria(matId) {
     { ico: '📝', rotulo: 'Ver provas e atividades', fn: () => {
       filtroEventoMat = matId; renderAgenda(); irParaAba('agenda');
     }},
+    { ico: '🎯', rotulo: 'Notas e média', fn: () => {
+      irParaAba('materias');
+      const det = document.getElementById('notas-' + matId);
+      if (det) { det.open = true; det.scrollIntoView({ block: 'center' }); }
+    }},
     { ico: '📖', rotulo: 'Ver plano de aula', fn: () => {
       irParaAba('materias');
       const card = document.getElementById('mat-' + matId);
@@ -743,7 +774,21 @@ function renderInicio() {
   document.getElementById('hoje-extra').textContent = materiasHoje.length
     ? `${materiasHoje.length} aula${materiasHoje.length === 1 ? '' : 's'}` : '';
   if (!db.materias.length) {
-    alvoHoje.innerHTML = '<div class="vazio">Bem-vindo! Cadastre suas matérias na aba <strong>Matérias</strong> para começar.</div>';
+    alvoHoje.innerHTML = `<div class="card" style="text-align:center; padding:24px 18px">
+      <div style="font-size:34px; margin-bottom:6px">👋</div>
+      <h3 style="margin-bottom:6px">Bem-vindo ao Faltaê!</h3>
+      <p class="muted" style="margin:0 0 14px">Em 1 minuto você configura tudo:<br>
+        <strong>1.</strong> Cadastre suas matérias com o limite de faltas<br>
+        <strong>2.</strong> Importe o plano de ensino (datas + conteúdos)<br>
+        <strong>3.</strong> Registre faltas com um toque e veja o que perdeu</p>
+      <button class="primary" data-onboarding type="button">Criar minha primeira matéria</button>
+    </div>`;
+    alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => {
+      irParaAba('materias');
+      const det = document.querySelector('#aba-materias details.add');
+      det.open = true;
+      document.getElementById('materia-nome').focus();
+    });
   } else if (!materiasHoje.length) {
     alvoHoje.innerHTML = '<div class="vazio">Sem aulas no plano para hoje. Bom descanso! 🎉</div>';
   } else {
@@ -1133,6 +1178,7 @@ function renderMaterias() {
           <h3>${esc(mat.nome)}</h3>
           <div class="muted num">${mat.totalAulas} aulas · limite ${mat.limitePct}% → máx. ${r.maxFaltas} faltas</div>
           ${aulas.length ? `<div class="sutil num">Cronograma: ${dadas} de ${aulas.length} aulas dadas</div>` : ''}
+          ${(() => { const rn = resumoNotas(mat); return rn && rn.mediaAtual != null ? `<div class="sutil num">Notas: média ${nf(rn.mediaAtual)} · ${esc(rn.status.txt)}</div>` : ''; })()}
         </div>
         <button class="small" data-ed-materia="${mat.id}">Editar</button>
         <button class="small ghost-danger" data-del-materia="${mat.id}">Excluir</button>
@@ -1183,6 +1229,31 @@ function renderMaterias() {
           </label>
           <button class="small" type="submit">Importar linhas</button>
         </form>
+      </details>
+      <details class="plano" id="notas-${mat.id}">
+        <summary>Notas e média${(() => { const rn = resumoNotas(mat); return rn ? ` — <span class="pill lisa ${rn.status.cls}">${esc(rn.status.txt)}</span>` : ''; })()} ▾</summary>
+        ${(mat.avaliacoes || []).length ? `<ul class="lista-conteudo" style="margin-top:10px">
+          ${mat.avaliacoes.map(av => `<li class="row">
+            <div class="grow"><strong>${esc(av.nome)}</strong> <span class="sutil num">· peso ${av.peso || 1}</span></div>
+            <input type="number" step="0.1" min="0" max="10" inputmode="decimal" value="${av.nota != null && av.nota !== '' ? av.nota : ''}"
+              placeholder="nota" style="width:86px; min-height:38px; text-align:center" data-nota-av="${av.id}" data-nota-mat="${mat.id}" aria-label="Nota de ${esc(av.nome)}">
+            <button class="small icone ghost-danger" data-del-av="${av.id}" data-del-av-mat="${mat.id}" aria-label="Excluir avaliação">✕</button>
+          </li>`).join('')}
+        </ul>` : '<p class="muted" style="margin:10px 0 0">Cadastre as avaliações da matéria (com peso) e lance as notas conforme saírem — o app calcula quanto você precisa tirar nas pendentes.</p>'}
+        <form class="painel" data-form-av="${mat.id}" style="margin-top:12px">
+          <div class="campos-2">
+            <label class="campo">Avaliação
+              <input type="text" name="nome" placeholder="Ex.: P1" required>
+            </label>
+            <label class="campo">Peso
+              <input type="number" name="peso" min="0.5" step="0.5" value="1" required>
+            </label>
+          </div>
+          <button class="small" type="submit">Adicionar avaliação</button>
+        </form>
+        <label class="campo" style="margin-top:10px; max-width:220px">Média para aprovação
+          <input type="number" step="0.1" min="0" max="10" value="${mat.mediaMin != null ? mat.mediaMin : 6}" data-media-min="${mat.id}">
+        </label>
       </details>
     </div>`;
   }).join('');
@@ -1247,6 +1318,47 @@ function renderMaterias() {
       conteudo: f.elements.conteudo.value.trim()
     });
     salvar(); renderTudo(); toast('Aula adicionada ao plano');
+  }));
+  alvo.querySelectorAll('[data-form-av]').forEach(f => f.addEventListener('submit', ev => {
+    ev.preventDefault();
+    const mat = materiaPorId(f.dataset.formAv);
+    if (!mat) return;
+    mat.avaliacoes = mat.avaliacoes || [];
+    mat.avaliacoes.push({ id: uid(), nome: f.elements.nome.value.trim(), peso: parseFloat(f.elements.peso.value) || 1, nota: null });
+    salvar(); renderMaterias();
+    const det = document.getElementById('notas-' + mat.id);
+    if (det) det.open = true;
+    toast('Avaliação adicionada');
+  }));
+  alvo.querySelectorAll('[data-nota-av]').forEach(inp => inp.addEventListener('change', () => {
+    const mat = materiaPorId(inp.dataset.notaMat);
+    const av = mat && (mat.avaliacoes || []).find(a => a.id === inp.dataset.notaAv);
+    if (!av) return;
+    const v = inp.value === '' ? null : Math.min(10, Math.max(0, parseFloat(inp.value)));
+    av.nota = v;
+    salvar(); renderMaterias();
+    const det = document.getElementById('notas-' + mat.id);
+    if (det) det.open = true;
+    const rn = resumoNotas(mat);
+    toast(v == null ? 'Nota removida' : `Nota lançada — ${rn.status.txt}`);
+  }));
+  alvo.querySelectorAll('[data-del-av]').forEach(b => b.addEventListener('click', () => {
+    const mat = materiaPorId(b.dataset.delAvMat);
+    if (!mat) return;
+    excluirComDesfazer('Avaliação excluída', () => {
+      mat.avaliacoes = (mat.avaliacoes || []).filter(a => a.id !== b.dataset.delAv);
+    });
+    const det = document.getElementById('notas-' + mat.id);
+    if (det) det.open = true;
+  }));
+  alvo.querySelectorAll('[data-media-min]').forEach(inp => inp.addEventListener('change', () => {
+    const mat = materiaPorId(inp.dataset.mediaMin);
+    if (!mat) return;
+    mat.mediaMin = Math.min(10, Math.max(0, parseFloat(inp.value) || 6));
+    salvar(); renderMaterias();
+    const det = document.getElementById('notas-' + mat.id);
+    if (det) det.open = true;
+    toast('Média de aprovação ajustada para ' + nf(mat.mediaMin));
   }));
   alvo.querySelectorAll('[data-form-importar]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
