@@ -3,6 +3,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Faltaê: controle suas faltas, veja o conteúdo que perdeu, acompanhe provas e notas. O app que não deixa você reprovar por falta.">
 <meta name="theme-color" content="#4056C7">
+<script>/* aplica o tema salvo antes da primeira pintura — sem flash branco */
+try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro') document.documentElement.dataset.theme = 'dark'; else if (_t === 'claro') document.documentElement.dataset.theme = 'light'; } catch (e) {}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -630,6 +632,18 @@
         </div>
       </details>
 
+      <details class="menu-sec" id="menu-aparencia">
+        <summary><span class="ico-menu">🌗</span> Aparência</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Tema do app neste aparelho.</p>
+          <div class="acoes-dados" role="radiogroup" aria-label="Tema do app" style="margin-top:0">
+            <button class="small" type="button" data-tema="claro">☀️ Claro</button>
+            <button class="small" type="button" data-tema="escuro">🌙 Escuro</button>
+            <button class="small" type="button" data-tema="sistema">⚙️ Sistema</button>
+          </div>
+        </div>
+      </details>
+
       <details class="menu-sec">
         <summary><span class="ico-menu">💾</span> Backup dos dados</summary>
         <div class="corpo-menu">
@@ -640,6 +654,16 @@
             <button class="small" id="btn-importar">Importar backup</button>
             <input type="file" id="arquivo-backup" accept="application/json" hidden>
           </div>
+          <div style="border-top:1px solid var(--line); margin:14px 0 10px"></div>
+          <button class="small ghost-danger" id="btn-zerar" type="button">Apagar todos os dados deste aparelho</button>
+        </div>
+      </details>
+
+      <details class="menu-sec">
+        <summary><span class="ico-menu">🗓️</span> Encerrar semestre</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Fim do semestre? O Faltaê baixa um backup completo (de recordação e garantia) e zera tudo pra você começar o próximo — aí é só importar a grade nova da turma.</p>
+          <button class="small ghost-danger" id="btn-encerrar-semestre" type="button">Encerrar semestre…</button>
         </div>
       </details>
 
@@ -648,6 +672,14 @@
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Leve o Faltaê pra tela inicial: abre em um toque, funciona offline e não ocupa quase nada.</p>
           <button class="primary small" id="btn-instalar" type="button">Instalar o app</button>
+        </div>
+      </details>
+
+      <details class="menu-sec">
+        <summary><span class="ico-menu">💚</span> Indique o Faltaê</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Conhece alguém vivendo no limite dos 25%? O Faltaê cresce de indicação em indicação — sem anúncio, sem investidor, na base do boca a boca.</p>
+          <button class="small" id="btn-indicar" type="button">Compartilhar o app</button>
         </div>
       </details>
 
@@ -2138,6 +2170,57 @@ document.getElementById('form-sugestao').addEventListener('submit', async ev => 
   } else {
     toast('Não deu pra enviar agora — tente de novo ou use o GitHub logo abaixo.');
   }
+});
+
+/* ─────────── tema (claro / escuro / sistema) ─────────── */
+function aplicarTema(tema) {
+  const raiz = document.documentElement;
+  if (tema === 'claro') raiz.dataset.theme = 'light';
+  else if (tema === 'escuro') raiz.dataset.theme = 'dark';
+  else { delete raiz.dataset.theme; tema = 'sistema'; }
+  localStorage.setItem('controleFaltas.tema', tema);
+  const escuroAtivo = tema === 'escuro' || (tema === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', escuroAtivo ? '#0F1120' : '#4056C7');
+  document.querySelectorAll('[data-tema]').forEach(b => b.classList.toggle('primary', b.dataset.tema === tema));
+}
+document.querySelectorAll('[data-tema]').forEach(b => b.addEventListener('click', () => aplicarTema(b.dataset.tema)));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => aplicarTema(localStorage.getItem('controleFaltas.tema') || 'sistema'));
+aplicarTema(localStorage.getItem('controleFaltas.tema') || 'sistema');
+
+/* ─────────── encerrar semestre e apagar dados ─────────── */
+function baixarBackup(prefixo) {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = prefixo + '-' + hojeISO() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('btn-encerrar-semestre').addEventListener('click', () => {
+  if (!db.materias.length && !db.faltas.length) { toast('Nada pra encerrar — o app já está zerado.'); return; }
+  if (!confirm('Encerrar o semestre?\n\n1) Um backup completo será baixado agora (guarde-o!)\n2) Matérias, aulas, faltas, provas e notas serão zeradas')) return;
+  baixarBackup('faltae-semestre-encerrado');
+  db = novoBanco();
+  salvar(); renderTudo();
+  toast('Semestre encerrado. Bora pro próximo! 🎓');
+});
+
+document.getElementById('btn-zerar').addEventListener('click', () => {
+  if (!confirm('Apagar TODOS os dados deste aparelho?\n\nEssa ação não tem volta. Dados sincronizados na nuvem não são apagados.')) return;
+  if (!confirm('Última confirmação: apagar tudo mesmo?')) return;
+  db = novoBanco();
+  salvarLocal(); // de propósito NÃO empurra pra nuvem — só limpa o aparelho
+  localStorage.removeItem('controleFaltas.ultimaSync');
+  renderTudo();
+  toast('Dados deste aparelho apagados.');
+});
+
+/* ─────────── indicação ─────────── */
+document.getElementById('btn-indicar').addEventListener('click', () => {
+  const texto = 'Uso o Faltaê pra não reprovar por falta: ele avisa quantas faltas ainda posso usar, mostra o que caiu nas aulas que perdi e calcula quanto preciso tirar nas provas. Grátis: https://gutoaranda.github.io/controle-faltas/';
+  if (navigator.share) navigator.share({ text: texto }).catch(() => {});
+  else navigator.clipboard.writeText(texto).then(() => toast('Convite copiado — manda pra quem precisa 💚')).catch(() => {});
 });
 
 /* link de convite: faltaê.../?grade=CODIGO importa direto */
