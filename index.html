@@ -280,7 +280,9 @@
   #sheet .alca { width: 40px; height: 4px; border-radius: 999px; background: var(--line); margin: 2px auto 10px; }
   #sheet h3 { margin: 0 0 2px; font-size: 16px; }
   #sheet .sub { margin: 0 0 10px; }
-  #sheet .opcoes { display: grid; gap: 6px; }
+  #sheet .opcoes { display: grid; gap: 6px; max-height: 55vh; overflow-y: auto; }
+  #sheet .opcoes button .trunca { flex: 1; text-align: left; }
+  #sheet .opcoes .ico.data { font-size: 11px; font-weight: 800; letter-spacing: -.02em; }
   #sheet .opcoes button {
     text-align: left; display: flex; align-items: center; gap: 12px;
     border: 0; background: none; padding: 12px 6px; min-height: 48px;
@@ -606,6 +608,7 @@ function irParaAba(nome) {
   document.querySelectorAll('.aba').forEach(s => s.classList.remove('ativa'));
   document.getElementById('aba-' + nome).classList.add('ativa');
   window.scrollTo(0, 0);
+  localStorage.setItem('controleFaltas.aba', nome);
 }
 document.querySelectorAll('nav.abas button').forEach(btn => {
   btn.addEventListener('click', () => irParaAba(btn.dataset.aba));
@@ -639,11 +642,12 @@ function abrirSheetMateria(matId) {
     }});
   }
   acoes.push(
-    { ico: '📅', rotulo: 'Registrar falta em outra data', fn: () => {
+    { ico: '📅', rotulo: 'Registrar falta nesta matéria', fn: () => {
       irParaAba('faltas');
       const det = document.querySelector('#aba-faltas details.add');
       det.open = true;
       document.getElementById('falta-materia').value = matId;
+      document.getElementById('falta-data').value = hojeISO();
     }},
     { ico: '🗂', rotulo: 'Ver faltas desta matéria', fn: () => {
       filtroFaltaMat = matId; renderFaltas(); irParaAba('faltas');
@@ -672,6 +676,45 @@ function abrirSheetMateria(matId) {
   document.querySelectorAll('[data-sheet-acao]').forEach(b => b.addEventListener('click', () => {
     fecharSheet();
     acoes[parseInt(b.dataset.sheetAcao, 10)].fn();
+  }));
+  document.getElementById('sheet').classList.add('on');
+  document.getElementById('sheet-fundo').classList.add('on');
+}
+
+/* folha de ajuste de atraso do professor */
+function abrirSheetAtraso(matId) {
+  const mat = materiaPorId(matId);
+  if (!mat) return;
+  const aulas = db.aulas.filter(a => a.materiaId === matId).sort((a, b) => a.data.localeCompare(b.data));
+  const candidatas = aulas.filter(a => diasAte(a.data) >= -14);
+  document.getElementById('sheet-titulo').textContent = 'Qual conteúdo ainda não foi dado?';
+  document.getElementById('sheet-sub').textContent =
+    mat.nome + ' — toque no conteúdo que atrasou. Ele e os seguintes deslizam, cada um para a data da aula seguinte do plano.';
+  const alvoOp = document.getElementById('sheet-opcoes');
+  alvoOp.innerHTML = candidatas.length
+    ? candidatas.map(a =>
+      `<button type="button" data-atraso-aula="${a.id}">
+        <span class="ico data num">${formatarData(a.data).slice(0, 5)}</span>
+        <span class="trunca">${esc(a.conteudo)}</span>
+      </button>`).join('')
+    : '<p class="muted">Não há aulas recentes ou futuras neste plano para ajustar.</p>';
+  alvoOp.querySelectorAll('[data-atraso-aula]').forEach(b => b.addEventListener('click', () => {
+    fecharSheet();
+    const i = aulas.findIndex(a => a.id === b.dataset.atrasoAula);
+    if (i < 0) return;
+    const antes = JSON.stringify(db);
+    const datas = aulas.map(a => a.data);
+    const novaUltima = somarDias(datas[datas.length - 1], 7);
+    for (let j = i; j < aulas.length; j++) {
+      aulas[j].data = (j + 1 < aulas.length) ? datas[j + 1] : novaUltima;
+    }
+    salvar(); renderTudo();
+    const rotulo = aulas[i].conteudo.length > 34 ? aulas[i].conteudo.slice(0, 34) + '…' : aulas[i].conteudo;
+    toast(`"${rotulo}" foi para ${formatarData(aulas[i].data).slice(0, 5)}`, 'Desfazer', () => {
+      db = JSON.parse(antes);
+      salvar(); renderTudo();
+      toast('Ajuste desfeito');
+    });
   }));
   document.getElementById('sheet').classList.add('on');
   document.getElementById('sheet-fundo').classList.add('on');
@@ -1120,14 +1163,9 @@ function renderMaterias() {
               <button class="small icone ghost-danger" data-del-aula="${a.id}" aria-label="Excluir aula">✕</button>
             </li>`).join('') || '<li class="muted">Nenhuma aula cadastrada.</li>'}
         </ul>
-        ${aulas.length > 1 ? `<form class="painel" data-form-adiar="${mat.id}" style="margin-top:12px">
-          <label class="campo">Professor atrasou o conteúdo? Adiar a partir de:
-            <select name="apartir">
-              ${aulas.map(a => `<option value="${a.id}">${formatarData(a.data)} — ${esc(a.conteudo.slice(0, 55))}</option>`).join('')}
-            </select>
-          </label>
-          <button class="small" type="submit">Adiar: deslizar conteúdos para as próximas datas</button>
-        </form>` : ''}
+        ${aulas.length > 1 ? `<div class="acoes-dados">
+          <button class="small" type="button" data-atrasar="${mat.id}">🕐 Professor atrasou? Ajustar cronograma</button>
+        </div>` : ''}
         <form class="painel" data-form-aula="${mat.id}" style="margin-top:12px">
           <div class="campos-2">
             <label class="campo">Data
@@ -1197,18 +1235,8 @@ function renderMaterias() {
     edAulaId = null;
     salvar(); renderTudo(); toast('Aula atualizada');
   }));
-  alvo.querySelectorAll('[data-form-adiar]').forEach(f => f.addEventListener('submit', ev => {
-    ev.preventDefault();
-    const aulas = db.aulas.filter(a => a.materiaId === f.dataset.formAdiar).sort((a, b) => a.data.localeCompare(b.data));
-    const i = aulas.findIndex(a => a.id === f.elements.apartir.value);
-    if (i < 0) return;
-    if (!confirm(`Adiar os conteúdos a partir de ${formatarData(aulas[i].data)}? Cada um passa para a data da aula seguinte (a última ganha uma nova data, uma semana depois).`)) return;
-    const datas = aulas.map(a => a.data);
-    const novaUltima = somarDias(datas[datas.length - 1], 7);
-    for (let j = i; j < aulas.length; j++) {
-      aulas[j].data = (j + 1 < aulas.length) ? datas[j + 1] : novaUltima;
-    }
-    salvar(); renderTudo(); toast('Conteúdos adiados para as próximas datas');
+  alvo.querySelectorAll('[data-atrasar]').forEach(b => b.addEventListener('click', () => {
+    abrirSheetAtraso(b.dataset.atrasar);
   }));
   alvo.querySelectorAll('[data-form-aula]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
@@ -1342,7 +1370,11 @@ infoBackup();
 dispararLembretes();
 
 if (new URLSearchParams(location.search).get('hoje')) {
+  irParaAba('inicio');
   document.getElementById('inicio-hoje').scrollIntoView({ block: 'center' });
+} else {
+  const abaSalva = localStorage.getItem('controleFaltas.aba');
+  if (abaSalva && abaSalva !== 'inicio' && document.getElementById('aba-' + abaSalva)) irParaAba(abaSalva);
 }
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

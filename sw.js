@@ -1,4 +1,4 @@
-const CACHE = 'controle-faltas-v4';
+const CACHE = 'controle-faltas-v5';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', ev => {
