@@ -819,6 +819,8 @@ function calcSequenciaDiaria() {
 
 /* ─────────── cálculos: notas PUC ─────────── */
 const nf = n => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+/* médias arredondadas a 1 casa ANTES de comparar — o número da tela é o número da regra (MF ≥ 6,0 aprova) */
+const arred1 = v => Math.round(v * 10) / 10;
 
 function notasDe(mat) {
   if (!mat.notasPUC) mat.notasPUC = { b1: { pr: null, te: null, su: null }, b2: { pr: null, te: null, su: null }, exame: null };
@@ -836,7 +838,7 @@ function efetivasBim(b) {
 function mbDe(b) {
   const e = efetivasBim(b);
   if (e.pr == null || e.te == null) return { mb: null, pendentes: [e.pr == null ? 'prática' : null, e.te == null ? 'teórica' : null].filter(Boolean) };
-  return { mb: (e.pr * 3 + e.te * 7) / 10, pendentes: [] };
+  return { mb: arred1((e.pr * 3 + e.te * 7) / 10), pendentes: [] };
 }
 function resumoPUC(mat) {
   const n = notasDe(mat);
@@ -844,7 +846,7 @@ function resumoPUC(mat) {
   const lancouAlgo = [n.b1.pr, n.b1.te, n.b1.su, n.b2.pr, n.b2.te, n.b2.su, n.exame].some(v => v != null);
   let mf = null, status = null, dica = null;
   if (b1.mb != null && b2.mb != null) {
-    mf = (b1.mb + b2.mb) / 2;
+    mf = arred1((b1.mb + b2.mb) / 2);
     if (mf >= 6) status = { cls: 'ok', txt: `MF ${nf(mf)} — aprovado 🎉` };
     else if (mf < 3) status = { cls: 'danger', txt: `MF ${nf(mf)} — reprovado direto` };
     else if (n.exame != null) {
