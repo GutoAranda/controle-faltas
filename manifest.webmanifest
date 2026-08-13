@@ -1,7 +1,7 @@
 {
-  "name": "Controle de Faltas",
-  "short_name": "Faltas",
-  "description": "Controle suas faltas, veja o conteúdo perdido e acompanhe provas e atividades.",
+  "name": "Faltaê — controle de faltas",
+  "short_name": "Faltaê",
+  "description": "Controle suas faltas, veja o conteúdo que perdeu e acompanhe provas e notas. Não reprove por falta.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
