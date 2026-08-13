@@ -102,7 +102,7 @@
   }
   header.app .inner {
     max-width: 560px; margin: 0 auto; padding: 14px 16px 10px;
-    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
   header.app h1 {
     font-family: var(--fonte-display);
@@ -122,9 +122,8 @@
     content: ''; flex: none; width: 16px; height: 3px; border-radius: 2px;
     background: var(--faisca);
   }
-  h2 .extra { margin-left: auto; }
+  h2 .extra { margin-left: auto; font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12px; color: var(--ink-3); }
   h2:first-child { margin-top: 8px; }
-  h2 .extra { font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12px; color: var(--ink-3); }
 
   .card {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -156,7 +155,6 @@
   .fill-ok { background: var(--ok); }
   .fill-warn { background: var(--warn); }
   .fill-danger { background: var(--danger); }
-  .fill-accent { background: var(--accent); }
 
   button {
     font: inherit; cursor: pointer; border-radius: 11px; border: 1px solid var(--line);
@@ -178,8 +176,9 @@
     font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
     border-radius: 10px; padding: 10px 12px; width: 100%; min-height: 44px;
   }
-  textarea { min-height: 90px; resize: vertical; }
+  textarea { min-height: 72px; resize: vertical; }
   .campos-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .campos-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
   .vazio {
     border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 22px 16px;
@@ -194,7 +193,6 @@
   .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; min-height: 36px; }
   .check input { width: 20px; height: 20px; min-height: 0; accent-color: var(--accent); }
 
-  /* ── hoje ── */
   .aula-hoje { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
   .aula-hoje + .aula-hoje { border-top: 1px solid var(--line); }
   .aula-hoje .info { flex: 1; min-width: 0; }
@@ -216,7 +214,16 @@
   .tile .valor { font-family: var(--fonte-display); font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
   .tile .rotulo { font-size: 10.5px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .07em; margin-top: 3px; }
 
-  /* ── formulários recolhidos ── */
+  /* ── ofensiva ── */
+  .ofensiva { display: flex; align-items: center; gap: 14px; }
+  .ofensiva .chama { font-size: 34px; line-height: 1; filter: grayscale(1) opacity(.45); }
+  .ofensiva.acesa .chama { filter: none; }
+  .ofensiva .num-semanas { font-family: var(--fonte-display); font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .semana-dots { display: flex; gap: 5px; margin-top: 7px; }
+  .semana-dots span { width: 14px; height: 14px; border-radius: 5px; background: var(--surface-2); }
+  .semana-dots span.ok { background: var(--faisca); }
+  .semana-dots span.falta { background: var(--danger-soft); border: 1px solid var(--danger); }
+
   details.add { margin-bottom: 10px; }
   details.add > summary {
     list-style: none; cursor: pointer; user-select: none;
@@ -236,6 +243,45 @@
   details.passadas { margin-top: 4px; }
   details.passadas > summary { list-style: none; cursor: pointer; color: var(--ink-3); font-size: 13px; font-weight: 600; padding: 10px 2px; min-height: 40px; display: flex; align-items: center; }
   details.passadas > summary::-webkit-details-marker { display: none; }
+  details.passadas .card { opacity: .55; }
+
+  .filtro { margin: 0 0 10px; }
+  .filtro select { min-height: 42px; font-size: 14px; }
+
+  .semana-dia { padding: 8px 0; }
+  .semana-dia + .semana-dia { border-top: 1px solid var(--line); }
+  .semana-dia .quando { font-size: 12px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
+  .semana-dia ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+  .semana-dia li { font-size: 13.5px; color: var(--ink-2); }
+  .semana-dia li strong { color: var(--ink); font-weight: 700; }
+
+  /* ── notas ── */
+  .bloco-bim { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .bloco-bim .titulo-bim { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 10px; }
+  .bloco-bim .titulo-bim .mb { font-family: var(--fonte-display); font-size: 17px; letter-spacing: 0; text-transform: none; color: var(--ink); }
+  .nota-campo { display: grid; gap: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; }
+  .nota-campo input { text-align: center; padding: 8px 4px; min-height: 42px; font-weight: 700; }
+  .nota-campo input:placeholder-shown { border-style: dashed; }
+  .resultado-mf { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .resultado-mf .mf { font-family: var(--fonte-display); font-size: 26px; font-weight: 800; }
+  .dica-nota { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+  .dica-nota strong { color: var(--accent); }
+
+  /* ── menu ── */
+  .menu-lista { display: grid; gap: 8px; }
+  details.menu-sec { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  details.menu-sec > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    padding: 15px 16px; font-weight: 700; font-size: 15px; min-height: 52px;
+  }
+  details.menu-sec > summary::-webkit-details-marker { display: none; }
+  details.menu-sec > summary .ico-menu {
+    width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; font-size: 16px; flex: none;
+  }
+  details.menu-sec > summary::after { content: '▾'; margin-left: auto; color: var(--ink-3); }
+  details.menu-sec[open] > summary::after { content: '▴'; }
+  details.menu-sec .corpo-menu { padding: 4px 16px 16px; border-top: 1px solid var(--line); }
 
   nav.abas {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
@@ -244,10 +290,10 @@
     border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  nav.abas .inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+  nav.abas .inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); }
   nav.abas button {
-    border: 0; background: none; border-radius: 0; padding: 9px 4px 10px; min-height: 0;
-    display: grid; justify-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; color: var(--ink-3);
+    border: 0; background: none; border-radius: 0; padding: 9px 2px 10px; min-height: 0;
+    display: grid; justify-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: var(--ink-3);
     letter-spacing: .02em;
   }
   nav.abas button:active { transform: none; }
@@ -277,17 +323,6 @@
     min-height: 32px; padding: 2px 6px; text-decoration: underline; text-underline-offset: 3px;
   }
 
-  .filtro { margin: 0 0 10px; }
-  .filtro select { min-height: 42px; font-size: 14px; }
-
-  .semana-dia { padding: 8px 0; }
-  .semana-dia + .semana-dia { border-top: 1px solid var(--line); }
-  .semana-dia .quando { font-size: 12px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
-  .semana-dia ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; }
-  .semana-dia li { font-size: 13.5px; color: var(--ink-2); }
-  .semana-dia li strong { color: var(--ink); font-weight: 700; }
-
-  /* ── folha de ações (bottom sheet) ── */
   #sheet-fundo {
     position: fixed; inset: 0; z-index: 30; background: rgba(10, 12, 24, .45);
     opacity: 0; pointer-events: none; transition: opacity .2s ease;
@@ -306,15 +341,15 @@
   #sheet h3 { margin: 0 0 2px; font-family: var(--fonte-display); font-size: 16px; letter-spacing: -.02em; }
   #sheet .sub { margin: 0 0 10px; }
   #sheet .opcoes { display: grid; gap: 6px; max-height: 55vh; overflow-y: auto; }
-  #sheet .opcoes button .trunca { flex: 1; text-align: left; }
-  #sheet .opcoes .ico.data { font-size: 11px; font-weight: 800; letter-spacing: -.02em; }
   #sheet .opcoes button {
     text-align: left; display: flex; align-items: center; gap: 12px;
     border: 0; background: none; padding: 12px 6px; min-height: 48px;
     font-size: 15px; font-weight: 600; border-radius: 10px;
   }
+  #sheet .opcoes button .trunca { flex: 1; text-align: left; }
   #sheet .opcoes button:active { background: var(--surface-2); transform: none; }
   #sheet .opcoes .ico { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; flex: none; }
+  #sheet .opcoes .ico.data { font-size: 11px; font-weight: 800; letter-spacing: -.02em; }
   #sheet .opcoes .perigo .ico { background: var(--danger-soft); color: var(--danger); }
 
   @media (prefers-reduced-motion: reduce) {
@@ -339,10 +374,9 @@
 
     <h2>Hoje <span class="extra num" id="hoje-extra"></span></h2>
     <div id="inicio-hoje"></div>
-    <details class="passadas" id="semana-wrap">
-      <summary>Próximas aulas dos próximos 7 dias ▾</summary>
-      <div class="card" id="inicio-semana" style="margin-top:6px"></div>
-    </details>
+
+    <h2>Sua sequência</h2>
+    <div class="card" id="inicio-ofensiva"></div>
 
     <h2>Resumo do semestre</h2>
     <div id="inicio-resumo"></div>
@@ -350,18 +384,23 @@
     <h2>Situação por matéria <span class="extra">pior primeiro</span></h2>
     <div id="inicio-materias"></div>
 
-    <h2>Conteúdos a recuperar</h2>
-    <div id="inicio-recuperar"></div>
-
-    <h2>Próximos 14 dias</h2>
-    <div id="inicio-agenda"></div>
+    <details class="passadas" id="semana-wrap">
+      <summary>Próximas aulas dos próximos 7 dias ▾</summary>
+      <div class="card" id="inicio-semana" style="margin-top:6px; opacity:1"></div>
+    </details>
   </section>
 
   <!-- ══════════ FALTAS ══════════ -->
   <section class="aba" id="aba-faltas">
-    <h2>Registrar</h2>
-    <details class="add">
-      <summary>Registrar falta em outra data</summary>
+    <h2>Faltas e recuperação</h2>
+    <div class="filtro"><select id="filtro-falta" aria-label="Escolher matéria">
+      <option value="">Escolha a matéria…</option>
+    </select></div>
+
+    <div id="faltas-conteudo"></div>
+
+    <details class="add" id="faltas-add" style="margin-top:14px">
+      <summary>Registrar falta</summary>
       <div class="corpo">
         <form class="painel" id="form-falta">
           <label class="campo">Matéria
@@ -383,11 +422,6 @@
         </form>
       </div>
     </details>
-    <p class="sutil" style="margin:0 2px 0">Dica: para faltas de hoje, use os botões da tela <strong>Início</strong>.</p>
-
-    <h2>Histórico <span class="extra num" id="faltas-extra"></span></h2>
-    <div class="filtro"><select id="filtro-falta" aria-label="Filtrar faltas por matéria"></select></div>
-    <div id="lista-faltas"></div>
   </section>
 
   <!-- ══════════ AGENDA ══════════ -->
@@ -414,6 +448,9 @@
           <label class="campo">Título
             <input type="text" id="evento-titulo" placeholder="Ex.: P1 — Capítulos 1 a 3" required>
           </label>
+          <label class="campo">Descrição (opcional)
+            <textarea id="evento-descricao" placeholder="Ex.: levar CP seco, consulta permitida"></textarea>
+          </label>
           <button class="primary" type="submit">Adicionar à agenda</button>
         </form>
       </div>
@@ -433,42 +470,95 @@
     </div>
   </section>
 
-  <!-- ══════════ MATÉRIAS ══════════ -->
-  <section class="aba" id="aba-materias">
-    <h2>Gerenciar</h2>
-    <details class="add">
-      <summary>Nova matéria</summary>
-      <div class="corpo">
-        <form class="painel" id="form-materia">
-          <label class="campo">Nome da matéria
-            <input type="text" id="materia-nome" placeholder="Ex.: Direito Civil IX" required>
-          </label>
-          <div class="campos-2">
-            <label class="campo">Total de aulas no semestre
-              <input type="number" id="materia-total" min="1" max="500" placeholder="Ex.: 17" required>
-            </label>
-            <label class="campo">Limite de faltas (%)
-              <input type="number" id="materia-limite" min="1" max="100" value="25" required>
-            </label>
+  <!-- ══════════ NOTAS ══════════ -->
+  <section class="aba" id="aba-notas">
+    <h2>Notas <span class="extra">PUC · 2 bimestres</span></h2>
+    <p class="sutil" style="margin:0 2px 12px">Prática peso 3 · Teórica peso 7 · MB = (P×3 + T×7)÷10 · MF = (MB1+MB2)÷2 · aprova com 6 · exame entre 3 e 6. Campo vazio = nota não lançada (nunca vira 0 sozinho).</p>
+    <div id="lista-notas"></div>
+  </section>
+
+  <!-- ══════════ MENU ══════════ -->
+  <section class="aba" id="aba-menu">
+    <h2>Menu</h2>
+    <div class="menu-lista">
+
+      <details class="menu-sec" id="menu-materias">
+        <summary><span class="ico-menu">📖</span> Minhas matérias <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
+        <div class="corpo-menu">
+          <details class="add" style="margin-top:12px">
+            <summary>Nova matéria</summary>
+            <div class="corpo">
+              <form class="painel" id="form-materia">
+                <label class="campo">Nome da matéria
+                  <input type="text" id="materia-nome" placeholder="Ex.: Direito Civil IX" required>
+                </label>
+                <div class="campos-2">
+                  <label class="campo">Total de aulas no semestre
+                    <input type="number" id="materia-total" min="1" max="500" placeholder="Ex.: 17" required>
+                  </label>
+                  <label class="campo">Limite de faltas (%)
+                    <input type="number" id="materia-limite" min="1" max="100" value="25" required>
+                  </label>
+                </div>
+                <div class="campos-3">
+                  <label class="campo">Dia da semana
+                    <select id="materia-dia">
+                      <option value="">—</option>
+                      <option value="seg">segunda</option><option value="ter">terça</option>
+                      <option value="qua">quarta</option><option value="qui">quinta</option>
+                      <option value="sex">sexta</option><option value="sáb">sábado</option>
+                    </select>
+                  </label>
+                  <label class="campo">Horário
+                    <input type="text" id="materia-horario" placeholder="18:50">
+                  </label>
+                  <label class="campo">Créditos
+                    <input type="number" id="materia-creditos" min="1" max="12" placeholder="3">
+                  </label>
+                </div>
+                <button class="primary" type="submit">Salvar matéria</button>
+              </form>
+            </div>
+          </details>
+          <div id="lista-materias"></div>
+        </div>
+      </details>
+
+      <details class="menu-sec">
+        <summary><span class="ico-menu">💾</span> Backup dos dados</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando — e use-o para levar tudo para outro aparelho.</p>
+          <p class="sutil num" id="backup-info" style="margin:0 0 4px"></p>
+          <div class="acoes-dados">
+            <button class="small" id="btn-exportar">Exportar backup</button>
+            <button class="small" id="btn-importar">Importar backup</button>
+            <input type="file" id="arquivo-backup" accept="application/json" hidden>
           </div>
-          <button class="primary" type="submit">Salvar matéria</button>
-        </form>
-      </div>
-    </details>
+        </div>
+      </details>
 
-    <h2>Minhas matérias <span class="extra num" id="materias-extra"></span></h2>
-    <div id="lista-materias"></div>
+      <details class="menu-sec">
+        <summary><span class="ico-menu">💬</span> Sugestões e problemas</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Achou um problema ou tem uma ideia? Sua opinião constrói o Faltaê.</p>
+          <div class="acoes-dados" style="margin-top:0">
+            <a class="small" style="display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:9px; padding:6px 12px; min-height:36px; text-decoration:none; color:var(--accent); font-weight:700; font-size:13px" href="https://github.com/GutoAranda/controle-faltas/issues" target="_blank" rel="noopener">Enviar sugestão</a>
+          </div>
+        </div>
+      </details>
 
-    <h2>Backup dos dados</h2>
-    <div class="card">
-      <p class="muted" style="margin:0 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando — e use-o para levar tudo para outro aparelho.</p>
-      <p class="sutil num" id="backup-info" style="margin:0 0 4px"></p>
-      <p class="sutil" style="margin:6px 0 0"><a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> · <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a></p>
-      <div class="acoes-dados">
-        <button class="small" id="btn-exportar">Exportar backup</button>
-        <button class="small" id="btn-importar">Importar backup</button>
-        <input type="file" id="arquivo-backup" accept="application/json" hidden>
-      </div>
+      <details class="menu-sec">
+        <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 4px">Versão 2.0 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam neste aparelho e não são coletados.</p>
+          <p class="sutil" style="margin:6px 0 0">
+            <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
+            <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
+            <a href="https://gutoaranda.github.io/controle-faltas/landing.html" style="color:var(--accent)">Site</a>
+          </p>
+        </div>
+      </details>
+
     </div>
   </section>
 </main>
@@ -476,7 +566,7 @@
 <div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-acao" hidden type="button">Desfazer</button></div>
 
 <div id="sheet-fundo"></div>
-<div id="sheet" role="dialog" aria-modal="true" aria-label="Ações da matéria">
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Ações">
   <div class="alca"></div>
   <h3 id="sheet-titulo"></h3>
   <p class="muted sub" id="sheet-sub"></p>
@@ -497,9 +587,13 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg>
       Agenda
     </button>
-    <button data-aba="materias">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 16.5A3.5 3.5 0 0 1 8.5 13H19"/></svg>
-      Matérias
+    <button data-aba="notas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg>
+      Notas
+    </button>
+    <button data-aba="menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      Menu
     </button>
   </div>
 </nav>
@@ -549,6 +643,11 @@ function somarDias(iso, n) {
 function diasAte(iso) {
   return Math.round((new Date(iso + 'T12:00:00') - new Date(hojeISO() + 'T12:00:00')) / 864e5);
 }
+function inicioDaSemana(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  const dow = (d.getDay() + 6) % 7; /* seg=0 */
+  return somarDias(iso, -dow);
+}
 function chipPrazo(iso) {
   const dias = diasAte(iso);
   if (dias === 0) return { texto: 'HOJE', cls: 'danger' };
@@ -568,7 +667,7 @@ function normalizarDataDigitada(texto) {
   return null;
 }
 
-/* ─────────── cálculos ─────────── */
+/* ─────────── cálculos: faltas ─────────── */
 function materiaPorId(id) { return db.materias.find(m => m.id === id); }
 
 function resumoMateria(mat) {
@@ -587,31 +686,6 @@ function conteudosDaFalta(f) {
   return db.aulas.filter(a => a.materiaId === f.materiaId && a.data === f.data);
 }
 
-const nf = n => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-function resumoNotas(mat) {
-  const avs = mat.avaliacoes || [];
-  if (!avs.length) return null;
-  const mediaMin = mat.mediaMin != null ? mat.mediaMin : 6;
-  const lanc = avs.filter(a => a.nota != null && a.nota !== '');
-  const pesoTotal = avs.reduce((s, a) => s + (a.peso || 1), 0);
-  const pesoLanc = lanc.reduce((s, a) => s + (a.peso || 1), 0);
-  const pontos = lanc.reduce((s, a) => s + a.nota * (a.peso || 1), 0);
-  const pesoPend = pesoTotal - pesoLanc;
-  const mediaAtual = pesoLanc ? pontos / pesoLanc : null;
-  const fechada = pesoPend === 0;
-  const mediaFinal = fechada ? pontos / pesoTotal : null;
-  const precisa = !fechada ? (mediaMin * pesoTotal - pontos) / pesoPend : null;
-  let status;
-  if (fechada) status = mediaFinal >= mediaMin
-    ? { cls: 'ok', txt: `média final ${nf(mediaFinal)} — aprovado 🎉` }
-    : { cls: 'danger', txt: `média final ${nf(mediaFinal)} — abaixo de ${nf(mediaMin)}` };
-  else if (precisa <= 0) status = { cls: 'ok', txt: `média ${nf(mediaMin)} já garantida 🎉` };
-  else if (precisa > 10) status = { cls: 'danger', txt: `precisa de ${nf(precisa)} — impossível atingir ${nf(mediaMin)}` };
-  else status = { cls: precisa >= 7 ? 'warn' : 'accent', txt: `precisa de ${nf(precisa)} nas pendentes` };
-  return { mediaMin, lanc, pendentes: avs.length - lanc.length, mediaAtual, precisa, fechada, mediaFinal, status };
-}
-
 function infoSemestre() {
   if (!db.aulas.length) return null;
   const datas = db.aulas.map(a => a.data).sort();
@@ -619,6 +693,98 @@ function infoSemestre() {
   const total = Math.max(1, Math.round((new Date(fim + 'T12:00:00') - new Date(ini + 'T12:00:00')) / 6048e5) + 1);
   const decorrido = Math.floor((new Date(hojeISO() + 'T12:00:00') - new Date(ini + 'T12:00:00')) / 6048e5) + 1;
   return { atual: Math.min(total, Math.max(1, decorrido)), total, ini, fim };
+}
+
+/* ─────────── cálculos: ofensiva (sequência semanal) ─────────── */
+function calcOfensiva() {
+  const hoje = hojeISO();
+  const segAtual = inicioDaSemana(hoje);
+  const historico = [];
+  let streak = 0;
+  let quebrada = false;
+  for (let i = 0; i < 30; i++) {
+    const seg = somarDias(segAtual, -7 * i);
+    const dom = somarDias(seg, 6);
+    const temAulas = db.aulas.some(a => a.data >= seg && a.data <= dom && a.data <= hoje);
+    const temFalta = db.faltas.some(f => !f.abonada && f.data >= seg && f.data <= dom);
+    let status;
+    if (!temAulas && !temFalta) status = 'neutra';
+    else if (temFalta) status = 'falta';
+    else status = 'ok';
+    if (i < 8) historico.push({ seg, status });
+    if (!quebrada) {
+      if (status === 'falta') quebrada = true;
+      else if (status === 'ok') streak++;
+    }
+    if (seg < (db.aulas.length ? db.aulas.map(a => a.data).sort()[0] : hoje)) break;
+  }
+  return { streak, historico: historico.reverse() };
+}
+
+/* ─────────── cálculos: notas PUC ─────────── */
+const nf = n => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function notasDe(mat) {
+  if (!mat.notasPUC) mat.notasPUC = { b1: { pr: null, te: null, su: null }, b2: { pr: null, te: null, su: null }, exame: null };
+  return mat.notasPUC;
+}
+function efetivasBim(b) {
+  /* substitutiva repõe a prova ausente; na dupla ausência, repõe a teórica */
+  let pr = b.pr, te = b.te;
+  if (b.su != null) {
+    if (te == null) te = b.su;
+    else if (pr == null) pr = b.su;
+  }
+  return { pr, te };
+}
+function mbDe(b) {
+  const e = efetivasBim(b);
+  if (e.pr == null || e.te == null) return { mb: null, pendentes: [e.pr == null ? 'prática' : null, e.te == null ? 'teórica' : null].filter(Boolean) };
+  return { mb: (e.pr * 3 + e.te * 7) / 10, pendentes: [] };
+}
+function resumoPUC(mat) {
+  const n = notasDe(mat);
+  const b1 = mbDe(n.b1), b2 = mbDe(n.b2);
+  const lancouAlgo = [n.b1.pr, n.b1.te, n.b1.su, n.b2.pr, n.b2.te, n.b2.su, n.exame].some(v => v != null);
+  let mf = null, status = null, dica = null;
+  if (b1.mb != null && b2.mb != null) {
+    mf = (b1.mb + b2.mb) / 2;
+    if (mf >= 6) status = { cls: 'ok', txt: `MF ${nf(mf)} — aprovado 🎉` };
+    else if (mf < 3) status = { cls: 'danger', txt: `MF ${nf(mf)} — reprovado direto` };
+    else if (n.exame != null) {
+      status = n.exame >= 6
+        ? { cls: 'ok', txt: `exame ${nf(n.exame)} — aprovado no exame 🎉` }
+        : { cls: 'danger', txt: `exame ${nf(n.exame)} — reprovado` };
+    } else {
+      status = { cls: 'warn', txt: `MF ${nf(mf)} — vai para exame` };
+      dica = 'No exame final, precisa de 6,0 para aprovar.';
+    }
+  } else if (b1.mb != null && b2.mb == null) {
+    const precisaMB2 = 12 - b1.mb;
+    if (precisaMB2 <= 0) { status = { cls: 'ok', txt: `MB1 ${nf(b1.mb)} — aprovação garantida 🎉` }; }
+    else if (precisaMB2 > 10) { status = { cls: 'warn', txt: `MB1 ${nf(b1.mb)} — sem exame ficou impossível` }; dica = 'Ainda dá para escapar da reprovação direta: busque MF ≥ 3,0 e jogue o resto no exame.'; }
+    else { status = { cls: 'accent', txt: `MB1 ${nf(b1.mb)} — precisa de MB2 ≥ ${nf(precisaMB2)}` }; }
+  } else if (lancouAlgo) {
+    status = { cls: 'accent', txt: 'notas parciais lançadas' };
+  }
+  /* dica dentro do bimestre em andamento */
+  const bimAberto = b1.mb == null ? { b: n.b1, rot: '1º bimestre' } : (b2.mb == null ? { b: n.b2, rot: '2º bimestre' } : null);
+  let dicaBim = null;
+  if (bimAberto) {
+    const e = efetivasBim(bimAberto.b);
+    if (e.pr != null && e.te == null) {
+      const alvoMB = (b1.mb != null && bimAberto.rot === '2º bimestre') ? Math.min(10, Math.max(0, 12 - b1.mb)) : 6;
+      const teNec = (alvoMB * 10 - e.pr * 3) / 7;
+      if (teNec > 0 && teNec <= 10) dicaBim = `${bimAberto.rot}: com prática ${nf(e.pr)}, precisa de ${nf(teNec)} na teórica para MB ${nf(alvoMB)}.`;
+    }
+    if (e.pr == null && e.te != null) {
+      const alvoMB = (b1.mb != null && bimAberto.rot === '2º bimestre') ? Math.min(10, Math.max(0, 12 - b1.mb)) : 6;
+      const prNec = (alvoMB * 10 - e.te * 7) / 3;
+      if (prNec > 0 && prNec <= 10) dicaBim = `${bimAberto.rot}: com teórica ${nf(e.te)}, precisa de ${nf(prNec)} na prática para MB ${nf(alvoMB)}.`;
+    }
+  }
+  const pendencias = [...(b1.pendentes.map(p => '1º bim: ' + p)), ...(b2.pendentes.map(p => '2º bim: ' + p))];
+  return { n, mb1: b1.mb, mb2: b2.mb, mf, status, dica, dicaBim, pendencias, lancouAlgo, precisaExame: mf != null && mf >= 3 && mf < 6 };
 }
 
 function esc(t) {
@@ -653,7 +819,7 @@ function excluirComDesfazer(msg, aplicar) {
   });
 }
 
-/* ─────────── navegação por abas ─────────── */
+/* ─────────── navegação ─────────── */
 function irParaAba(nome) {
   document.querySelectorAll('nav.abas button').forEach(b => {
     if (b.dataset.aba === nome) b.setAttribute('aria-current', 'page');
@@ -668,13 +834,29 @@ document.querySelectorAll('nav.abas button').forEach(btn => {
   btn.addEventListener('click', () => irParaAba(btn.dataset.aba));
 });
 
-/* ─────────── folha de ações da matéria ─────────── */
+/* ─────────── folha de ações ─────────── */
 function fecharSheet() {
   document.getElementById('sheet').classList.remove('on');
   document.getElementById('sheet-fundo').classList.remove('on');
 }
 document.getElementById('sheet-fundo').addEventListener('click', fecharSheet);
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') fecharSheet(); });
+
+function montarSheet(titulo, sub, acoes) {
+  document.getElementById('sheet-titulo').textContent = titulo;
+  document.getElementById('sheet-sub').textContent = sub;
+  const alvo = document.getElementById('sheet-opcoes');
+  alvo.innerHTML = acoes.map((a, i) =>
+    `<button type="button" data-sheet-acao="${i}" class="${a.perigo ? 'perigo' : ''}">
+      <span class="ico ${a.icoData ? 'data num' : ''}">${a.ico}</span><span class="trunca">${a.rotulo}</span>
+    </button>`).join('');
+  alvo.querySelectorAll('[data-sheet-acao]').forEach(b => b.addEventListener('click', () => {
+    fecharSheet();
+    acoes[parseInt(b.dataset.sheetAcao, 10)].fn();
+  }));
+  document.getElementById('sheet').classList.add('on');
+  document.getElementById('sheet-fundo').classList.add('on');
+}
 
 function abrirSheetMateria(matId) {
   const mat = materiaPorId(matId);
@@ -683,9 +865,6 @@ function abrirSheetMateria(matId) {
   const hoje = hojeISO();
   const temAulaHoje = db.aulas.some(a => a.materiaId === matId && a.data === hoje);
   const faltouHoje = db.faltas.some(f => f.materiaId === matId && f.data === hoje);
-  document.getElementById('sheet-titulo').textContent = mat.nome;
-  document.getElementById('sheet-sub').textContent =
-    `${r.usadas} de ${r.maxFaltas} faltas usadas · pode faltar mais ${r.restam}`;
   const acoes = [];
   if (temAulaHoje) {
     acoes.push({ ico: '✗', rotulo: faltouHoje ? 'Desfazer a falta de hoje' : 'Faltei hoje', perigo: !faltouHoje, fn: () => {
@@ -698,8 +877,7 @@ function abrirSheetMateria(matId) {
   acoes.push(
     { ico: '📅', rotulo: 'Registrar falta nesta matéria', fn: () => {
       irParaAba('faltas');
-      const det = document.querySelector('#aba-faltas details.add');
-      det.open = true;
+      document.getElementById('faltas-add').open = true;
       document.getElementById('falta-materia').value = matId;
       document.getElementById('falta-data').value = hojeISO();
     }},
@@ -709,13 +887,15 @@ function abrirSheetMateria(matId) {
     { ico: '📝', rotulo: 'Ver provas e atividades', fn: () => {
       filtroEventoMat = matId; renderAgenda(); irParaAba('agenda');
     }},
-    { ico: '🎯', rotulo: 'Notas e média', fn: () => {
-      irParaAba('materias');
-      const det = document.getElementById('notas-' + matId);
-      if (det) { det.open = true; det.scrollIntoView({ block: 'center' }); }
+    { ico: '🎯', rotulo: 'Notas e médias', fn: () => {
+      irParaAba('notas');
+      const card = document.getElementById('nota-' + matId);
+      if (card) card.scrollIntoView({ block: 'start' });
     }},
     { ico: '📖', rotulo: 'Ver plano de aula', fn: () => {
-      irParaAba('materias');
+      irParaAba('menu');
+      document.getElementById('menu-materias').open = true;
+      renderMaterias();
       const card = document.getElementById('mat-' + matId);
       if (card) {
         const det = card.querySelector('details.plano');
@@ -724,66 +904,47 @@ function abrirSheetMateria(matId) {
       }
     }},
     { ico: '✎', rotulo: 'Editar matéria', fn: () => {
-      edMateriaId = matId; renderMaterias(); irParaAba('materias');
+      edMateriaId = matId; renderMaterias(); irParaAba('menu');
+      document.getElementById('menu-materias').open = true;
       const card = document.getElementById('mat-' + matId);
       if (card) card.scrollIntoView({ block: 'start' });
     }}
   );
-  document.getElementById('sheet-opcoes').innerHTML = acoes.map((a, i) =>
-    `<button type="button" data-sheet-acao="${i}" class="${a.perigo ? 'perigo' : ''}"><span class="ico">${a.ico}</span>${a.rotulo}</button>`
-  ).join('');
-  document.querySelectorAll('[data-sheet-acao]').forEach(b => b.addEventListener('click', () => {
-    fecharSheet();
-    acoes[parseInt(b.dataset.sheetAcao, 10)].fn();
-  }));
-  document.getElementById('sheet').classList.add('on');
-  document.getElementById('sheet-fundo').classList.add('on');
+  montarSheet(mat.nome, `${r.usadas} de ${r.maxFaltas} faltas usadas · pode faltar mais ${r.restam}`, acoes);
 }
 
-/* folha de ajuste de atraso do professor */
 function abrirSheetAtraso(matId) {
   const mat = materiaPorId(matId);
   if (!mat) return;
   const aulas = db.aulas.filter(a => a.materiaId === matId).sort((a, b) => a.data.localeCompare(b.data));
   const candidatas = aulas.filter(a => diasAte(a.data) >= -14);
-  document.getElementById('sheet-titulo').textContent = 'Qual conteúdo ainda não foi dado?';
-  document.getElementById('sheet-sub').textContent =
-    mat.nome + ' — toque no conteúdo que atrasou. Ele e os seguintes deslizam, cada um para a data da aula seguinte do plano.';
-  const alvoOp = document.getElementById('sheet-opcoes');
-  alvoOp.innerHTML = candidatas.length
-    ? candidatas.map(a =>
-      `<button type="button" data-atraso-aula="${a.id}">
-        <span class="ico data num">${formatarData(a.data).slice(0, 5)}</span>
-        <span class="trunca">${esc(a.conteudo)}</span>
-      </button>`).join('')
-    : '<p class="muted">Não há aulas recentes ou futuras neste plano para ajustar.</p>';
-  alvoOp.querySelectorAll('[data-atraso-aula]').forEach(b => b.addEventListener('click', () => {
-    fecharSheet();
-    const i = aulas.findIndex(a => a.id === b.dataset.atrasoAula);
-    if (i < 0) return;
-    const antes = JSON.stringify(db);
-    const datas = aulas.map(a => a.data);
-    const novaUltima = somarDias(datas[datas.length - 1], 7);
-    for (let j = i; j < aulas.length; j++) {
-      aulas[j].data = (j + 1 < aulas.length) ? datas[j + 1] : novaUltima;
-    }
-    salvar(); renderTudo();
-    const rotulo = aulas[i].conteudo.length > 34 ? aulas[i].conteudo.slice(0, 34) + '…' : aulas[i].conteudo;
-    toast(`"${rotulo}" foi para ${formatarData(aulas[i].data).slice(0, 5)}`, 'Desfazer', () => {
-      db = JSON.parse(antes);
+  const acoes = candidatas.map(a => ({
+    ico: formatarData(a.data).slice(0, 5), icoData: true, rotulo: a.conteudo, fn: () => {
+      const i = aulas.findIndex(x => x.id === a.id);
+      if (i < 0) return;
+      const antes = JSON.stringify(db);
+      const datas = aulas.map(x => x.data);
+      const novaUltima = somarDias(datas[datas.length - 1], 7);
+      for (let j = i; j < aulas.length; j++) {
+        aulas[j].data = (j + 1 < aulas.length) ? datas[j + 1] : novaUltima;
+      }
       salvar(); renderTudo();
-      toast('Ajuste desfeito');
-    });
+      const rotulo = a.conteudo.length > 34 ? a.conteudo.slice(0, 34) + '…' : a.conteudo;
+      toast(`"${rotulo}" foi para ${formatarData(a.data).slice(0, 5)}`, 'Desfazer', () => {
+        db = JSON.parse(antes);
+        salvar(); renderTudo();
+        toast('Ajuste desfeito');
+      });
+    }
   }));
-  document.getElementById('sheet').classList.add('on');
-  document.getElementById('sheet-fundo').classList.add('on');
+  montarSheet('Qual conteúdo ainda não foi dado?',
+    mat.nome + ' — toque no conteúdo que atrasou. Ele e os seguintes deslizam para as próximas datas do plano.', acoes);
 }
 
 /* ─────────── render: início ─────────── */
 function renderInicio() {
   const hoje = hojeISO();
 
-  /* lembrete de provas hoje/amanhã */
   const alvoLem = document.getElementById('inicio-lembrete');
   const perto = db.eventos
     .filter(e => !e.feita && e.data >= hoje && e.data <= somarDias(hoje, 1))
@@ -794,7 +955,7 @@ function renderInicio() {
       <span class="muted-2">· ${esc(mat ? mat.nome : '?')}</span></div>`;
   }).join('');
 
-  /* hoje: aulas do dia com falta em um toque */
+  /* hoje */
   const alvoHoje = document.getElementById('inicio-hoje');
   const aulasHoje = db.aulas.filter(a => a.data === hoje);
   const materiasHoje = [...new Set(aulasHoje.map(a => a.materiaId))]
@@ -812,9 +973,9 @@ function renderInicio() {
       <button class="primary" data-onboarding type="button">Criar minha primeira matéria</button>
     </div>`;
     alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => {
-      irParaAba('materias');
-      const det = document.querySelector('#aba-materias details.add');
-      det.open = true;
+      irParaAba('menu');
+      document.getElementById('menu-materias').open = true;
+      document.querySelector('#menu-materias details.add').open = true;
       document.getElementById('materia-nome').focus();
     });
   } else if (!materiasHoje.length) {
@@ -834,7 +995,6 @@ function renderInicio() {
       </div>`;
     }).join('') + `</div>`;
   }
-
   alvoHoje.querySelectorAll('[data-falta-hoje]').forEach(b => b.addEventListener('click', () => {
     const mid = b.dataset.faltaHoje;
     const existente = db.faltas.find(f => f.materiaId === mid && f.data === hoje);
@@ -843,31 +1003,32 @@ function renderInicio() {
       db.faltas = db.faltas.filter(f => f.id !== existente.id);
       toast(`Falta desfeita — ${mat ? mat.nome : ''}`);
     } else {
-      db.faltas.push({ id: uid(), materiaId: mid, data: hoje, qtd: 1, recuperada: false });
+      db.faltas.push({ id: uid(), materiaId: mid, data: hoje, qtd: 1, recuperada: false, abonada: false });
       toast(`Falta registrada — ${mat ? mat.nome : ''}`);
     }
     salvar(); renderTudo();
   }));
 
-  /* próximas aulas dos próximos 7 dias */
-  const alvoSem = document.getElementById('inicio-semana');
-  const proximasAulas = db.aulas
-    .filter(a => a.data > hoje && a.data <= somarDias(hoje, 7))
-    .sort((a, b) => a.data.localeCompare(b.data));
-  document.getElementById('semana-wrap').style.display = proximasAulas.length ? '' : 'none';
-  if (proximasAulas.length) {
-    const porDia = {};
-    for (const a of proximasAulas) (porDia[a.data] = porDia[a.data] || []).push(a);
-    alvoSem.innerHTML = Object.keys(porDia).sort().map(data => `<div class="semana-dia">
-      <div class="quando num">${diaSemana(data)} · ${formatarData(data).slice(0, 5)}</div>
-      <ul>${porDia[data].map(a => {
-        const mat = materiaPorId(a.materiaId);
-        return `<li><strong>${esc(mat ? mat.nome : '?')}</strong> — ${esc(a.conteudo)}</li>`;
-      }).join('')}</ul>
-    </div>`).join('');
+  /* ofensiva */
+  const alvoOf = document.getElementById('inicio-ofensiva');
+  if (!db.aulas.length) {
+    alvoOf.innerHTML = '<p class="muted" style="margin:0">Cadastre seus cronogramas para acompanhar sua sequência de presença semanal.</p>';
+  } else {
+    const of = calcOfensiva();
+    const acesa = of.streak > 0;
+    alvoOf.innerHTML = `<div class="ofensiva ${acesa ? 'acesa' : ''}">
+      <div class="chama">🔥</div>
+      <div class="grow">
+        <div class="num-semanas num">${of.streak} semana${of.streak === 1 ? '' : 's'}</div>
+        <div class="muted">${acesa ? 'sem nenhuma falta — segue firme!' : 'Uma semana 100% presente acende a chama.'}</div>
+        <div class="semana-dots" aria-label="Últimas ${of.historico.length} semanas">
+          ${of.historico.map(h => `<span class="${h.status === 'ok' ? 'ok' : (h.status === 'falta' ? 'falta' : '')}" title="semana de ${formatarData(h.seg).slice(0, 5)}"></span>`).join('')}
+        </div>
+      </div>
+    </div>`;
   }
 
-  /* resumo do semestre */
+  /* resumo */
   const alvoRes = document.getElementById('inicio-resumo');
   if (!db.materias.length) {
     alvoRes.innerHTML = '';
@@ -882,15 +1043,15 @@ function renderInicio() {
     alvoRes.innerHTML = `<div class="tiles">
       <div class="tile"><div class="valor">${presenca}%</div><div class="rotulo">Presença até hoje</div></div>
       <div class="tile"><div class="valor">${totFaltas}</div><div class="rotulo">Faltas no semestre</div></div>
-      <div class="tile"><div class="valor">${aRec}</div><div class="rotulo">A recuperar</div></div>
+      <div class="tile"><div class="valor">${aRec}</div><div class="rotulo">Conteúdos a recuperar</div></div>
       <div class="tile"><div class="valor">${proxProva ? formatarData(proxProva.data).slice(0, 5) : '—'}</div><div class="rotulo">Próxima prova</div></div>
     </div>`;
   }
 
-  /* situação por matéria — pior primeiro */
+  /* situação por matéria */
   const alvoMat = document.getElementById('inicio-materias');
   if (!db.materias.length) {
-    alvoMat.innerHTML = '<div class="vazio">Cadastre suas matérias na aba <strong>Matérias</strong> para começar.</div>';
+    alvoMat.innerHTML = '<div class="vazio">Cadastre suas matérias no <strong>Menu</strong> para começar.</div>';
   } else {
     const ordenadas = [...db.materias]
       .map(mat => ({ mat, r: resumoMateria(mat) }))
@@ -911,120 +1072,103 @@ function renderInicio() {
       </div>`;
     }).join('');
   }
-
-  /* conteúdos a recuperar */
-  const pendentes = db.faltas.filter(f => !f.recuperada && conteudosDaFalta(f).length);
-  const alvoRec = document.getElementById('inicio-recuperar');
-  if (!pendentes.length) {
-    alvoRec.innerHTML = '<div class="vazio">Nada para recuperar. 🎉</div>';
-  } else {
-    alvoRec.innerHTML = pendentes
-      .sort((a, b) => a.data.localeCompare(b.data))
-      .map(f => {
-        const mat = materiaPorId(f.materiaId);
-        const conteudos = conteudosDaFalta(f).map(a => esc(a.conteudo)).join(' · ');
-        return `<div class="card">
-          <div class="row">
-            <div class="grow">
-              <h3 style="font-size:14px">${esc(mat ? mat.nome : '?')} <span class="muted num">· ${formatarData(f.data)}</span></h3>
-              <div class="muted" style="margin-top:2px">${conteudos}</div>
-            </div>
-            <button class="small" data-recuperar="${f.id}">Recuperei</button>
-          </div>
-        </div>`;
-      }).join('');
-  }
   alvoMat.querySelectorAll('[data-sheet-mat]').forEach(c => {
     c.addEventListener('click', () => abrirSheetMateria(c.dataset.sheetMat));
     c.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrirSheetMateria(c.dataset.sheetMat); } });
   });
 
-  alvoRec.querySelectorAll('[data-recuperar]').forEach(b => b.addEventListener('click', () => {
-    const f = db.faltas.find(x => x.id === b.dataset.recuperar);
-    if (f) { f.recuperada = true; salvar(); renderTudo(); toast('Conteúdo marcado como recuperado 👏'); }
-  }));
-
-  /* próximos 14 dias */
-  const proximos = db.eventos
-    .filter(e => !e.feita && e.data >= hoje && e.data <= somarDias(hoje, 14))
+  /* próximas aulas 7 dias */
+  const alvoSem = document.getElementById('inicio-semana');
+  const proximasAulas = db.aulas
+    .filter(a => a.data > hoje && a.data <= somarDias(hoje, 7))
     .sort((a, b) => a.data.localeCompare(b.data));
-  const alvoAg = document.getElementById('inicio-agenda');
-  if (!proximos.length) {
-    alvoAg.innerHTML = '<div class="vazio">Nenhuma prova ou atividade nos próximos 14 dias.</div>';
-  } else {
-    alvoAg.innerHTML = proximos.map(e => {
-      const mat = materiaPorId(e.materiaId);
-      const prazo = chipPrazo(e.data);
-      return `<div class="card row">
-        <span class="pill lisa ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIV.'}</span>
-        <div class="grow">
-          <strong style="font-size:14px">${esc(e.titulo)}</strong>
-          <div class="muted trunca">${esc(mat ? mat.nome : '?')} · ${diaSemana(e.data)} ${formatarData(e.data).slice(0, 5)}</div>
-        </div>
-        <span class="pill lisa ${prazo.cls}">${prazo.texto}</span>
-      </div>`;
-    }).join('');
+  document.getElementById('semana-wrap').style.display = proximasAulas.length ? '' : 'none';
+  if (proximasAulas.length) {
+    const porDia = {};
+    for (const a of proximasAulas) (porDia[a.data] = porDia[a.data] || []).push(a);
+    alvoSem.innerHTML = Object.keys(porDia).sort().map(data => `<div class="semana-dia">
+      <div class="quando num">${diaSemana(data)} · ${formatarData(data).slice(0, 5)}</div>
+      <ul>${porDia[data].map(a => {
+        const mat = materiaPorId(a.materiaId);
+        return `<li><strong>${esc(mat ? mat.nome : '?')}</strong> — ${esc(a.conteudo)}</li>`;
+      }).join('')}</ul>
+    </div>`).join('');
   }
 }
 
 /* ─────────── render: faltas ─────────── */
+let filtroFaltaMat = '';
+let filtroEventoMat = '';
+
 function preencherSelectMaterias(sel) {
   sel.innerHTML = db.materias.length
     ? [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('')
     : '<option value="">— cadastre uma matéria primeiro —</option>';
 }
-
-let filtroFaltaMat = '';
-let filtroEventoMat = '';
-
+function preencherFiltroFaltas(sel, valorAtual) {
+  sel.innerHTML = '<option value="">Escolha a matéria…</option><option value="__todas" ' + (valorAtual === '__todas' ? 'selected' : '') + '>Todas as matérias</option>' +
+    [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome))
+      .map(m => `<option value="${m.id}" ${m.id === valorAtual ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
+}
 function preencherFiltro(sel, valorAtual) {
   sel.innerHTML = '<option value="">Todas as matérias</option>' +
     [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome))
       .map(m => `<option value="${m.id}" ${m.id === valorAtual ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
 }
 
+function cardFalta(f) {
+  const mat = materiaPorId(f.materiaId);
+  const conteudos = conteudosDaFalta(f);
+  const blocoConteudo = conteudos.length
+    ? `<ul class="lista-conteudo">${conteudos.map(a => `<li>${esc(a.conteudo)}</li>`).join('')}</ul>
+       <label class="check" style="margin-top:6px">
+         <input type="checkbox" data-toggle-rec="${f.id}" ${f.recuperada ? 'checked' : ''}>
+         Conteúdo recuperado
+       </label>`
+    : `<div class="sutil" style="margin-top:6px">Sem plano de aula nesta data — cadastre o plano no Menu → Minhas matérias.</div>`;
+  return `<div class="card">
+    <div class="row">
+      <div class="grow">
+        <h3 style="font-size:15px">${esc(mat ? mat.nome : 'Matéria removida')} ${f.abonada ? '<span class="pill lisa ok">ABONADA</span>' : ''}</h3>
+        <div class="muted num">${diaSemana(f.data)}, ${formatarData(f.data)} · ${f.qtd} aula${f.qtd === 1 ? '' : 's'}</div>
+      </div>
+      <button class="small" data-abonar="${f.id}">${f.abonada ? 'Remover abono' : 'Abonar'}</button>
+      <button class="small ghost-danger" data-del-falta="${f.id}">Excluir</button>
+    </div>
+    ${blocoConteudo}
+  </div>`;
+}
+
 function renderFaltas() {
   preencherSelectMaterias(document.getElementById('falta-materia'));
-  preencherFiltro(document.getElementById('filtro-falta'), filtroFaltaMat);
-  const alvo = document.getElementById('lista-faltas');
-  const efetivas = db.faltas.filter(f => !f.abonada).reduce((s, f) => s + f.qtd, 0);
-  const abonadas = db.faltas.filter(f => f.abonada).reduce((s, f) => s + f.qtd, 0);
-  document.getElementById('faltas-extra').textContent = db.faltas.length
-    ? `${efetivas} aula${efetivas === 1 ? '' : 's'}${abonadas ? ` · ${abonadas} abonada${abonadas === 1 ? '' : 's'}` : ''}` : '';
-  document.querySelector('#aba-faltas .filtro').style.display = db.faltas.length ? '' : 'none';
-  const visiveis = db.faltas.filter(f => !filtroFaltaMat || f.materiaId === filtroFaltaMat);
-  if (!db.faltas.length) {
-    alvo.innerHTML = '<div class="vazio">Nenhuma falta registrada até agora. Que continue assim! 💪</div>';
+  preencherFiltroFaltas(document.getElementById('filtro-falta'), filtroFaltaMat);
+  const alvo = document.getElementById('faltas-conteudo');
+
+  if (!db.materias.length) {
+    alvo.innerHTML = '<div class="vazio">Cadastre suas matérias no <strong>Menu</strong> para começar.</div>';
     return;
   }
+  if (!filtroFaltaMat) {
+    alvo.innerHTML = '<div class="vazio">Escolha uma matéria (ou todas) para ver faltas e conteúdos a recuperar.<br>Assim a tela mostra só o que você pediu. 😌</div>';
+    return;
+  }
+  const visiveis = db.faltas.filter(f => filtroFaltaMat === '__todas' || f.materiaId === filtroFaltaMat);
   if (!visiveis.length) {
-    alvo.innerHTML = '<div class="vazio">Nenhuma falta nesta matéria. 👏</div>';
+    alvo.innerHTML = '<div class="vazio">Nenhuma falta registrada aqui. Que continue assim! 💪</div>';
     return;
   }
-  alvo.innerHTML = [...visiveis]
-    .sort((a, b) => b.data.localeCompare(a.data))
-    .map(f => {
-      const mat = materiaPorId(f.materiaId);
-      const conteudos = conteudosDaFalta(f);
-      const blocoConteudo = conteudos.length
-        ? `<ul class="lista-conteudo">${conteudos.map(a => `<li>${esc(a.conteudo)}</li>`).join('')}</ul>
-           <label class="check" style="margin-top:6px">
-             <input type="checkbox" data-toggle-rec="${f.id}" ${f.recuperada ? 'checked' : ''}>
-             Conteúdo recuperado
-           </label>`
-        : `<div class="sutil" style="margin-top:6px">Sem plano de aula nesta data — cadastre o plano na aba Matérias para saber o que perdeu.</div>`;
-      return `<div class="card">
-        <div class="row">
-          <div class="grow">
-            <h3 style="font-size:15px">${esc(mat ? mat.nome : 'Matéria removida')} ${f.abonada ? '<span class="pill lisa ok">ABONADA</span>' : ''}</h3>
-            <div class="muted num">${diaSemana(f.data)}, ${formatarData(f.data)} · ${f.qtd} aula${f.qtd === 1 ? '' : 's'}</div>
-          </div>
-          <button class="small" data-abonar="${f.id}">${f.abonada ? 'Remover abono' : 'Abonar'}</button>
-          <button class="small ghost-danger" data-del-falta="${f.id}">Excluir</button>
-        </div>
-        ${blocoConteudo}
-      </div>`;
-    }).join('');
+  const pendentes = visiveis.filter(f => !f.recuperada && conteudosDaFalta(f).length).sort((a, b) => a.data.localeCompare(b.data));
+  const semConteudo = visiveis.filter(f => !f.recuperada && !conteudosDaFalta(f).length).sort((a, b) => b.data.localeCompare(a.data));
+  const recuperadas = visiveis.filter(f => f.recuperada).sort((a, b) => b.data.localeCompare(a.data));
+
+  alvo.innerHTML =
+    (pendentes.length ? `<h2 style="margin-top:4px">A recuperar <span class="extra">mais antigos primeiro</span></h2>` + pendentes.map(cardFalta).join('') : '') +
+    (semConteudo.length ? `<h2>Outras faltas</h2>` + semConteudo.map(cardFalta).join('') : '') +
+    (!pendentes.length && !semConteudo.length ? '<div class="vazio">Tudo recuperado por aqui. 👏</div>' : '') +
+    (recuperadas.length ? `<details class="passadas">
+        <summary>Recuperados (${recuperadas.length}) ▾</summary>
+        ${recuperadas.map(cardFalta).join('')}
+      </details>` : '');
 
   alvo.querySelectorAll('[data-del-falta]').forEach(b => b.addEventListener('click', () => {
     excluirComDesfazer('Falta excluída', () => {
@@ -1041,7 +1185,7 @@ function renderFaltas() {
   }));
   alvo.querySelectorAll('[data-toggle-rec]').forEach(c => c.addEventListener('change', () => {
     const f = db.faltas.find(x => x.id === c.dataset.toggleRec);
-    if (f) { f.recuperada = c.checked; salvar(); renderInicio(); }
+    if (f) { f.recuperada = c.checked; salvar(); renderTudo(); if (c.checked) toast('Conteúdo recuperado 👏'); }
   }));
 }
 
@@ -1055,8 +1199,9 @@ document.getElementById('form-falta').addEventListener('submit', ev => {
   const data = document.getElementById('falta-data').value;
   const qtd = parseInt(document.getElementById('falta-qtd').value, 10) || 1;
   const abonada = document.getElementById('falta-abonada').checked;
-  if (!materiaId) { toast('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
+  if (!materiaId) { toast('Cadastre uma matéria primeiro, no Menu.'); return; }
   db.faltas.push({ id: uid(), materiaId, data, qtd, recuperada: false, abonada });
+  if (!filtroFaltaMat) filtroFaltaMat = materiaId;
   salvar(); renderTudo();
   document.getElementById('falta-qtd').value = 1;
   document.getElementById('falta-abonada').checked = false;
@@ -1081,7 +1226,7 @@ function renderAgenda() {
   const cartao = (e, apagado) => {
     const mat = materiaPorId(e.materiaId);
     const prazo = !apagado ? chipPrazo(e.data) : null;
-    return `<div class="card" style="${apagado ? 'opacity:.55' : ''}">
+    return `<div class="card">
       <div class="row">
         <span class="pill lisa ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIV.'}</span>
         <div class="grow">
@@ -1090,6 +1235,7 @@ function renderAgenda() {
         </div>
         ${prazo ? `<span class="pill lisa ${prazo.cls}">${prazo.texto}</span>` : ''}
       </div>
+      ${e.descricao ? `<div class="muted" style="margin-top:8px; background:var(--surface-2); border-radius:9px; padding:8px 10px">${esc(e.descricao)}</div>` : ''}
       <div class="acoes-dados">
         <button class="small" data-feito="${e.id}">${e.feita ? 'Reabrir' : 'Concluído'}</button>
         <button class="small ghost-danger" data-del-evento="${e.id}">Excluir</button>
@@ -1119,22 +1265,40 @@ document.getElementById('filtro-evento').addEventListener('change', ev => {
   filtroEventoMat = ev.target.value; renderAgenda();
 });
 
-/* exportar provas e atividades para o calendário (.ics) */
+document.getElementById('form-evento').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const materiaId = document.getElementById('evento-materia').value;
+  if (!materiaId) { toast('Cadastre uma matéria primeiro, no Menu.'); return; }
+  db.eventos.push({
+    id: uid(),
+    tipo: document.getElementById('evento-tipo').value,
+    materiaId,
+    data: document.getElementById('evento-data').value,
+    titulo: document.getElementById('evento-titulo').value.trim(),
+    descricao: document.getElementById('evento-descricao').value.trim(),
+    feita: false
+  });
+  salvar(); renderTudo();
+  ev.target.reset();
+  toast('Adicionado à agenda');
+});
+
+/* exportar .ics */
 document.getElementById('btn-ics').addEventListener('click', () => {
   const hoje = hojeISO();
   const futuros = db.eventos.filter(e => !e.feita && e.data >= hoje);
   if (!futuros.length) { toast('Nenhuma prova ou atividade futura para exportar.'); return; }
   const escICS = t => String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,');
-  const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Controle de Faltas//PT-BR'];
+  const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Faltae//PT-BR'];
   for (const e of futuros) {
     const mat = materiaPorId(e.materiaId);
     const d = e.data.replace(/-/g, '');
     linhas.push(
       'BEGIN:VEVENT',
-      'UID:' + e.id + '@controle-faltas',
+      'UID:' + e.id + '@faltae',
       'DTSTART;VALUE=DATE:' + d,
       'SUMMARY:' + escICS((e.tipo === 'prova' ? '📝 ' : '📌 ') + e.titulo),
-      'DESCRIPTION:' + escICS(mat ? mat.nome : ''),
+      'DESCRIPTION:' + escICS((mat ? mat.nome : '') + (e.descricao ? ' — ' + e.descricao : '')),
       'BEGIN:VALARM', 'TRIGGER:-PT18H', 'ACTION:DISPLAY', 'DESCRIPTION:' + escICS(e.titulo), 'END:VALARM',
       'END:VEVENT'
     );
@@ -1149,32 +1313,79 @@ document.getElementById('btn-ics').addEventListener('click', () => {
   toast(`${futuros.length} evento(s) exportado(s) — abra o arquivo para adicionar ao calendário`);
 });
 
-document.getElementById('form-evento').addEventListener('submit', ev => {
-  ev.preventDefault();
-  const materiaId = document.getElementById('evento-materia').value;
-  if (!materiaId) { toast('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
-  db.eventos.push({
-    id: uid(),
-    tipo: document.getElementById('evento-tipo').value,
-    materiaId,
-    data: document.getElementById('evento-data').value,
-    titulo: document.getElementById('evento-titulo').value.trim(),
-    feita: false
-  });
-  salvar(); renderTudo();
-  ev.target.reset();
-  toast('Adicionado à agenda');
-});
+/* ─────────── render: notas (PUC) ─────────── */
+function renderNotas() {
+  const alvo = document.getElementById('lista-notas');
+  if (!db.materias.length) {
+    alvo.innerHTML = '<div class="vazio">Cadastre suas matérias no <strong>Menu</strong> para lançar notas.</div>';
+    return;
+  }
+  const campoNota = (matId, bim, campo, valor, rotulo) =>
+    `<div class="nota-campo">${rotulo}
+      <input type="number" step="0.1" min="0" max="10" inputmode="decimal"
+        value="${valor != null ? valor : ''}" placeholder="—"
+        data-nota="${matId}|${bim}|${campo}" aria-label="${rotulo} — nota">
+    </div>`;
 
-/* ─────────── render: matérias ─────────── */
+  alvo.innerHTML = [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(mat => {
+    const r = resumoPUC(mat);
+    const n = r.n;
+    const blocoBim = (bim, rot, dados, mb) => `<div class="bloco-bim">
+      <div class="titulo-bim">${rot} <span class="mb num">${mb != null ? 'MB ' + nf(mb) : '—'}</span></div>
+      <div class="campos-3">
+        ${campoNota(mat.id, bim, 'pr', dados.pr, 'Prática ·3')}
+        ${campoNota(mat.id, bim, 'te', dados.te, 'Teórica ·7')}
+        ${campoNota(mat.id, bim, 'su', dados.su, 'Substit.')}
+      </div>
+    </div>`;
+    return `<div class="card" id="nota-${mat.id}">
+      <div class="row">
+        <div class="grow"><h3>${esc(mat.nome)}</h3></div>
+        ${r.status ? `<span class="pill lisa ${r.status.cls}">${esc(r.status.txt)}</span>` : '<span class="sutil">sem notas ainda</span>'}
+      </div>
+      ${r.pendencias.length && r.lancouAlgo ? `<div class="sutil" style="margin-top:4px">⚠ não lançadas (não contam como 0): ${r.pendencias.join(', ')}</div>` : ''}
+      ${blocoBim('b1', '1º bimestre', n.b1, r.mb1)}
+      ${blocoBim('b2', '2º bimestre', n.b2, r.mb2)}
+      ${r.precisaExame ? `<div class="bloco-bim">
+        <div class="titulo-bim">Exame final <span class="mb num">${n.exame != null ? nf(n.exame) : '—'}</span></div>
+        <div class="campos-3">
+          ${campoNota(mat.id, 'ex', 'exame', n.exame, 'Nota ≥6 aprova')}
+        </div>
+      </div>` : ''}
+      ${r.mf != null ? `<div class="resultado-mf">
+        <span class="mf num">${nf(r.mf)}</span>
+        <span class="muted">média final (MB1 ${nf(r.mb1)} + MB2 ${nf(r.mb2)}) ÷ 2</span>
+      </div>` : ''}
+      ${r.dicaBim ? `<div class="dica-nota">🎯 <strong>${esc(r.dicaBim)}</strong></div>` : ''}
+      ${r.dica ? `<div class="dica-nota">${esc(r.dica)}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  alvo.querySelectorAll('[data-nota]').forEach(inp => inp.addEventListener('change', () => {
+    const [matId, bim, campo] = inp.dataset.nota.split('|');
+    const mat = materiaPorId(matId);
+    if (!mat) return;
+    const n = notasDe(mat);
+    const v = inp.value === '' ? null : Math.min(10, Math.max(0, parseFloat(inp.value)));
+    if (bim === 'ex') n.exame = v;
+    else n[bim][campo] = v;
+    salvar(); renderNotas(); renderInicio();
+    const r = resumoPUC(mat);
+    toast(v == null ? 'Nota removida (volta a "não lançada")' : (r.status ? r.status.txt : 'Nota lançada'));
+    const card = document.getElementById('nota-' + matId);
+    if (card) card.scrollIntoView({ block: 'nearest' });
+  }));
+}
+
+/* ─────────── render: matérias (no menu) ─────────── */
 let edMateriaId = null;
 let edAulaId = null;
 
 function renderMaterias() {
   const alvo = document.getElementById('lista-materias');
-  document.getElementById('materias-extra').textContent = db.materias.length || '';
+  document.getElementById('materias-extra').textContent = db.materias.length ? `(${db.materias.length})` : '';
   if (!db.materias.length) {
-    alvo.innerHTML = '<div class="vazio">Nenhuma matéria cadastrada ainda. Toque em <strong>＋ Nova matéria</strong> acima.</div>';
+    alvo.innerHTML = '<div class="vazio" style="margin-top:10px">Nenhuma matéria ainda. Toque em <strong>＋ Nova matéria</strong> acima.</div>';
     return;
   }
   const hoje = hojeISO();
@@ -1183,8 +1394,9 @@ function renderMaterias() {
     const aulas = db.aulas.filter(a => a.materiaId === mat.id).sort((a, b) => a.data.localeCompare(b.data));
     const dadas = aulas.filter(a => a.data <= hoje).length;
     const abrirPlano = aulas.some(a => a.id === edAulaId) ? ' open' : '';
+    const meta = [mat.diaSemana, mat.horario, mat.creditos ? mat.creditos + ' créd.' : null].filter(Boolean).join(' · ');
     const cabecalho = edMateriaId === mat.id
-      ? `<form class="painel" data-form-ed-materia="${mat.id}">
+      ? `<form class="painel" data-form-ed-materia="${mat.id}" style="margin-top:10px">
           <label class="campo">Nome da matéria
             <input type="text" name="nome" value="${esc(mat.nome)}" required>
           </label>
@@ -1196,6 +1408,20 @@ function renderMaterias() {
               <input type="number" name="limite" min="1" max="100" value="${mat.limitePct}" required>
             </label>
           </div>
+          <div class="campos-3">
+            <label class="campo">Dia
+              <select name="dia">
+                <option value="">—</option>
+                ${['seg','ter','qua','qui','sex','sáb'].map(d => `<option value="${d}" ${mat.diaSemana === d ? 'selected' : ''}>${d}</option>`).join('')}
+              </select>
+            </label>
+            <label class="campo">Horário
+              <input type="text" name="horario" value="${esc(mat.horario || '')}" placeholder="18:50">
+            </label>
+            <label class="campo">Créditos
+              <input type="number" name="creditos" min="1" max="12" value="${mat.creditos || ''}">
+            </label>
+          </div>
           <div class="acoes-dados">
             <button class="small primary" type="submit">Salvar alterações</button>
             <button class="small" type="button" data-cancel-ed-materia>Cancelar</button>
@@ -1204,17 +1430,16 @@ function renderMaterias() {
       : `<div class="row">
         <div class="grow">
           <h3>${esc(mat.nome)}</h3>
-          <div class="muted num">${mat.totalAulas} aulas · limite ${mat.limitePct}% → máx. ${r.maxFaltas} faltas</div>
+          <div class="muted num">${mat.totalAulas} aulas · limite ${mat.limitePct}% → máx. ${r.maxFaltas} faltas${meta ? ' · ' + esc(meta) : ''}</div>
           ${aulas.length ? `<div class="sutil num">Cronograma: ${dadas} de ${aulas.length} aulas dadas</div>` : ''}
-          ${(() => { const rn = resumoNotas(mat); return rn && rn.mediaAtual != null ? `<div class="sutil num">Notas: média ${nf(rn.mediaAtual)} · ${esc(rn.status.txt)}</div>` : ''; })()}
         </div>
         <button class="small" data-ed-materia="${mat.id}">Editar</button>
         <button class="small ghost-danger" data-del-materia="${mat.id}">Excluir</button>
       </div>`;
-    return `<div class="card" id="mat-${mat.id}">
+    return `<div class="card" id="mat-${mat.id}" style="margin-top:10px">
       ${cabecalho}
       <details class="plano"${abrirPlano}>
-        <summary>Plano de aula (${aulas.length} aula${aulas.length === 1 ? '' : 's'} cadastrada${aulas.length === 1 ? '' : 's'}) ▾</summary>
+        <summary>Plano de aula (${aulas.length} aula${aulas.length === 1 ? '' : 's'}) ▾</summary>
         <ul class="lista-conteudo" style="margin-top:10px">
           ${aulas.map(a => a.id === edAulaId
             ? `<li><form class="painel" data-form-ed-aula="${a.id}" style="margin:4px 0">
@@ -1258,37 +1483,12 @@ function renderMaterias() {
           <button class="small" type="submit">Importar linhas</button>
         </form>
       </details>
-      <details class="plano" id="notas-${mat.id}">
-        <summary>Notas e média${(() => { const rn = resumoNotas(mat); return rn ? ` — <span class="pill lisa ${rn.status.cls}">${esc(rn.status.txt)}</span>` : ''; })()} ▾</summary>
-        ${(mat.avaliacoes || []).length ? `<ul class="lista-conteudo" style="margin-top:10px">
-          ${mat.avaliacoes.map(av => `<li class="row">
-            <div class="grow"><strong>${esc(av.nome)}</strong> <span class="sutil num">· peso ${av.peso || 1}</span></div>
-            <input type="number" step="0.1" min="0" max="10" inputmode="decimal" value="${av.nota != null && av.nota !== '' ? av.nota : ''}"
-              placeholder="nota" style="width:86px; min-height:38px; text-align:center" data-nota-av="${av.id}" data-nota-mat="${mat.id}" aria-label="Nota de ${esc(av.nome)}">
-            <button class="small icone ghost-danger" data-del-av="${av.id}" data-del-av-mat="${mat.id}" aria-label="Excluir avaliação">✕</button>
-          </li>`).join('')}
-        </ul>` : '<p class="muted" style="margin:10px 0 0">Cadastre as avaliações da matéria (com peso) e lance as notas conforme saírem — o app calcula quanto você precisa tirar nas pendentes.</p>'}
-        <form class="painel" data-form-av="${mat.id}" style="margin-top:12px">
-          <div class="campos-2">
-            <label class="campo">Avaliação
-              <input type="text" name="nome" placeholder="Ex.: P1" required>
-            </label>
-            <label class="campo">Peso
-              <input type="number" name="peso" min="0.5" step="0.5" value="1" required>
-            </label>
-          </div>
-          <button class="small" type="submit">Adicionar avaliação</button>
-        </form>
-        <label class="campo" style="margin-top:10px; max-width:220px">Média para aprovação
-          <input type="number" step="0.1" min="0" max="10" value="${mat.mediaMin != null ? mat.mediaMin : 6}" data-media-min="${mat.id}">
-        </label>
-      </details>
     </div>`;
   }).join('');
 
   alvo.querySelectorAll('[data-del-materia]').forEach(b => b.addEventListener('click', () => {
     const mat = materiaPorId(b.dataset.delMateria);
-    if (!confirm(`Excluir "${mat.nome}" e todas as faltas, aulas e eventos dela?`)) return;
+    if (!confirm(`Excluir "${mat.nome}" e todas as faltas, aulas, notas e eventos dela?`)) return;
     const id = b.dataset.delMateria;
     excluirComDesfazer(`"${mat.nome}" excluída`, () => {
       db.materias = db.materias.filter(m => m.id !== id);
@@ -1314,6 +1514,9 @@ function renderMaterias() {
       mat.nome = f.elements.nome.value.trim();
       mat.totalAulas = parseInt(f.elements.total.value, 10);
       mat.limitePct = parseInt(f.elements.limite.value, 10);
+      mat.diaSemana = f.elements.dia.value || null;
+      mat.horario = f.elements.horario.value.trim() || null;
+      mat.creditos = parseInt(f.elements.creditos.value, 10) || null;
     }
     edMateriaId = null;
     salvar(); renderTudo(); toast('Matéria atualizada');
@@ -1347,47 +1550,6 @@ function renderMaterias() {
     });
     salvar(); renderTudo(); toast('Aula adicionada ao plano');
   }));
-  alvo.querySelectorAll('[data-form-av]').forEach(f => f.addEventListener('submit', ev => {
-    ev.preventDefault();
-    const mat = materiaPorId(f.dataset.formAv);
-    if (!mat) return;
-    mat.avaliacoes = mat.avaliacoes || [];
-    mat.avaliacoes.push({ id: uid(), nome: f.elements.nome.value.trim(), peso: parseFloat(f.elements.peso.value) || 1, nota: null });
-    salvar(); renderMaterias();
-    const det = document.getElementById('notas-' + mat.id);
-    if (det) det.open = true;
-    toast('Avaliação adicionada');
-  }));
-  alvo.querySelectorAll('[data-nota-av]').forEach(inp => inp.addEventListener('change', () => {
-    const mat = materiaPorId(inp.dataset.notaMat);
-    const av = mat && (mat.avaliacoes || []).find(a => a.id === inp.dataset.notaAv);
-    if (!av) return;
-    const v = inp.value === '' ? null : Math.min(10, Math.max(0, parseFloat(inp.value)));
-    av.nota = v;
-    salvar(); renderMaterias();
-    const det = document.getElementById('notas-' + mat.id);
-    if (det) det.open = true;
-    const rn = resumoNotas(mat);
-    toast(v == null ? 'Nota removida' : `Nota lançada — ${rn.status.txt}`);
-  }));
-  alvo.querySelectorAll('[data-del-av]').forEach(b => b.addEventListener('click', () => {
-    const mat = materiaPorId(b.dataset.delAvMat);
-    if (!mat) return;
-    excluirComDesfazer('Avaliação excluída', () => {
-      mat.avaliacoes = (mat.avaliacoes || []).filter(a => a.id !== b.dataset.delAv);
-    });
-    const det = document.getElementById('notas-' + mat.id);
-    if (det) det.open = true;
-  }));
-  alvo.querySelectorAll('[data-media-min]').forEach(inp => inp.addEventListener('change', () => {
-    const mat = materiaPorId(inp.dataset.mediaMin);
-    if (!mat) return;
-    mat.mediaMin = Math.min(10, Math.max(0, parseFloat(inp.value) || 6));
-    salvar(); renderMaterias();
-    const det = document.getElementById('notas-' + mat.id);
-    if (det) det.open = true;
-    toast('Média de aprovação ajustada para ' + nf(mat.mediaMin));
-  }));
   alvo.querySelectorAll('[data-form-importar]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
     const linhas = f.elements.lote.value.split('\n').map(l => l.trim()).filter(Boolean);
@@ -1413,7 +1575,10 @@ document.getElementById('form-materia').addEventListener('submit', ev => {
     id: uid(),
     nome: document.getElementById('materia-nome').value.trim(),
     totalAulas: parseInt(document.getElementById('materia-total').value, 10),
-    limitePct: parseInt(document.getElementById('materia-limite').value, 10)
+    limitePct: parseInt(document.getElementById('materia-limite').value, 10),
+    diaSemana: document.getElementById('materia-dia').value || null,
+    horario: document.getElementById('materia-horario').value.trim() || null,
+    creditos: parseInt(document.getElementById('materia-creditos').value, 10) || null
   });
   salvar(); renderTudo();
   ev.target.reset();
@@ -1466,7 +1631,7 @@ document.getElementById('btn-exportar').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'controle-faltas-backup-' + hojeISO() + '.json';
+  a.download = 'faltae-backup-' + hojeISO() + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
   localStorage.setItem('controleFaltas.ultimoBackup', hojeISO());
@@ -1486,7 +1651,7 @@ document.getElementById('arquivo-backup').addEventListener('change', ev => {
       db = { ...novoBanco(), ...dados };
       salvar(); renderTudo(); toast('Backup importado com sucesso');
     } catch {
-      toast('Arquivo inválido — selecione um backup exportado por este app.');
+      toast('Arquivo inválido — selecione um backup exportado pelo Faltaê.');
     }
   };
   leitor.readAsText(arq);
@@ -1498,6 +1663,7 @@ function renderTudo() {
   renderInicio();
   renderFaltas();
   renderAgenda();
+  renderNotas();
   renderMaterias();
   const sem = infoSemestre();
   document.getElementById('semana').textContent = sem ? `semana ${sem.atual} de ${sem.total}` : '';
