@@ -1,4 +1,4 @@
-const CACHE = 'faltae-v9';
+const CACHE = 'faltae-v11';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', ev => {
@@ -15,6 +15,8 @@ self.addEventListener('activate', ev => {
 
 self.addEventListener('fetch', ev => {
   if (ev.request.method !== 'GET') return;
+  // chamadas de API (Supabase etc.) vão sempre direto pra rede — cache só para os arquivos do app
+  if (new URL(ev.request.url).origin !== location.origin) return;
   ev.respondWith(
     caches.match(ev.request, { ignoreSearch: true }).then(res =>
       res ||

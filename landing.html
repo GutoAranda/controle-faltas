@@ -81,6 +81,22 @@
   .cta-final .btn { background: var(--lima); color: var(--tinta); }
   .cta-final .btn:hover { background: #B8F04D; }
 
+  .planos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: stretch; }
+  .plano { background: var(--superficie); border: 1px solid var(--linha); border-radius: 18px; padding: 24px 22px; box-shadow: var(--sombra); display: flex; flex-direction: column; }
+  .plano.destaque { border: 2px solid var(--indigo); position: relative; }
+  .plano .selo-plano { position: absolute; top: -12px; left: 22px; background: var(--lima); color: var(--tinta); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 4px 12px; border-radius: 99px; }
+  .plano h3 { font-size: 20px; margin: 0 0 2px; }
+  .plano .preco { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 34px; letter-spacing: -.03em; margin: 6px 0 2px; }
+  .plano .preco small { font-size: 15px; font-weight: 700; color: var(--tinta-2); letter-spacing: 0; }
+  .plano .desc-plano { font-size: 14px; color: var(--tinta-3); margin: 0 0 14px; }
+  .plano ul { list-style: none; margin: 0 0 20px; padding: 0; font-size: 15px; color: var(--tinta-2); flex: 1; }
+  .plano ul li { padding: 5px 0 5px 26px; position: relative; }
+  .plano ul li::before { content: '✓'; position: absolute; left: 2px; color: var(--indigo); font-weight: 800; }
+  .plano .btn { text-align: center; }
+  .plano .btn.claro { background: var(--superficie); color: var(--indigo); border: 1px solid var(--linha); }
+  .plano .btn.claro:hover { background: var(--papel); }
+  .plano.futuro { opacity: .75; }
+
   details.faq { border-bottom: 1px solid var(--linha); }
   details.faq summary { cursor: pointer; font-weight: 700; padding: 18px 0; list-style: none; font-size: 16.5px; }
   details.faq summary::-webkit-details-marker { display: none; }
@@ -152,10 +168,54 @@
   </div>
 </section>
 
+<section class="bloco container" id="planos">
+  <h2>Preço de estudante, sem pegadinha.</h2>
+  <p class="lede">Comece grátis agora. Quando quiser seus dados em todos os aparelhos, o Essencial custa menos que um lanche no intervalo.</p>
+  <div class="planos">
+    <div class="plano">
+      <h3>Grátis</h3>
+      <div class="preco">R$0</div>
+      <p class="desc-plano">pra sempre, neste aparelho</p>
+      <ul>
+        <li>Até 6 matérias</li>
+        <li>Faltas, agenda e notas completos</li>
+        <li>Funciona offline</li>
+        <li>Backup manual (exportar/importar)</li>
+      </ul>
+      <a class="btn claro" href="./">Começar agora</a>
+    </div>
+    <div class="plano destaque">
+      <span class="selo-plano">TESTE FECHADO</span>
+      <h3>Essencial</h3>
+      <div class="preco">R$15<small>/mês</small></div>
+      <p class="desc-plano">grátis durante o teste fechado</p>
+      <ul>
+        <li>Matérias ilimitadas</li>
+        <li>Sincronização entre celular, tablet e computador</li>
+        <li>Conta protegida por senha</li>
+        <li>Tudo do plano Grátis</li>
+      </ul>
+      <a class="btn" href="https://github.com/GutoAranda/controle-faltas/issues" target="_blank" rel="noopener">Quero ser testador</a>
+    </div>
+    <div class="plano futuro">
+      <h3>Pro</h3>
+      <div class="preco">R$29<small>/mês</small></div>
+      <p class="desc-plano">em breve</p>
+      <ul>
+        <li>Relatório de frequência pra apresentar à coordenação</li>
+        <li>Planejador de notas avançado</li>
+        <li>Tudo do Essencial</li>
+      </ul>
+      <a class="btn claro" href="https://github.com/GutoAranda/controle-faltas/issues" target="_blank" rel="noopener">Avise-me</a>
+    </div>
+  </div>
+</section>
+
 <section class="bloco container" style="padding-bottom:40px">
   <h2>Perguntas rápidas</h2>
-  <details class="faq"><summary>É grátis mesmo?</summary><p>Sim. O núcleo do Faltaê (faltas, cronogramas, provas e notas) é grátis para sempre. No futuro, uma assinatura Pro opcional trará sincronização entre aparelhos e recursos avançados.</p></details>
-  <details class="faq"><summary>Preciso criar conta?</summary><p>Não. Você abre e usa. Tudo fica salvo no seu aparelho — exporte um backup de vez em quando pela aba Matérias.</p></details>
+  <details class="faq"><summary>É grátis mesmo?</summary><p>Sim. O plano Grátis (até 6 matérias, com faltas, agenda e notas completos) é grátis para sempre. O Essencial — R$15/mês — libera matérias ilimitadas e sincronização entre aparelhos, e está grátis durante o teste fechado.</p></details>
+  <details class="faq"><summary>Preciso criar conta?</summary><p>Não. Você abre e usa, tudo fica salvo no seu aparelho. A conta é opcional e só existe pra um motivo: sincronizar seus dados entre celular, tablet e computador no plano Essencial.</p></details>
+  <details class="faq"><summary>Como funciona a sincronização?</summary><p>Criou a conta, pronto: cada falta, prova ou nota que você registrar sobe automaticamente pra nuvem e aparece nos seus outros aparelhos. Só você acessa seus dados — protegidos por senha e criptografia.</p></details>
   <details class="faq"><summary>Funciona como aplicativo?</summary><p>Sim: no Android, use "Adicionar à tela inicial" no navegador (ou o APK, quando disponível na Play Store). Funciona offline depois da primeira abertura.</p></details>
   <details class="faq"><summary>O Faltaê substitui o sistema da faculdade?</summary><p>Não — ele é o seu controle pessoal, sempre à mão e na sua linguagem. O registro oficial de presença continua sendo o da instituição: use os dois.</p></details>
 </section>
