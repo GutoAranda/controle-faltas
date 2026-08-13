@@ -240,12 +240,55 @@
     position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
     transform: translate(-50%, 16px); z-index: 20;
     background: var(--ink); color: var(--bg);
-    padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
     box-shadow: 0 6px 20px rgba(0,0,0,.25);
     opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
-    max-width: min(90vw, 480px); text-align: center;
+    max-width: min(92vw, 480px);
+    display: flex; align-items: center; gap: 10px;
   }
-  #toast.on { opacity: 1; transform: translate(-50%, 0); }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  #toast button {
+    background: none; border: 0; color: inherit; font-weight: 800; font-size: 14px;
+    min-height: 32px; padding: 2px 6px; text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  .filtro { margin: 0 0 10px; }
+  .filtro select { min-height: 42px; font-size: 14px; }
+
+  .semana-dia { padding: 8px 0; }
+  .semana-dia + .semana-dia { border-top: 1px solid var(--line); }
+  .semana-dia .quando { font-size: 12px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
+  .semana-dia ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+  .semana-dia li { font-size: 13.5px; color: var(--ink-2); }
+  .semana-dia li strong { color: var(--ink); font-weight: 700; }
+
+  /* ── folha de ações (bottom sheet) ── */
+  #sheet-fundo {
+    position: fixed; inset: 0; z-index: 30; background: rgba(10, 12, 24, .45);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  #sheet-fundo.on { opacity: 1; pointer-events: auto; }
+  #sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 31;
+    max-width: 560px; margin: 0 auto;
+    background: var(--surface); border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 30px rgba(0,0,0,.25);
+    padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+    transform: translateY(105%); transition: transform .25s ease;
+  }
+  #sheet.on { transform: none; }
+  #sheet .alca { width: 40px; height: 4px; border-radius: 999px; background: var(--line); margin: 2px auto 10px; }
+  #sheet h3 { margin: 0 0 2px; font-size: 16px; }
+  #sheet .sub { margin: 0 0 10px; }
+  #sheet .opcoes { display: grid; gap: 6px; }
+  #sheet .opcoes button {
+    text-align: left; display: flex; align-items: center; gap: 12px;
+    border: 0; background: none; padding: 12px 6px; min-height: 48px;
+    font-size: 15px; font-weight: 600; border-radius: 10px;
+  }
+  #sheet .opcoes button:active { background: var(--surface-2); transform: none; }
+  #sheet .opcoes .ico { width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 16px; flex: none; }
+  #sheet .opcoes .perigo .ico { background: var(--danger-soft); color: var(--danger); }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -266,6 +309,10 @@
 
     <h2>Hoje <span class="extra num" id="hoje-extra"></span></h2>
     <div id="inicio-hoje"></div>
+    <details class="passadas" id="semana-wrap">
+      <summary>Próximas aulas dos próximos 7 dias ▾</summary>
+      <div class="card" id="inicio-semana" style="margin-top:6px"></div>
+    </details>
 
     <h2>Resumo do semestre</h2>
     <div id="inicio-resumo"></div>
@@ -298,6 +345,10 @@
               <input type="number" id="falta-qtd" min="1" max="10" value="1" required>
             </label>
           </div>
+          <label class="check">
+            <input type="checkbox" id="falta-abonada">
+            Falta abonada (atestado) — não conta no limite
+          </label>
           <button class="primary" type="submit">Registrar falta</button>
         </form>
       </div>
@@ -305,6 +356,7 @@
     <p class="sutil" style="margin:0 2px 0">Dica: para faltas de hoje, use os botões da tela <strong>Início</strong>.</p>
 
     <h2>Histórico <span class="extra num" id="faltas-extra"></span></h2>
+    <div class="filtro"><select id="filtro-falta" aria-label="Filtrar faltas por matéria"></select></div>
     <div id="lista-faltas"></div>
   </section>
 
@@ -338,13 +390,15 @@
     </details>
 
     <h2>Próximas</h2>
+    <div class="filtro"><select id="filtro-evento" aria-label="Filtrar agenda por matéria"></select></div>
     <div id="lista-eventos"></div>
 
-    <h2>Lembretes</h2>
+    <h2>Lembretes e calendário</h2>
     <div class="card">
-      <p class="muted" style="margin:0 0 4px">Ao abrir o app na véspera (ou no dia) de uma prova, você recebe um aviso no aparelho. Provas de hoje e amanhã também aparecem em destaque no Início.</p>
+      <p class="muted" style="margin:0 0 4px">Ao abrir o app na véspera (ou no dia) de uma prova, você recebe um aviso no aparelho. Você também pode levar as provas para o app de calendário do celular.</p>
       <div class="acoes-dados">
-        <button class="small" id="btn-lembretes">Ativar lembretes neste aparelho</button>
+        <button class="small" id="btn-lembretes">Ativar lembretes</button>
+        <button class="small" id="btn-ics">Exportar para o calendário (.ics)</button>
       </div>
     </div>
   </section>
@@ -378,6 +432,7 @@
     <h2>Backup dos dados</h2>
     <div class="card">
       <p class="muted" style="margin:0 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando — e use-o para levar tudo para outro aparelho.</p>
+      <p class="sutil num" id="backup-info" style="margin:0 0 4px"></p>
       <div class="acoes-dados">
         <button class="small" id="btn-exportar">Exportar backup</button>
         <button class="small" id="btn-importar">Importar backup</button>
@@ -387,7 +442,15 @@
   </section>
 </main>
 
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-acao" hidden type="button">Desfazer</button></div>
+
+<div id="sheet-fundo"></div>
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Ações da matéria">
+  <div class="alca"></div>
+  <h3 id="sheet-titulo"></h3>
+  <p class="muted sub" id="sheet-sub"></p>
+  <div class="opcoes" id="sheet-opcoes"></div>
+</div>
 
 <nav class="abas" aria-label="Navegação principal">
   <div class="inner">
@@ -479,7 +542,7 @@ function materiaPorId(id) { return db.materias.find(m => m.id === id); }
 
 function resumoMateria(mat) {
   const maxFaltas = Math.max(1, Math.floor(mat.totalAulas * mat.limitePct / 100));
-  const usadas = db.faltas.filter(f => f.materiaId === mat.id).reduce((s, f) => s + f.qtd, 0);
+  const usadas = db.faltas.filter(f => f.materiaId === mat.id && !f.abonada).reduce((s, f) => s + f.qtd, 0);
   const pct = usadas / maxFaltas;
   let nivel, rotulo;
   if (pct > 1) { nivel = 'danger'; rotulo = 'Limite estourado'; }
@@ -506,25 +569,113 @@ function esc(t) {
   return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-/* ─────────── feedback (toast) ─────────── */
-function toast(msg) {
+/* ─────────── feedback (toast, com desfazer opcional) ─────────── */
+function toast(msg, rotuloAcao, fnAcao) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
+  const btn = document.getElementById('toast-acao');
+  document.getElementById('toast-msg').textContent = msg;
+  if (rotuloAcao && fnAcao) {
+    btn.textContent = rotuloAcao;
+    btn.hidden = false;
+    btn.onclick = () => { el.classList.remove('on'); fnAcao(); };
+  } else {
+    btn.hidden = true;
+    btn.onclick = null;
+  }
   el.classList.add('on');
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('on'), 2600);
+  toast._t = setTimeout(() => el.classList.remove('on'), rotuloAcao ? 5000 : 2600);
+}
+function excluirComDesfazer(msg, aplicar) {
+  const antes = JSON.stringify(db);
+  aplicar();
+  salvar(); renderTudo();
+  toast(msg, 'Desfazer', () => {
+    db = JSON.parse(antes);
+    salvar(); renderTudo();
+    toast('Ação desfeita');
+  });
 }
 
 /* ─────────── navegação por abas ─────────── */
-document.querySelectorAll('nav.abas button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('nav.abas button').forEach(b => b.removeAttribute('aria-current'));
-    btn.setAttribute('aria-current', 'page');
-    document.querySelectorAll('.aba').forEach(s => s.classList.remove('ativa'));
-    document.getElementById('aba-' + btn.dataset.aba).classList.add('ativa');
-    window.scrollTo(0, 0);
+function irParaAba(nome) {
+  document.querySelectorAll('nav.abas button').forEach(b => {
+    if (b.dataset.aba === nome) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
   });
+  document.querySelectorAll('.aba').forEach(s => s.classList.remove('ativa'));
+  document.getElementById('aba-' + nome).classList.add('ativa');
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('nav.abas button').forEach(btn => {
+  btn.addEventListener('click', () => irParaAba(btn.dataset.aba));
 });
+
+/* ─────────── folha de ações da matéria ─────────── */
+function fecharSheet() {
+  document.getElementById('sheet').classList.remove('on');
+  document.getElementById('sheet-fundo').classList.remove('on');
+}
+document.getElementById('sheet-fundo').addEventListener('click', fecharSheet);
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') fecharSheet(); });
+
+function abrirSheetMateria(matId) {
+  const mat = materiaPorId(matId);
+  if (!mat) return;
+  const r = resumoMateria(mat);
+  const hoje = hojeISO();
+  const temAulaHoje = db.aulas.some(a => a.materiaId === matId && a.data === hoje);
+  const faltouHoje = db.faltas.some(f => f.materiaId === matId && f.data === hoje);
+  document.getElementById('sheet-titulo').textContent = mat.nome;
+  document.getElementById('sheet-sub').textContent =
+    `${r.usadas} de ${r.maxFaltas} faltas usadas · pode faltar mais ${r.restam}`;
+  const acoes = [];
+  if (temAulaHoje) {
+    acoes.push({ ico: '✗', rotulo: faltouHoje ? 'Desfazer a falta de hoje' : 'Faltei hoje', perigo: !faltouHoje, fn: () => {
+      const existente = db.faltas.find(f => f.materiaId === matId && f.data === hoje);
+      if (existente) { db.faltas = db.faltas.filter(f => f.id !== existente.id); toast('Falta desfeita — ' + mat.nome); }
+      else { db.faltas.push({ id: uid(), materiaId: matId, data: hoje, qtd: 1, recuperada: false, abonada: false }); toast('Falta registrada — ' + mat.nome); }
+      salvar(); renderTudo();
+    }});
+  }
+  acoes.push(
+    { ico: '📅', rotulo: 'Registrar falta em outra data', fn: () => {
+      irParaAba('faltas');
+      const det = document.querySelector('#aba-faltas details.add');
+      det.open = true;
+      document.getElementById('falta-materia').value = matId;
+    }},
+    { ico: '🗂', rotulo: 'Ver faltas desta matéria', fn: () => {
+      filtroFaltaMat = matId; renderFaltas(); irParaAba('faltas');
+    }},
+    { ico: '📝', rotulo: 'Ver provas e atividades', fn: () => {
+      filtroEventoMat = matId; renderAgenda(); irParaAba('agenda');
+    }},
+    { ico: '📖', rotulo: 'Ver plano de aula', fn: () => {
+      irParaAba('materias');
+      const card = document.getElementById('mat-' + matId);
+      if (card) {
+        const det = card.querySelector('details.plano');
+        if (det) det.open = true;
+        card.scrollIntoView({ block: 'start' });
+      }
+    }},
+    { ico: '✎', rotulo: 'Editar matéria', fn: () => {
+      edMateriaId = matId; renderMaterias(); irParaAba('materias');
+      const card = document.getElementById('mat-' + matId);
+      if (card) card.scrollIntoView({ block: 'start' });
+    }}
+  );
+  document.getElementById('sheet-opcoes').innerHTML = acoes.map((a, i) =>
+    `<button type="button" data-sheet-acao="${i}" class="${a.perigo ? 'perigo' : ''}"><span class="ico">${a.ico}</span>${a.rotulo}</button>`
+  ).join('');
+  document.querySelectorAll('[data-sheet-acao]').forEach(b => b.addEventListener('click', () => {
+    fecharSheet();
+    acoes[parseInt(b.dataset.sheetAcao, 10)].fn();
+  }));
+  document.getElementById('sheet').classList.add('on');
+  document.getElementById('sheet-fundo').classList.add('on');
+}
 
 /* ─────────── render: início ─────────── */
 function renderInicio() {
@@ -582,13 +733,31 @@ function renderInicio() {
     salvar(); renderTudo();
   }));
 
+  /* próximas aulas dos próximos 7 dias */
+  const alvoSem = document.getElementById('inicio-semana');
+  const proximasAulas = db.aulas
+    .filter(a => a.data > hoje && a.data <= somarDias(hoje, 7))
+    .sort((a, b) => a.data.localeCompare(b.data));
+  document.getElementById('semana-wrap').style.display = proximasAulas.length ? '' : 'none';
+  if (proximasAulas.length) {
+    const porDia = {};
+    for (const a of proximasAulas) (porDia[a.data] = porDia[a.data] || []).push(a);
+    alvoSem.innerHTML = Object.keys(porDia).sort().map(data => `<div class="semana-dia">
+      <div class="quando num">${diaSemana(data)} · ${formatarData(data).slice(0, 5)}</div>
+      <ul>${porDia[data].map(a => {
+        const mat = materiaPorId(a.materiaId);
+        return `<li><strong>${esc(mat ? mat.nome : '?')}</strong> — ${esc(a.conteudo)}</li>`;
+      }).join('')}</ul>
+    </div>`).join('');
+  }
+
   /* resumo do semestre */
   const alvoRes = document.getElementById('inicio-resumo');
   if (!db.materias.length) {
     alvoRes.innerHTML = '';
   } else {
     const dadas = db.aulas.filter(a => a.data <= hoje).length;
-    const totFaltas = db.faltas.reduce((s, f) => s + f.qtd, 0);
+    const totFaltas = db.faltas.filter(f => !f.abonada).reduce((s, f) => s + f.qtd, 0);
     const presenca = dadas ? Math.max(0, Math.round((dadas - Math.min(dadas, totFaltas)) / dadas * 100)) : 100;
     const aRec = db.faltas.filter(f => !f.recuperada && conteudosDaFalta(f).length).length;
     const proxProva = db.eventos
@@ -612,13 +781,15 @@ function renderInicio() {
       .sort((a, b) => b.r.pct - a.r.pct || a.mat.nome.localeCompare(b.mat.nome));
     alvoMat.innerHTML = ordenadas.map(({ mat, r }) => {
       const largura = Math.min(100, Math.round(r.pct * 100));
-      return `<div class="card">
+      const aulasFuturas = db.aulas.filter(a => a.materiaId === mat.id && a.data > hoje).length;
+      const contexto = aulasFuturas ? ` nas <strong>${aulasFuturas}</strong> aulas restantes` : '';
+      return `<div class="card" data-sheet-mat="${mat.id}" role="button" tabindex="0" style="cursor:pointer" aria-label="Ações de ${esc(mat.nome)}">
         <div class="row">
           <div class="grow"><h3>${esc(mat.nome)}</h3></div>
           <span class="pill ${r.nivel}">${r.rotulo}</span>
         </div>
         <div class="muted num" style="margin-top:4px">
-          ${r.usadas} de ${r.maxFaltas} faltas usadas · pode faltar mais <strong>${r.restam}</strong>
+          ${r.usadas} de ${r.maxFaltas} faltas usadas · pode faltar mais <strong>${r.restam}</strong>${contexto}
         </div>
         <div class="bar" role="img" aria-label="${r.usadas} de ${r.maxFaltas} faltas usadas"><span class="fill-${r.nivel}" style="width:${largura}%"></span></div>
       </div>`;
@@ -647,6 +818,11 @@ function renderInicio() {
         </div>`;
       }).join('');
   }
+  alvoMat.querySelectorAll('[data-sheet-mat]').forEach(c => {
+    c.addEventListener('click', () => abrirSheetMateria(c.dataset.sheetMat));
+    c.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrirSheetMateria(c.dataset.sheetMat); } });
+  });
+
   alvoRec.querySelectorAll('[data-recuperar]').forEach(b => b.addEventListener('click', () => {
     const f = db.faltas.find(x => x.id === b.dataset.recuperar);
     if (f) { f.recuperada = true; salvar(); renderTudo(); toast('Conteúdo marcado como recuperado 👏'); }
@@ -682,16 +858,34 @@ function preencherSelectMaterias(sel) {
     : '<option value="">— cadastre uma matéria primeiro —</option>';
 }
 
+let filtroFaltaMat = '';
+let filtroEventoMat = '';
+
+function preencherFiltro(sel, valorAtual) {
+  sel.innerHTML = '<option value="">Todas as matérias</option>' +
+    [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome))
+      .map(m => `<option value="${m.id}" ${m.id === valorAtual ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
+}
+
 function renderFaltas() {
   preencherSelectMaterias(document.getElementById('falta-materia'));
+  preencherFiltro(document.getElementById('filtro-falta'), filtroFaltaMat);
   const alvo = document.getElementById('lista-faltas');
-  const total = db.faltas.reduce((s, f) => s + f.qtd, 0);
-  document.getElementById('faltas-extra').textContent = db.faltas.length ? `${total} aula${total === 1 ? '' : 's'}` : '';
+  const efetivas = db.faltas.filter(f => !f.abonada).reduce((s, f) => s + f.qtd, 0);
+  const abonadas = db.faltas.filter(f => f.abonada).reduce((s, f) => s + f.qtd, 0);
+  document.getElementById('faltas-extra').textContent = db.faltas.length
+    ? `${efetivas} aula${efetivas === 1 ? '' : 's'}${abonadas ? ` · ${abonadas} abonada${abonadas === 1 ? '' : 's'}` : ''}` : '';
+  document.querySelector('#aba-faltas .filtro').style.display = db.faltas.length ? '' : 'none';
+  const visiveis = db.faltas.filter(f => !filtroFaltaMat || f.materiaId === filtroFaltaMat);
   if (!db.faltas.length) {
     alvo.innerHTML = '<div class="vazio">Nenhuma falta registrada até agora. Que continue assim! 💪</div>';
     return;
   }
-  alvo.innerHTML = [...db.faltas]
+  if (!visiveis.length) {
+    alvo.innerHTML = '<div class="vazio">Nenhuma falta nesta matéria. 👏</div>';
+    return;
+  }
+  alvo.innerHTML = [...visiveis]
     .sort((a, b) => b.data.localeCompare(a.data))
     .map(f => {
       const mat = materiaPorId(f.materiaId);
@@ -706,9 +900,10 @@ function renderFaltas() {
       return `<div class="card">
         <div class="row">
           <div class="grow">
-            <h3 style="font-size:15px">${esc(mat ? mat.nome : 'Matéria removida')}</h3>
+            <h3 style="font-size:15px">${esc(mat ? mat.nome : 'Matéria removida')} ${f.abonada ? '<span class="pill lisa ok">ABONADA</span>' : ''}</h3>
             <div class="muted num">${diaSemana(f.data)}, ${formatarData(f.data)} · ${f.qtd} aula${f.qtd === 1 ? '' : 's'}</div>
           </div>
+          <button class="small" data-abonar="${f.id}">${f.abonada ? 'Remover abono' : 'Abonar'}</button>
           <button class="small ghost-danger" data-del-falta="${f.id}">Excluir</button>
         </div>
         ${blocoConteudo}
@@ -716,9 +911,17 @@ function renderFaltas() {
     }).join('');
 
   alvo.querySelectorAll('[data-del-falta]').forEach(b => b.addEventListener('click', () => {
-    if (!confirm('Excluir esta falta?')) return;
-    db.faltas = db.faltas.filter(f => f.id !== b.dataset.delFalta);
-    salvar(); renderTudo(); toast('Falta excluída');
+    excluirComDesfazer('Falta excluída', () => {
+      db.faltas = db.faltas.filter(f => f.id !== b.dataset.delFalta);
+    });
+  }));
+  alvo.querySelectorAll('[data-abonar]').forEach(b => b.addEventListener('click', () => {
+    const f = db.faltas.find(x => x.id === b.dataset.abonar);
+    if (f) {
+      f.abonada = !f.abonada;
+      salvar(); renderTudo();
+      toast(f.abonada ? 'Falta abonada — fora do limite' : 'Abono removido — volta a contar no limite');
+    }
   }));
   alvo.querySelectorAll('[data-toggle-rec]').forEach(c => c.addEventListener('change', () => {
     const f = db.faltas.find(x => x.id === c.dataset.toggleRec);
@@ -726,29 +929,38 @@ function renderFaltas() {
   }));
 }
 
+document.getElementById('filtro-falta').addEventListener('change', ev => {
+  filtroFaltaMat = ev.target.value; renderFaltas();
+});
+
 document.getElementById('form-falta').addEventListener('submit', ev => {
   ev.preventDefault();
   const materiaId = document.getElementById('falta-materia').value;
   const data = document.getElementById('falta-data').value;
   const qtd = parseInt(document.getElementById('falta-qtd').value, 10) || 1;
+  const abonada = document.getElementById('falta-abonada').checked;
   if (!materiaId) { toast('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
-  db.faltas.push({ id: uid(), materiaId, data, qtd, recuperada: false });
+  db.faltas.push({ id: uid(), materiaId, data, qtd, recuperada: false, abonada });
   salvar(); renderTudo();
   document.getElementById('falta-qtd').value = 1;
-  toast('Falta registrada');
+  document.getElementById('falta-abonada').checked = false;
+  toast(abonada ? 'Falta abonada registrada' : 'Falta registrada');
 });
 
 /* ─────────── render: agenda ─────────── */
 function renderAgenda() {
   preencherSelectMaterias(document.getElementById('evento-materia'));
+  preencherFiltro(document.getElementById('filtro-evento'), filtroEventoMat);
   const alvo = document.getElementById('lista-eventos');
   const hoje = hojeISO();
+  document.querySelector('#aba-agenda .filtro').style.display = db.eventos.length ? '' : 'none';
   if (!db.eventos.length) {
     alvo.innerHTML = '<div class="vazio">Nenhuma prova ou atividade cadastrada.</div>';
     return;
   }
-  const futuros = db.eventos.filter(e => !e.feita && e.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
-  const passados = db.eventos.filter(e => e.feita || e.data < hoje).sort((a, b) => b.data.localeCompare(a.data));
+  const visiveis = db.eventos.filter(e => !filtroEventoMat || e.materiaId === filtroEventoMat);
+  const futuros = visiveis.filter(e => !e.feita && e.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
+  const passados = visiveis.filter(e => e.feita || e.data < hoje).sort((a, b) => b.data.localeCompare(a.data));
 
   const cartao = (e, apagado) => {
     const mat = materiaPorId(e.materiaId);
@@ -781,11 +993,45 @@ function renderAgenda() {
     if (e) { e.feita = !e.feita; salvar(); renderTudo(); toast(e.feita ? 'Marcado como concluído' : 'Reaberto'); }
   }));
   alvo.querySelectorAll('[data-del-evento]').forEach(b => b.addEventListener('click', () => {
-    if (!confirm('Excluir este item da agenda?')) return;
-    db.eventos = db.eventos.filter(e => e.id !== b.dataset.delEvento);
-    salvar(); renderTudo(); toast('Item excluído');
+    excluirComDesfazer('Item excluído da agenda', () => {
+      db.eventos = db.eventos.filter(e => e.id !== b.dataset.delEvento);
+    });
   }));
 }
+
+document.getElementById('filtro-evento').addEventListener('change', ev => {
+  filtroEventoMat = ev.target.value; renderAgenda();
+});
+
+/* exportar provas e atividades para o calendário (.ics) */
+document.getElementById('btn-ics').addEventListener('click', () => {
+  const hoje = hojeISO();
+  const futuros = db.eventos.filter(e => !e.feita && e.data >= hoje);
+  if (!futuros.length) { toast('Nenhuma prova ou atividade futura para exportar.'); return; }
+  const escICS = t => String(t).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,');
+  const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Controle de Faltas//PT-BR'];
+  for (const e of futuros) {
+    const mat = materiaPorId(e.materiaId);
+    const d = e.data.replace(/-/g, '');
+    linhas.push(
+      'BEGIN:VEVENT',
+      'UID:' + e.id + '@controle-faltas',
+      'DTSTART;VALUE=DATE:' + d,
+      'SUMMARY:' + escICS((e.tipo === 'prova' ? '📝 ' : '📌 ') + e.titulo),
+      'DESCRIPTION:' + escICS(mat ? mat.nome : ''),
+      'BEGIN:VALARM', 'TRIGGER:-PT18H', 'ACTION:DISPLAY', 'DESCRIPTION:' + escICS(e.titulo), 'END:VALARM',
+      'END:VEVENT'
+    );
+  }
+  linhas.push('END:VCALENDAR');
+  const blob = new Blob([linhas.join('\r\n')], { type: 'text/calendar' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'provas-' + hoje + '.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(`${futuros.length} evento(s) exportado(s) — abra o arquivo para adicionar ao calendário`);
+});
 
 document.getElementById('form-evento').addEventListener('submit', ev => {
   ev.preventDefault();
@@ -848,7 +1094,7 @@ function renderMaterias() {
         <button class="small" data-ed-materia="${mat.id}">Editar</button>
         <button class="small ghost-danger" data-del-materia="${mat.id}">Excluir</button>
       </div>`;
-    return `<div class="card">
+    return `<div class="card" id="mat-${mat.id}">
       ${cabecalho}
       <details class="plano"${abrirPlano}>
         <summary>Plano de aula (${aulas.length} aula${aulas.length === 1 ? '' : 's'} cadastrada${aulas.length === 1 ? '' : 's'}) ▾</summary>
@@ -907,11 +1153,12 @@ function renderMaterias() {
     const mat = materiaPorId(b.dataset.delMateria);
     if (!confirm(`Excluir "${mat.nome}" e todas as faltas, aulas e eventos dela?`)) return;
     const id = b.dataset.delMateria;
-    db.materias = db.materias.filter(m => m.id !== id);
-    db.aulas = db.aulas.filter(a => a.materiaId !== id);
-    db.faltas = db.faltas.filter(f => f.materiaId !== id);
-    db.eventos = db.eventos.filter(e => e.materiaId !== id);
-    salvar(); renderTudo(); toast('Matéria excluída');
+    excluirComDesfazer(`"${mat.nome}" excluída`, () => {
+      db.materias = db.materias.filter(m => m.id !== id);
+      db.aulas = db.aulas.filter(a => a.materiaId !== id);
+      db.faltas = db.faltas.filter(f => f.materiaId !== id);
+      db.eventos = db.eventos.filter(e => e.materiaId !== id);
+    });
   }));
   alvo.querySelectorAll('[data-del-aula]').forEach(b => b.addEventListener('click', () => {
     db.aulas = db.aulas.filter(a => a.id !== b.dataset.delAula);
@@ -1039,6 +1286,14 @@ document.getElementById('btn-lembretes').addEventListener('click', () => {
 });
 
 /* ─────────── backup ─────────── */
+function infoBackup() {
+  const el = document.getElementById('backup-info');
+  const ultimo = localStorage.getItem('controleFaltas.ultimoBackup');
+  if (!ultimo) { el.textContent = 'Nenhum backup exportado neste aparelho ainda.'; return; }
+  const dias = diasAte(ultimo) * -1;
+  el.textContent = 'Último backup: ' + formatarData(ultimo) + (dias > 30 ? ' — faz mais de um mês, que tal exportar um novo?' : '');
+}
+
 document.getElementById('btn-exportar').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -1046,6 +1301,8 @@ document.getElementById('btn-exportar').addEventListener('click', () => {
   a.download = 'controle-faltas-backup-' + hojeISO() + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
+  localStorage.setItem('controleFaltas.ultimoBackup', hojeISO());
+  infoBackup();
   toast('Backup exportado');
 });
 document.getElementById('btn-importar').addEventListener('click', () => document.getElementById('arquivo-backup').click());
@@ -1081,7 +1338,12 @@ function renderTudo() {
 document.getElementById('hoje').textContent = diaSemana(hojeISO()) + ', ' + formatarData(hojeISO());
 document.getElementById('falta-data').value = hojeISO();
 renderTudo();
+infoBackup();
 dispararLembretes();
+
+if (new URLSearchParams(location.search).get('hoje')) {
+  document.getElementById('inicio-hoje').scrollIntoView({ block: 'center' });
+}
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').catch(() => { /* sem SW (ex.: hospedagem sem suporte) — o app segue funcionando */ });
