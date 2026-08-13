@@ -561,6 +561,33 @@
         </div>
       </details>
 
+      <details class="menu-sec" id="menu-grade">
+        <summary><span class="ico-menu">🎓</span> Grade da turma</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px"><strong>Importar:</strong> pegue o código com um colega da turma e traga matérias, horários, aulas e provas de uma vez. Suas faltas e notas não são afetadas.</p>
+          <form id="form-importar-grade" style="display:flex; gap:8px; max-width:340px">
+            <input type="text" id="grade-codigo" placeholder="CÓDIGO" maxlength="8" autocapitalize="characters" autocomplete="off"
+              style="text-align:center; font-weight:800; letter-spacing:.14em; text-transform:uppercase">
+            <button class="primary" type="submit" style="flex:none">Importar</button>
+          </form>
+          <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
+          <p class="muted" style="margin:0 0 8px"><strong>Compartilhar:</strong> publique sua grade e vire o herói da turma — cada colega importa tudo em um toque. Só a grade é compartilhada (faltas e notas ficam só suas).</p>
+          <form id="form-compartilhar-grade" class="painel" style="max-width:340px">
+            <label class="campo">Nome da turma
+              <input type="text" id="grade-titulo" placeholder="Ex.: Direito 9º período noturno — PUC" maxlength="80">
+            </label>
+            <button class="small" type="submit">Gerar código da turma</button>
+          </form>
+          <div id="grade-resultado" hidden style="margin-top:12px">
+            <p class="muted" style="margin:0 0 6px">Pronto! Manda pro grupo da turma:</p>
+            <div class="row" style="gap:8px">
+              <strong id="grade-codigo-gerado" class="num" style="font-size:22px; letter-spacing:.14em"></strong>
+              <button class="small" type="button" id="btn-copiar-convite">Copiar convite</button>
+            </div>
+          </div>
+        </div>
+      </details>
+
       <details class="menu-sec" id="menu-materias">
         <summary><span class="ico-menu">📖</span> Minhas matérias <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
@@ -1064,17 +1091,24 @@ function renderInicio() {
     alvoHoje.innerHTML = `<div class="card" style="text-align:center; padding:24px 18px">
       <div style="font-size:34px; margin-bottom:6px">👋</div>
       <h3 style="margin-bottom:6px">Bem-vindo ao Faltaê!</h3>
-      <p class="muted" style="margin:0 0 14px">Em 1 minuto você configura tudo:<br>
-        <strong>1.</strong> Cadastre suas matérias com o limite de faltas<br>
-        <strong>2.</strong> Importe o plano de ensino (datas + conteúdos)<br>
-        <strong>3.</strong> Registre faltas com um toque e veja o que perdeu</p>
-      <button class="primary" data-onboarding type="button">Criar minha primeira matéria</button>
+      <p class="muted" style="margin:0 0 12px"><strong>Sua turma já usa o Faltaê?</strong><br>Pegue o código com um colega e importe a grade inteira — matérias, horários, aulas e provas — em um toque.</p>
+      <form data-form-codigo style="display:flex; gap:8px; max-width:320px; margin:0 auto 16px">
+        <input type="text" data-campo-codigo placeholder="CÓDIGO DA TURMA" maxlength="8" autocapitalize="characters" autocomplete="off"
+          style="text-align:center; font-weight:800; letter-spacing:.14em; text-transform:uppercase">
+        <button class="primary" type="submit" style="flex:none">Importar</button>
+      </form>
+      <p class="sutil" style="margin:0 0 10px">— ou monte do zero —</p>
+      <button class="small" data-onboarding type="button">Criar minha primeira matéria</button>
     </div>`;
     alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => {
       irParaAba('menu');
       document.getElementById('menu-materias').open = true;
       document.querySelector('#menu-materias details.add').open = true;
       document.getElementById('materia-nome').focus();
+    });
+    alvoHoje.querySelector('[data-form-codigo]').addEventListener('submit', ev => {
+      ev.preventDefault();
+      importarGradePorCodigo(alvoHoje.querySelector('[data-campo-codigo]').value);
     });
   } else if (!materiasHoje.length) {
     alvoHoje.innerHTML = '<div class="vazio">Sem aulas no plano para hoje. Bom descanso! 🎉</div>';
@@ -1956,6 +1990,106 @@ document.addEventListener('visibilitychange', () => {
 
 /* internet voltou: reenvia o que ficou pendente */
 window.addEventListener('online', () => agendarSync());
+
+/* ─────────── grade da turma (código de convite) ─────────── */
+function gerarCodigoTurma() {
+  const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem O/I/0/1 pra não confundir
+  let c = '';
+  const aleatorio = crypto.getRandomValues(new Uint8Array(6));
+  for (const b of aleatorio) c += alfabeto[b % alfabeto.length];
+  return c;
+}
+
+function aplicarGrade(d) {
+  const mapa = {};
+  let nm = 0, na = 0, ne = 0;
+  for (const m of (d.materias || [])) {
+    if (!m || !m.nome) continue;
+    const jaTem = db.materias.find(x => x.nome.trim().toLowerCase() === String(m.nome).trim().toLowerCase());
+    if (jaTem) { mapa[m.id] = jaTem.id; continue; }
+    const novoId = uid();
+    mapa[m.id] = novoId;
+    db.materias.push({ id: novoId, nome: String(m.nome), totalAulas: m.totalAulas || null, limitePct: m.limitePct || 25, diaSemana: m.diaSemana || null, horario: m.horario || null, creditos: m.creditos || null });
+    nm++;
+  }
+  for (const a of (d.aulas || [])) {
+    const materiaId = mapa[a.materiaId];
+    if (!materiaId || !a.data) continue;
+    if (db.aulas.some(x => x.materiaId === materiaId && x.data === a.data)) continue;
+    db.aulas.push({ id: uid(), materiaId, data: a.data, conteudo: a.conteudo || '' });
+    na++;
+  }
+  for (const e of (d.eventos || [])) {
+    const materiaId = mapa[e.materiaId];
+    if (!materiaId || !e.data || !e.titulo) continue;
+    if (db.eventos.some(x => x.materiaId === materiaId && x.data === e.data && x.titulo === e.titulo)) continue;
+    db.eventos.push({ id: uid(), materiaId, tipo: e.tipo === 'prova' ? 'prova' : 'atividade', titulo: String(e.titulo), data: e.data, descricao: e.descricao || null, feita: false });
+    ne++;
+  }
+  salvar(); renderTudo();
+  return { materias: nm, aulas: na, eventos: ne };
+}
+
+async function importarGradePorCodigo(codigo) {
+  codigo = (codigo || '').trim().toUpperCase();
+  if (!codigo) { toast('Digite o código da turma.'); return; }
+  if (!nuvemDisponivel()) { toast('Sem conexão — tente quando estiver online.'); return; }
+  const { data, error } = await nuvem.from('grades_compartilhadas').select('titulo, dados').eq('codigo', codigo).maybeSingle();
+  if (error) { toast('Não deu pra buscar agora — tente de novo em instantes.'); return; }
+  if (!data) { toast('Código não encontrado — confere com quem te passou.'); return; }
+  const d = data.dados || {};
+  const resumo = `${(d.materias || []).length} matérias, ${(d.aulas || []).length} aulas e ${(d.eventos || []).length} provas/atividades`;
+  if (!confirm(`Importar a grade "${data.titulo}"?\n\n${resumo}.\nSuas faltas e notas não mudam.`)) return;
+  const r = aplicarGrade(d);
+  irParaAba('inicio');
+  toast(r.materias + r.aulas + r.eventos
+    ? `Grade importada: +${r.materias} matérias, +${r.aulas} aulas, +${r.eventos} provas 🎉`
+    : 'Você já tinha tudo dessa grade — nada foi duplicado.');
+}
+
+document.getElementById('form-importar-grade').addEventListener('submit', ev => {
+  ev.preventDefault();
+  importarGradePorCodigo(document.getElementById('grade-codigo').value);
+});
+
+document.getElementById('form-compartilhar-grade').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if (!db.materias.length) { toast('Cadastre sua grade primeiro (matérias, aulas e provas).'); return; }
+  if (!nuvemDisponivel()) { toast('Sem conexão — tente quando estiver online.'); return; }
+  if (!usuarioNuvem) { toast('Crie uma conta grátis (seção Conta acima) pra publicar a grade.'); return; }
+  const titulo = document.getElementById('grade-titulo').value.trim();
+  if (!titulo) { toast('Dê um nome pra turma — ex.: "Direito 9º noturno — PUC".'); return; }
+  // só a estrutura da turma sai daqui — faltas, notas e recuperações NUNCA entram no pacote
+  const dados = {
+    materias: db.materias.map(m => ({ id: m.id, nome: m.nome, totalAulas: m.totalAulas, limitePct: m.limitePct, diaSemana: m.diaSemana, horario: m.horario, creditos: m.creditos })),
+    aulas: db.aulas.map(a => ({ id: a.id, materiaId: a.materiaId, data: a.data, conteudo: a.conteudo })),
+    eventos: db.eventos.map(e => ({ id: e.id, materiaId: e.materiaId, tipo: e.tipo, titulo: e.titulo, data: e.data, descricao: e.descricao || null }))
+  };
+  for (let tentativa = 0; tentativa < 4; tentativa++) {
+    const codigo = gerarCodigoTurma();
+    const { error } = await nuvem.from('grades_compartilhadas').insert({ codigo, titulo, dados, criado_por: usuarioNuvem.id });
+    if (!error) {
+      document.getElementById('grade-resultado').hidden = false;
+      document.getElementById('grade-codigo-gerado').textContent = codigo;
+      document.getElementById('btn-copiar-convite').onclick = async () => {
+        const convite = `Entra no Faltaê da nossa turma 🎯 ${location.origin}${location.pathname}?grade=${codigo}\nImporta a grade inteira (matérias, horários e provas) em um toque. Grátis, sem cadastro.`;
+        try { await navigator.clipboard.writeText(convite); toast('Convite copiado — cola no grupo da turma!'); }
+        catch { prompt('Copie o convite:', convite); }
+      };
+      toast('Grade da turma publicada! 🎓');
+      return;
+    }
+    if (error.code !== '23505') { toast('Não deu pra publicar: ' + error.message); return; }
+  }
+  toast('Tente de novo — houve colisão de códigos (raro).');
+});
+
+/* link de convite: faltaê.../?grade=CODIGO importa direto */
+const codigoConvite = new URLSearchParams(location.search).get('grade');
+if (codigoConvite) {
+  history.replaceState(null, '', location.pathname); // não re-perguntar ao recarregar
+  importarGradePorCodigo(codigoConvite);
+}
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
   if (!confirm('Sair da conta? Seus dados continuam salvos neste aparelho.')) return;
