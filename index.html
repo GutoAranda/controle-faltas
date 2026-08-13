@@ -518,7 +518,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       <div class="acoes-dados">
         <button class="small" id="btn-lembretes">Ativar lembretes</button>
         <button class="small" id="btn-ics">Exportar para o calendário (.ics)</button>
+        <button class="small" id="btn-assinar-cal">Assinar no calendário 🔄</button>
       </div>
+      <p class="sutil" style="margin:8px 0 0">Assinar no calendário: suas provas aparecem no Google Calendar e se atualizam sozinhas — recurso do plano Essencial.</p>
     </div>
   </section>
 
@@ -1866,7 +1868,10 @@ renderTudo();
 infoBackup();
 dispararLembretes();
 
-if (new URLSearchParams(location.search).get('hoje')) {
+const abaAtalho = new URLSearchParams(location.search).get('aba');
+if (abaAtalho && document.getElementById('aba-' + abaAtalho)) {
+  irParaAba(abaAtalho);
+} else if (new URLSearchParams(location.search).get('hoje')) {
   irParaAba('inicio');
   document.getElementById('inicio-hoje').scrollIntoView({ block: 'center' });
 } else {
@@ -2169,6 +2174,37 @@ document.getElementById('form-sugestao').addEventListener('submit', async ev => 
     toast('Recebido! Obrigado por construir o Faltaê 💚');
   } else {
     toast('Não deu pra enviar agora — tente de novo ou use o GitHub logo abaixo.');
+  }
+});
+
+/* ─────────── assinatura de calendário (Essencial) ─────────── */
+document.getElementById('btn-assinar-cal').addEventListener('click', async () => {
+  if (!usuarioNuvem || planoNuvem === 'gratis') {
+    toast('Assinar o calendário é um recurso do plano Essencial — crie sua conta no Menu.');
+    return;
+  }
+  if (!nuvemDisponivel()) { toast('Sem conexão — tente quando estiver online.'); return; }
+  const { data, error: erroLeitura } = await nuvem.from('dados_usuario')
+    .select('token_calendario').eq('user_id', usuarioNuvem.id).maybeSingle();
+  if (erroLeitura) {
+    toast(erroLeitura.code === '42703'
+      ? 'Este recurso está chegando — o servidor ainda não foi atualizado.'
+      : 'Não deu pra buscar seu link — tente de novo.');
+    return;
+  }
+  let token = data && data.token_calendario;
+  if (!token) {
+    token = (crypto.randomUUID() + crypto.randomUUID()).replaceAll('-', '');
+    const { error } = await nuvem.from('dados_usuario')
+      .update({ token_calendario: token }).eq('user_id', usuarioNuvem.id);
+    if (error) { toast('O servidor ainda não liberou este recurso — avise o suporte.'); return; }
+  }
+  const urlCal = 'https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/calendario?token=' + token;
+  try {
+    await navigator.clipboard.writeText(urlCal);
+    toast('Link copiado! No Google Calendar: Outras agendas › + › Com um URL.');
+  } catch {
+    prompt('Copie o link e assine no seu calendário:', urlCal);
   }
 });
 
