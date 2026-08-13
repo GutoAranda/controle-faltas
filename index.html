@@ -643,20 +643,32 @@
         </div>
       </details>
 
+      <details class="menu-sec" id="menu-instalar" hidden>
+        <summary><span class="ico-menu">📲</span> Instalar no aparelho</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Leve o Faltaê pra tela inicial: abre em um toque, funciona offline e não ocupa quase nada.</p>
+          <button class="primary small" id="btn-instalar" type="button">Instalar o app</button>
+        </div>
+      </details>
+
       <details class="menu-sec">
         <summary><span class="ico-menu">💬</span> Sugestões e problemas</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 8px">Achou um problema ou tem uma ideia? Sua opinião constrói o Faltaê.</p>
-          <div class="acoes-dados" style="margin-top:0">
-            <a class="small" style="display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:9px; padding:6px 12px; min-height:36px; text-decoration:none; color:var(--accent); font-weight:700; font-size:13px" href="https://github.com/GutoAranda/controle-faltas/issues" target="_blank" rel="noopener">Enviar sugestão</a>
-          </div>
+          <p class="muted" style="margin:12px 0 8px">Achou um problema ou tem uma ideia? Manda aqui — cai direto na mesa de quem constrói o app.</p>
+          <form id="form-sugestao" class="painel" style="max-width:420px">
+            <label class="campo">Sua mensagem
+              <textarea id="sugestao-texto" maxlength="2000" placeholder="Ex.: queria poder arquivar o semestre passado…" required></textarea>
+            </label>
+            <button class="small" type="submit">Enviar sugestão</button>
+          </form>
+          <p class="sutil" style="margin:8px 0 0">Prefere o GitHub? <a href="https://github.com/GutoAranda/controle-faltas/issues" target="_blank" rel="noopener" style="color:var(--accent)">Abra uma issue</a>.</p>
         </div>
       </details>
 
       <details class="menu-sec">
         <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Versão 2.1 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
+          <p class="muted" style="margin:12px 0 4px">Versão 2.2 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
             <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
             <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
@@ -1161,7 +1173,14 @@ function renderInicio() {
           ${of.historico.map(h => `<span class="${h.status === 'ok' ? 'ok' : (h.status === 'falta' ? 'falta' : '')}" title="semana de ${formatarData(h.seg).slice(0, 5)}"></span>`).join('')}
         </div>
       </div>
+      ${acesa ? '<button class="icone" id="btn-brag" type="button" title="Compartilhar sequência" aria-label="Compartilhar sequência">📤</button>' : ''}
     </div>`;
+    const btnBrag = document.getElementById('btn-brag');
+    if (btnBrag) btnBrag.addEventListener('click', () => {
+      const texto = `🔥 ${dias} dia${dias === 1 ? '' : 's'} de aula sem faltar${of.streak ? ` e ${of.streak} semana${of.streak === 1 ? '' : 's'} perfeita${of.streak === 1 ? '' : 's'}` : ''} — controlando tudo no Faltaê.\nhttps://gutoaranda.github.io/controle-faltas/`;
+      if (navigator.share) navigator.share({ text: texto }).catch(() => {});
+      else navigator.clipboard.writeText(texto).then(() => toast('Copiado — cola no grupo! 📤')).catch(() => {});
+    });
   }
 
   /* resumo */
@@ -2082,6 +2101,43 @@ document.getElementById('form-compartilhar-grade').addEventListener('submit', as
     if (error.code !== '23505') { toast('Não deu pra publicar: ' + error.message); return; }
   }
   toast('Tente de novo — houve colisão de códigos (raro).');
+});
+
+/* ─────────── instalar no aparelho (PWA) ─────────── */
+let promptInstalar = null;
+window.addEventListener('beforeinstallprompt', ev => {
+  ev.preventDefault();
+  promptInstalar = ev;
+  document.getElementById('menu-instalar').hidden = false;
+});
+document.getElementById('btn-instalar').addEventListener('click', async () => {
+  if (!promptInstalar) return;
+  promptInstalar.prompt();
+  const { outcome } = await promptInstalar.userChoice;
+  if (outcome === 'accepted') {
+    toast('Faltaê instalado! 🎉');
+    document.getElementById('menu-instalar').hidden = true;
+  }
+  promptInstalar = null;
+});
+
+/* ─────────── sugestões direto pra base ─────────── */
+document.getElementById('form-sugestao').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const campo = document.getElementById('sugestao-texto');
+  const texto = campo.value.trim();
+  if (texto.length < 5) { toast('Escreve um pouquinho mais 🙂'); return; }
+  let enviado = false;
+  if (nuvemDisponivel()) {
+    const { error } = await nuvem.from('sugestoes').insert({ mensagem: texto.slice(0, 2000), email: usuarioNuvem ? usuarioNuvem.email : null });
+    enviado = !error;
+  }
+  if (enviado) {
+    campo.value = '';
+    toast('Recebido! Obrigado por construir o Faltaê 💚');
+  } else {
+    toast('Não deu pra enviar agora — tente de novo ou use o GitHub logo abaixo.');
+  }
 });
 
 /* link de convite: faltaê.../?grade=CODIGO importa direto */
