@@ -1,6 +1,7 @@
 <title>Controle de Faltas</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Controle suas faltas, veja o conteúdo perdido e acompanhe provas.">
 <meta name="theme-color" content="#4056C7">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -8,60 +9,64 @@
 
 <style>
   :root {
-    --bg: #F5F6FA;
+    --bg: #F4F5FA;
     --surface: #FFFFFF;
-    --surface-2: #EDEFF7;
-    --ink: #1B2033;
-    --ink-2: #5A6178;
-    --line: #D9DCEA;
+    --surface-2: #ECEEF6;
+    --ink: #191E30;
+    --ink-2: #5B6178;
+    --ink-3: #8B90A5;
+    --line: #E2E4EF;
     --accent: #4056C7;
     --accent-ink: #FFFFFF;
-    --accent-soft: #E4E8FA;
-    --ok: #2F9E44;
-    --ok-soft: #E3F4E6;
-    --warn: #C87A06;
+    --accent-soft: #E6EAFB;
+    --ok: #22863C;
+    --ok-soft: #E1F3E5;
+    --warn: #A66605;
     --warn-soft: #FBEEDB;
-    --danger: #E03131;
+    --danger: #D02F2F;
     --danger-soft: #FBE4E4;
-    --shadow: 0 1px 3px rgba(27, 32, 51, .08);
+    --shadow: 0 1px 2px rgba(25, 30, 48, .05), 0 4px 14px rgba(25, 30, 48, .05);
+    --radius: 14px;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #12141D;
-      --surface: #1B1E2B;
-      --surface-2: #232738;
-      --ink: #E8EAF2;
-      --ink-2: #9CA2B8;
-      --line: #313648;
-      --accent: #7C8EE8;
-      --accent-ink: #12141D;
-      --accent-soft: #2A3050;
-      --ok: #69C778;
-      --ok-soft: #1E3324;
-      --warn: #E8A94D;
-      --warn-soft: #3A2E17;
-      --danger: #F27070;
-      --danger-soft: #3D2020;
-      --shadow: 0 1px 3px rgba(0, 0, 0, .35);
+      --bg: #101321;
+      --surface: #191D2E;
+      --surface-2: #232840;
+      --ink: #E9EBF5;
+      --ink-2: #A0A6BE;
+      --ink-3: #6E7490;
+      --line: #2B3049;
+      --accent: #8B9BEC;
+      --accent-ink: #101321;
+      --accent-soft: #283055;
+      --ok: #6FCB7F;
+      --ok-soft: #1C3323;
+      --warn: #E5A94F;
+      --warn-soft: #3A2E16;
+      --danger: #F07575;
+      --danger-soft: #3D1F1F;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #12141D;
-    --surface: #1B1E2B;
-    --surface-2: #232738;
-    --ink: #E8EAF2;
-    --ink-2: #9CA2B8;
-    --line: #313648;
-    --accent: #7C8EE8;
-    --accent-ink: #12141D;
-    --accent-soft: #2A3050;
-    --ok: #69C778;
-    --ok-soft: #1E3324;
-    --warn: #E8A94D;
-    --warn-soft: #3A2E17;
-    --danger: #F27070;
-    --danger-soft: #3D2020;
-    --shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    --bg: #101321;
+    --surface: #191D2E;
+    --surface-2: #232840;
+    --ink: #E9EBF5;
+    --ink-2: #A0A6BE;
+    --ink-3: #6E7490;
+    --line: #2B3049;
+    --accent: #8B9BEC;
+    --accent-ink: #101321;
+    --accent-soft: #283055;
+    --ok: #6FCB7F;
+    --ok-soft: #1C3323;
+    --warn: #E5A94F;
+    --warn-soft: #3A2E16;
+    --danger: #F07575;
+    --danger-soft: #3D1F1F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
   }
 
   * { box-sizing: border-box; }
@@ -70,119 +75,177 @@
     background: var(--bg);
     color: var(--ink);
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color: transparent;
   }
-  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  main { max-width: 560px; margin: 0 auto; padding: 12px 16px 16px; }
 
   header.app {
-    max-width: 560px; margin: 0 auto; padding: 20px 16px 4px;
+    position: sticky; top: 0; z-index: 9;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  }
+  header.app .inner {
+    max-width: 560px; margin: 0 auto; padding: 14px 16px 10px;
     display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   }
-  header.app h1 { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -.02em; }
-  header.app .hoje { color: var(--ink-2); font-size: 13px; }
+  header.app h1 { font-size: 19px; font-weight: 800; margin: 0; letter-spacing: -.02em; }
+  header.app .contexto { text-align: right; font-size: 12px; color: var(--ink-2); line-height: 1.35; }
+  header.app .contexto strong { color: var(--ink); font-weight: 700; }
 
-  h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); margin: 24px 0 10px; }
-  h2:first-child { margin-top: 4px; }
+  h2 {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--ink-3); margin: 26px 2px 10px; display: flex; align-items: baseline; justify-content: space-between;
+  }
+  h2:first-child { margin-top: 8px; }
+  h2 .extra { font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12px; color: var(--ink-3); }
 
   .card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 14px; box-shadow: var(--shadow); margin-bottom: 10px;
   }
-  .card h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .card h3 { margin: 0; font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
 
   .row { display: flex; align-items: center; gap: 10px; }
-  .row .grow { flex: 1; min-width: 0; }
+  .grow { flex: 1; min-width: 0; }
   .muted { color: var(--ink-2); font-size: 13px; }
+  .sutil { color: var(--ink-3); font-size: 12.5px; }
   .num { font-variant-numeric: tabular-nums; }
+  .trunca { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .pill {
-    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; letter-spacing: .03em;
     padding: 3px 9px; border-radius: 999px; white-space: nowrap;
   }
+  .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   .pill.ok { background: var(--ok-soft); color: var(--ok); }
   .pill.warn { background: var(--warn-soft); color: var(--warn); }
   .pill.danger { background: var(--danger-soft); color: var(--danger); }
   .pill.accent { background: var(--accent-soft); color: var(--accent); }
+  .pill.lisa::before { display: none; }
 
-  .bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
-  .bar > span { display: block; height: 100%; border-radius: 999px; transition: width .3s; }
-  .bar .fill-ok { background: var(--ok); }
-  .bar .fill-warn { background: var(--warn); }
-  .bar .fill-danger { background: var(--danger); }
+  .bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+  .bar > span { display: block; height: 100%; border-radius: 999px; transition: width .35s ease; }
+  .fill-ok { background: var(--ok); }
+  .fill-warn { background: var(--warn); }
+  .fill-danger { background: var(--danger); }
+  .fill-accent { background: var(--accent); }
 
   button {
-    font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line);
-    background: var(--surface); color: var(--ink); padding: 10px 14px;
+    font: inherit; cursor: pointer; border-radius: 11px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink); padding: 10px 14px; min-height: 44px;
+    transition: transform .08s ease, background .15s ease;
   }
+  button:active { transform: scale(.97); }
   button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
-  button.small { padding: 5px 10px; font-size: 13px; border-radius: 8px; }
+  button.small { padding: 6px 12px; font-size: 13px; border-radius: 9px; min-height: 36px; }
   button.ghost-danger { color: var(--danger); border-color: var(--line); background: transparent; }
-  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+  button.icone { min-height: 36px; min-width: 36px; padding: 6px; display: inline-flex; align-items: center; justify-content: center; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-visible {
     outline: 2px solid var(--accent); outline-offset: 2px;
   }
 
-  form.painel { display: grid; gap: 10px; margin-bottom: 14px; }
-  label.campo { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  form.painel { display: grid; gap: 12px; }
+  label.campo { display: grid; gap: 5px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
   input, select, textarea {
-    font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
-    border-radius: 10px; padding: 10px 12px; width: 100%;
+    font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 12px; width: 100%; min-height: 44px;
   }
   textarea { min-height: 90px; resize: vertical; }
   .campos-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
   .vazio {
-    border: 1px dashed var(--line); border-radius: 12px; padding: 20px 16px;
-    text-align: center; color: var(--ink-2); font-size: 14px;
+    border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 22px 16px;
+    text-align: center; color: var(--ink-3); font-size: 14px; line-height: 1.55;
   }
+  .vazio strong { color: var(--ink-2); }
 
   .lista-conteudo { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-  .lista-conteudo li {
-    background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-size: 14px;
+  .lista-conteudo li { background: var(--surface-2); border-radius: 9px; padding: 8px 10px; font-size: 14px; }
+  .lista-conteudo li .quando { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; min-height: 36px; }
+  .check input { width: 20px; height: 20px; min-height: 0; accent-color: var(--accent); }
+
+  /* ── hoje ── */
+  .aula-hoje { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+  .aula-hoje + .aula-hoje { border-top: 1px solid var(--line); }
+  .aula-hoje .info { flex: 1; min-width: 0; }
+  .aula-hoje .nome { font-size: 14px; font-weight: 700; }
+  .btn-falta { min-width: 92px; font-size: 13px; font-weight: 700; }
+  .btn-falta.marcada { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+
+  .lembrete {
+    background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+    border-radius: var(--radius); padding: 12px 14px; font-size: 14px; font-weight: 600; margin: 10px 0 4px;
   }
-  .lista-conteudo li .quando { font-size: 12px; color: var(--ink-2); }
+  .lembrete .muted-2 { font-weight: 400; opacity: .85; }
 
-  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
-  .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px 8px 10px; text-align: center; box-shadow: var(--shadow);
+  }
+  .tile .valor { font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .tile .rotulo { font-size: 10.5px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .07em; margin-top: 3px; }
 
-  .risco-topo { display: grid; gap: 10px; }
+  /* ── formulários recolhidos ── */
+  details.add { margin-bottom: 10px; }
+  details.add > summary {
+    list-style: none; cursor: pointer; user-select: none;
+    display: flex; align-items: center; gap: 8px; min-height: 44px;
+    border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 10px 14px;
+    color: var(--accent); font-size: 14px; font-weight: 700;
+  }
+  details.add > summary::-webkit-details-marker { display: none; }
+  details.add > summary::before { content: '＋'; font-size: 17px; font-weight: 800; }
+  details.add[open] > summary { border-style: solid; border-color: var(--accent); margin-bottom: 10px; }
+  details.add .corpo { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+
+  details.plano { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+  details.plano > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent); list-style: none; min-height: 36px; display: flex; align-items: center; }
+  details.plano > summary::-webkit-details-marker { display: none; }
+
+  details.passadas { margin-top: 4px; }
+  details.passadas > summary { list-style: none; cursor: pointer; color: var(--ink-3); font-size: 13px; font-weight: 600; padding: 10px 2px; min-height: 40px; display: flex; align-items: center; }
+  details.passadas > summary::-webkit-details-marker { display: none; }
 
   nav.abas {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    background: var(--surface); border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom);
   }
   nav.abas .inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
   nav.abas button {
-    border: 0; background: none; border-radius: 0; padding: 8px 4px 10px;
-    display: grid; justify-items: center; gap: 2px; font-size: 11px; font-weight: 600; color: var(--ink-2);
+    border: 0; background: none; border-radius: 0; padding: 9px 4px 10px; min-height: 0;
+    display: grid; justify-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; color: var(--ink-3);
+    letter-spacing: .02em;
   }
-  nav.abas button svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  nav.abas button:active { transform: none; }
+  nav.abas button svg { width: 23px; height: 23px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s ease; }
   nav.abas button[aria-current="page"] { color: var(--accent); }
+  nav.abas button[aria-current="page"] svg { transform: translateY(-1px); }
 
   .aba { display: none; }
-  .aba.ativa { display: block; }
+  .aba.ativa { display: block; animation: entrar .2s ease; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
   .acoes-dados { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
-  details.plano { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
-  details.plano summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--accent); list-style: none; }
-  details.plano summary::-webkit-details-marker { display: none; }
-
-  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .tile {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    padding: 12px 10px; text-align: center; box-shadow: var(--shadow);
+  #toast {
+    position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 16px); z-index: 20;
+    background: var(--ink); color: var(--bg);
+    padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+    max-width: min(90vw, 480px); text-align: center;
   }
-  .tile .valor { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .tile .rotulo { font-size: 11px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
-
-  .lembrete {
-    background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger);
-    border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 600; margin-bottom: 12px;
-  }
-  .lembrete .muted-2 { font-weight: 400; opacity: .85; }
-
-  #btn-faltei-hoje { margin-bottom: 4px; }
+  #toast.on { opacity: 1; transform: translate(-50%, 0); }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
@@ -190,18 +253,24 @@
 </style>
 
 <header class="app">
-  <h1>Controle de Faltas</h1>
-  <span class="hoje" id="hoje"></span>
+  <div class="inner">
+    <h1>Controle de Faltas</h1>
+    <div class="contexto"><strong id="hoje"></strong><br><span id="semana"></span></div>
+  </div>
 </header>
 
 <main>
   <!-- ══════════ INÍCIO ══════════ -->
   <section class="aba ativa" id="aba-inicio">
     <div id="inicio-lembrete"></div>
-    <button class="primary" id="btn-faltei-hoje" style="width:100%">Faltei hoje — registrar nas aulas do dia</button>
+
+    <h2>Hoje <span class="extra num" id="hoje-extra"></span></h2>
+    <div id="inicio-hoje"></div>
+
     <h2>Resumo do semestre</h2>
     <div id="inicio-resumo"></div>
-    <h2>Situação por matéria</h2>
+
+    <h2>Situação por matéria <span class="extra">pior primeiro</span></h2>
     <div id="inicio-materias"></div>
 
     <h2>Conteúdos a recuperar</h2>
@@ -213,86 +282,102 @@
 
   <!-- ══════════ FALTAS ══════════ -->
   <section class="aba" id="aba-faltas">
-    <h2>Registrar falta</h2>
-    <form class="painel card" id="form-falta">
-      <label class="campo">Matéria
-        <select id="falta-materia" required></select>
-      </label>
-      <div class="campos-2">
-        <label class="campo">Data
-          <input type="date" id="falta-data" required>
-        </label>
-        <label class="campo">Aulas perdidas
-          <input type="number" id="falta-qtd" min="1" max="10" value="1" required>
-        </label>
+    <h2>Registrar</h2>
+    <details class="add">
+      <summary>Registrar falta em outra data</summary>
+      <div class="corpo">
+        <form class="painel" id="form-falta">
+          <label class="campo">Matéria
+            <select id="falta-materia" required></select>
+          </label>
+          <div class="campos-2">
+            <label class="campo">Data
+              <input type="date" id="falta-data" required>
+            </label>
+            <label class="campo">Aulas perdidas
+              <input type="number" id="falta-qtd" min="1" max="10" value="1" required>
+            </label>
+          </div>
+          <button class="primary" type="submit">Registrar falta</button>
+        </form>
       </div>
-      <button class="primary" type="submit">Registrar falta</button>
-    </form>
+    </details>
+    <p class="sutil" style="margin:0 2px 0">Dica: para faltas de hoje, use os botões da tela <strong>Início</strong>.</p>
 
-    <h2>Histórico de faltas</h2>
+    <h2>Histórico <span class="extra num" id="faltas-extra"></span></h2>
     <div id="lista-faltas"></div>
   </section>
 
   <!-- ══════════ AGENDA ══════════ -->
   <section class="aba" id="aba-agenda">
-    <h2>Nova prova ou atividade</h2>
-    <form class="painel card" id="form-evento">
-      <div class="campos-2">
-        <label class="campo">Tipo
-          <select id="evento-tipo">
-            <option value="prova">Prova</option>
-            <option value="atividade">Atividade</option>
-          </select>
-        </label>
-        <label class="campo">Data
-          <input type="date" id="evento-data" required>
-        </label>
+    <h2>Adicionar</h2>
+    <details class="add">
+      <summary>Nova prova ou atividade</summary>
+      <div class="corpo">
+        <form class="painel" id="form-evento">
+          <div class="campos-2">
+            <label class="campo">Tipo
+              <select id="evento-tipo">
+                <option value="prova">Prova</option>
+                <option value="atividade">Atividade</option>
+              </select>
+            </label>
+            <label class="campo">Data
+              <input type="date" id="evento-data" required>
+            </label>
+          </div>
+          <label class="campo">Matéria
+            <select id="evento-materia" required></select>
+          </label>
+          <label class="campo">Título
+            <input type="text" id="evento-titulo" placeholder="Ex.: P1 — Capítulos 1 a 3" required>
+          </label>
+          <button class="primary" type="submit">Adicionar à agenda</button>
+        </form>
       </div>
-      <label class="campo">Matéria
-        <select id="evento-materia" required></select>
-      </label>
-      <label class="campo">Título
-        <input type="text" id="evento-titulo" placeholder="Ex.: P1 — Capítulos 1 a 3" required>
-      </label>
-      <button class="primary" type="submit">Adicionar à agenda</button>
-    </form>
+    </details>
+
+    <h2>Próximas</h2>
+    <div id="lista-eventos"></div>
 
     <h2>Lembretes</h2>
     <div class="card">
-      <p class="muted" style="margin:0 0 4px">Ao abrir o app na véspera (ou no dia) de uma prova, você recebe um aviso no aparelho. Provas de hoje e de amanhã também aparecem em destaque na tela inicial.</p>
+      <p class="muted" style="margin:0 0 4px">Ao abrir o app na véspera (ou no dia) de uma prova, você recebe um aviso no aparelho. Provas de hoje e amanhã também aparecem em destaque no Início.</p>
       <div class="acoes-dados">
         <button class="small" id="btn-lembretes">Ativar lembretes neste aparelho</button>
       </div>
     </div>
-
-    <h2>Agenda</h2>
-    <div id="lista-eventos"></div>
   </section>
 
   <!-- ══════════ MATÉRIAS ══════════ -->
   <section class="aba" id="aba-materias">
-    <h2>Nova matéria</h2>
-    <form class="painel card" id="form-materia">
-      <label class="campo">Nome da matéria
-        <input type="text" id="materia-nome" placeholder="Ex.: Cálculo I" required>
-      </label>
-      <div class="campos-2">
-        <label class="campo">Total de aulas no semestre
-          <input type="number" id="materia-total" min="1" max="500" placeholder="Ex.: 64" required>
-        </label>
-        <label class="campo">Limite de faltas (%)
-          <input type="number" id="materia-limite" min="1" max="100" value="25" required>
-        </label>
+    <h2>Gerenciar</h2>
+    <details class="add">
+      <summary>Nova matéria</summary>
+      <div class="corpo">
+        <form class="painel" id="form-materia">
+          <label class="campo">Nome da matéria
+            <input type="text" id="materia-nome" placeholder="Ex.: Direito Civil IX" required>
+          </label>
+          <div class="campos-2">
+            <label class="campo">Total de aulas no semestre
+              <input type="number" id="materia-total" min="1" max="500" placeholder="Ex.: 17" required>
+            </label>
+            <label class="campo">Limite de faltas (%)
+              <input type="number" id="materia-limite" min="1" max="100" value="25" required>
+            </label>
+          </div>
+          <button class="primary" type="submit">Salvar matéria</button>
+        </form>
       </div>
-      <button class="primary" type="submit">Salvar matéria</button>
-    </form>
+    </details>
 
-    <h2>Minhas matérias</h2>
+    <h2>Minhas matérias <span class="extra num" id="materias-extra"></span></h2>
     <div id="lista-materias"></div>
 
     <h2>Backup dos dados</h2>
     <div class="card">
-      <p class="muted" style="margin:0 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando.</p>
+      <p class="muted" style="margin:0 0 4px">Seus dados ficam salvos apenas neste aparelho. Exporte um backup de vez em quando — e use-o para levar tudo para outro aparelho.</p>
       <div class="acoes-dados">
         <button class="small" id="btn-exportar">Exportar backup</button>
         <button class="small" id="btn-importar">Importar backup</button>
@@ -302,22 +387,24 @@
   </section>
 </main>
 
+<div id="toast" role="status" aria-live="polite"></div>
+
 <nav class="abas" aria-label="Navegação principal">
   <div class="inner">
     <button data-aba="inicio" aria-current="page">
-      <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5M5.5 10v9h13v-9"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 10v9h13v-9"/></svg>
       Início
     </button>
     <button data-aba="faltas">
-      <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9.5 14.5l5 5M14.5 14.5l-5 5"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9.5 14.5l5 5M14.5 14.5l-5 5"/></svg>
       Faltas
     </button>
     <button data-aba="agenda">
-      <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg>
       Agenda
     </button>
     <button data-aba="materias">
-      <svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 16.5A3.5 3.5 0 0 1 8.5 13H19"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 16.5A3.5 3.5 0 0 1 8.5 13H19"/></svg>
       Matérias
     </button>
   </div>
@@ -365,6 +452,16 @@ function somarDias(iso, n) {
   d.setDate(d.getDate() + n);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
+function diasAte(iso) {
+  return Math.round((new Date(iso + 'T12:00:00') - new Date(hojeISO() + 'T12:00:00')) / 864e5);
+}
+function chipPrazo(iso) {
+  const dias = diasAte(iso);
+  if (dias === 0) return { texto: 'HOJE', cls: 'danger' };
+  if (dias === 1) return { texto: 'amanhã', cls: 'warn' };
+  if (dias <= 7) return { texto: `em ${dias} dias`, cls: 'warn' };
+  return { texto: `em ${dias} dias`, cls: 'accent' };
+}
 function normalizarDataDigitada(texto) {
   texto = texto.trim();
   let m = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -396,8 +493,26 @@ function conteudosDaFalta(f) {
   return db.aulas.filter(a => a.materiaId === f.materiaId && a.data === f.data);
 }
 
+function infoSemestre() {
+  if (!db.aulas.length) return null;
+  const datas = db.aulas.map(a => a.data).sort();
+  const ini = datas[0], fim = datas[datas.length - 1];
+  const total = Math.max(1, Math.round((new Date(fim + 'T12:00:00') - new Date(ini + 'T12:00:00')) / 6048e5) + 1);
+  const decorrido = Math.floor((new Date(hojeISO() + 'T12:00:00') - new Date(ini + 'T12:00:00')) / 6048e5) + 1;
+  return { atual: Math.min(total, Math.max(1, decorrido)), total, ini, fim };
+}
+
 function esc(t) {
   return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ─────────── feedback (toast) ─────────── */
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('on'), 2600);
 }
 
 /* ─────────── navegação por abas ─────────── */
@@ -413,43 +528,89 @@ document.querySelectorAll('nav.abas button').forEach(btn => {
 
 /* ─────────── render: início ─────────── */
 function renderInicio() {
-  const hojeRef = hojeISO();
+  const hoje = hojeISO();
 
+  /* lembrete de provas hoje/amanhã */
   const alvoLem = document.getElementById('inicio-lembrete');
   const perto = db.eventos
-    .filter(e => !e.feita && e.data >= hojeRef && e.data <= somarDias(hojeRef, 1))
+    .filter(e => !e.feita && e.data >= hoje && e.data <= somarDias(hoje, 1))
     .sort((a, b) => a.data.localeCompare(b.data));
   alvoLem.innerHTML = perto.map(e => {
     const mat = materiaPorId(e.materiaId);
-    return `<div class="lembrete">🔔 ${e.tipo === 'prova' ? 'Prova' : 'Atividade'} ${e.data === hojeRef ? 'HOJE' : 'amanhã'}: ${esc(e.titulo)}
+    return `<div class="lembrete">🔔 ${e.tipo === 'prova' ? 'Prova' : 'Atividade'} ${e.data === hoje ? 'HOJE' : 'amanhã'}: ${esc(e.titulo)}
       <span class="muted-2">· ${esc(mat ? mat.nome : '?')}</span></div>`;
   }).join('');
 
+  /* hoje: aulas do dia com falta em um toque */
+  const alvoHoje = document.getElementById('inicio-hoje');
+  const aulasHoje = db.aulas.filter(a => a.data === hoje);
+  const materiasHoje = [...new Set(aulasHoje.map(a => a.materiaId))]
+    .map(id => materiaPorId(id)).filter(Boolean);
+  document.getElementById('hoje-extra').textContent = materiasHoje.length
+    ? `${materiasHoje.length} aula${materiasHoje.length === 1 ? '' : 's'}` : '';
+  if (!db.materias.length) {
+    alvoHoje.innerHTML = '<div class="vazio">Bem-vindo! Cadastre suas matérias na aba <strong>Matérias</strong> para começar.</div>';
+  } else if (!materiasHoje.length) {
+    alvoHoje.innerHTML = '<div class="vazio">Sem aulas no plano para hoje. Bom descanso! 🎉</div>';
+  } else {
+    alvoHoje.innerHTML = `<div class="card">` + materiasHoje.map(mat => {
+      const conteudo = aulasHoje.filter(a => a.materiaId === mat.id).map(a => esc(a.conteudo)).join(' · ');
+      const marcada = db.faltas.some(f => f.materiaId === mat.id && f.data === hoje);
+      return `<div class="aula-hoje">
+        <div class="info">
+          <div class="nome trunca">${esc(mat.nome)}</div>
+          <div class="sutil trunca">${conteudo}</div>
+        </div>
+        <button class="btn-falta small ${marcada ? 'marcada' : ''}" data-falta-hoje="${mat.id}" aria-pressed="${marcada}">
+          ${marcada ? 'Faltei ✓' : 'Faltei'}
+        </button>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  alvoHoje.querySelectorAll('[data-falta-hoje]').forEach(b => b.addEventListener('click', () => {
+    const mid = b.dataset.faltaHoje;
+    const existente = db.faltas.find(f => f.materiaId === mid && f.data === hoje);
+    const mat = materiaPorId(mid);
+    if (existente) {
+      db.faltas = db.faltas.filter(f => f.id !== existente.id);
+      toast(`Falta desfeita — ${mat ? mat.nome : ''}`);
+    } else {
+      db.faltas.push({ id: uid(), materiaId: mid, data: hoje, qtd: 1, recuperada: false });
+      toast(`Falta registrada — ${mat ? mat.nome : ''}`);
+    }
+    salvar(); renderTudo();
+  }));
+
+  /* resumo do semestre */
   const alvoRes = document.getElementById('inicio-resumo');
   if (!db.materias.length) {
     alvoRes.innerHTML = '';
   } else {
-    const dadas = db.aulas.filter(a => a.data <= hojeRef).length;
+    const dadas = db.aulas.filter(a => a.data <= hoje).length;
     const totFaltas = db.faltas.reduce((s, f) => s + f.qtd, 0);
     const presenca = dadas ? Math.max(0, Math.round((dadas - Math.min(dadas, totFaltas)) / dadas * 100)) : 100;
     const aRec = db.faltas.filter(f => !f.recuperada && conteudosDaFalta(f).length).length;
     const proxProva = db.eventos
-      .filter(e => !e.feita && e.tipo === 'prova' && e.data >= hojeRef)
+      .filter(e => !e.feita && e.tipo === 'prova' && e.data >= hoje)
       .sort((a, b) => a.data.localeCompare(b.data))[0];
     alvoRes.innerHTML = `<div class="tiles">
       <div class="tile"><div class="valor">${presenca}%</div><div class="rotulo">Presença até hoje</div></div>
       <div class="tile"><div class="valor">${totFaltas}</div><div class="rotulo">Faltas no semestre</div></div>
-      <div class="tile"><div class="valor">${aRec}</div><div class="rotulo">Conteúdos a recuperar</div></div>
+      <div class="tile"><div class="valor">${aRec}</div><div class="rotulo">A recuperar</div></div>
       <div class="tile"><div class="valor">${proxProva ? formatarData(proxProva.data).slice(0, 5) : '—'}</div><div class="rotulo">Próxima prova</div></div>
     </div>`;
   }
 
+  /* situação por matéria — pior primeiro */
   const alvoMat = document.getElementById('inicio-materias');
   if (!db.materias.length) {
     alvoMat.innerHTML = '<div class="vazio">Cadastre suas matérias na aba <strong>Matérias</strong> para começar.</div>';
   } else {
-    alvoMat.innerHTML = db.materias.map(mat => {
-      const r = resumoMateria(mat);
+    const ordenadas = [...db.materias]
+      .map(mat => ({ mat, r: resumoMateria(mat) }))
+      .sort((a, b) => b.r.pct - a.r.pct || a.mat.nome.localeCompare(b.mat.nome));
+    alvoMat.innerHTML = ordenadas.map(({ mat, r }) => {
       const largura = Math.min(100, Math.round(r.pct * 100));
       return `<div class="card">
         <div class="row">
@@ -457,13 +618,14 @@ function renderInicio() {
           <span class="pill ${r.nivel}">${r.rotulo}</span>
         </div>
         <div class="muted num" style="margin-top:4px">
-          ${r.usadas} de ${r.maxFaltas} faltas usadas · ainda pode faltar <strong>${r.restam}</strong> aula${r.restam === 1 ? '' : 's'}
+          ${r.usadas} de ${r.maxFaltas} faltas usadas · pode faltar mais <strong>${r.restam}</strong>
         </div>
-        <div class="bar"><span class="fill-${r.nivel}" style="width:${largura}%"></span></div>
+        <div class="bar" role="img" aria-label="${r.usadas} de ${r.maxFaltas} faltas usadas"><span class="fill-${r.nivel}" style="width:${largura}%"></span></div>
       </div>`;
     }).join('');
   }
 
+  /* conteúdos a recuperar */
   const pendentes = db.faltas.filter(f => !f.recuperada && conteudosDaFalta(f).length);
   const alvoRec = document.getElementById('inicio-recuperar');
   if (!pendentes.length) {
@@ -485,12 +647,14 @@ function renderInicio() {
         </div>`;
       }).join('');
   }
+  alvoRec.querySelectorAll('[data-recuperar]').forEach(b => b.addEventListener('click', () => {
+    const f = db.faltas.find(x => x.id === b.dataset.recuperar);
+    if (f) { f.recuperada = true; salvar(); renderTudo(); toast('Conteúdo marcado como recuperado 👏'); }
+  }));
 
-  const hoje = hojeISO();
-  const limite = new Date(hoje + 'T12:00:00'); limite.setDate(limite.getDate() + 14);
-  const limiteISO = limite.getFullYear() + '-' + String(limite.getMonth() + 1).padStart(2, '0') + '-' + String(limite.getDate()).padStart(2, '0');
+  /* próximos 14 dias */
   const proximos = db.eventos
-    .filter(e => !e.feita && e.data >= hoje && e.data <= limiteISO)
+    .filter(e => !e.feita && e.data >= hoje && e.data <= somarDias(hoje, 14))
     .sort((a, b) => a.data.localeCompare(b.data));
   const alvoAg = document.getElementById('inicio-agenda');
   if (!proximos.length) {
@@ -498,47 +662,33 @@ function renderInicio() {
   } else {
     alvoAg.innerHTML = proximos.map(e => {
       const mat = materiaPorId(e.materiaId);
+      const prazo = chipPrazo(e.data);
       return `<div class="card row">
-        <span class="pill ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIVIDADE'}</span>
+        <span class="pill lisa ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIV.'}</span>
         <div class="grow">
           <strong style="font-size:14px">${esc(e.titulo)}</strong>
-          <div class="muted">${esc(mat ? mat.nome : '?')}</div>
+          <div class="muted trunca">${esc(mat ? mat.nome : '?')} · ${diaSemana(e.data)} ${formatarData(e.data).slice(0, 5)}</div>
         </div>
-        <span class="muted num">${diaSemana(e.data)} ${formatarData(e.data).slice(0, 5)}</span>
+        <span class="pill lisa ${prazo.cls}">${prazo.texto}</span>
       </div>`;
     }).join('');
   }
-
-  alvoRec.querySelectorAll('[data-recuperar]').forEach(b => b.addEventListener('click', () => {
-    const f = db.faltas.find(x => x.id === b.dataset.recuperar);
-    if (f) { f.recuperada = true; salvar(); renderTudo(); }
-  }));
 }
-
-document.getElementById('btn-faltei-hoje').addEventListener('click', () => {
-  const hoje = hojeISO();
-  const materiasHoje = [...new Set(db.aulas.filter(a => a.data === hoje).map(a => a.materiaId))];
-  if (!materiasHoje.length) { alert('Nenhuma aula no plano para hoje (' + formatarData(hoje) + ').'); return; }
-  const novas = materiasHoje.filter(mid => !db.faltas.some(f => f.materiaId === mid && f.data === hoje));
-  if (!novas.length) { alert('As faltas de hoje já estão registradas.'); return; }
-  const nomes = novas.map(mid => { const m = materiaPorId(mid); return m ? m.nome : '?'; }).join('\n· ');
-  if (!confirm('Registrar 1 falta hoje em:\n· ' + nomes)) return;
-  for (const mid of novas) db.faltas.push({ id: uid(), materiaId: mid, data: hoje, qtd: 1, recuperada: false });
-  salvar(); renderTudo();
-});
 
 /* ─────────── render: faltas ─────────── */
 function preencherSelectMaterias(sel) {
   sel.innerHTML = db.materias.length
-    ? db.materias.map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('')
+    ? [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('')
     : '<option value="">— cadastre uma matéria primeiro —</option>';
 }
 
 function renderFaltas() {
   preencherSelectMaterias(document.getElementById('falta-materia'));
   const alvo = document.getElementById('lista-faltas');
+  const total = db.faltas.reduce((s, f) => s + f.qtd, 0);
+  document.getElementById('faltas-extra').textContent = db.faltas.length ? `${total} aula${total === 1 ? '' : 's'}` : '';
   if (!db.faltas.length) {
-    alvo.innerHTML = '<div class="vazio">Nenhuma falta registrada até agora.</div>';
+    alvo.innerHTML = '<div class="vazio">Nenhuma falta registrada até agora. Que continue assim! 💪</div>';
     return;
   }
   alvo.innerHTML = [...db.faltas]
@@ -548,11 +698,11 @@ function renderFaltas() {
       const conteudos = conteudosDaFalta(f);
       const blocoConteudo = conteudos.length
         ? `<ul class="lista-conteudo">${conteudos.map(a => `<li>${esc(a.conteudo)}</li>`).join('')}</ul>
-           <label class="check" style="margin-top:8px">
+           <label class="check" style="margin-top:6px">
              <input type="checkbox" data-toggle-rec="${f.id}" ${f.recuperada ? 'checked' : ''}>
              Conteúdo recuperado
            </label>`
-        : `<div class="muted" style="margin-top:6px">Sem plano de aula para esta data — cadastre o plano na aba Matérias para saber o que você perdeu.</div>`;
+        : `<div class="sutil" style="margin-top:6px">Sem plano de aula nesta data — cadastre o plano na aba Matérias para saber o que perdeu.</div>`;
       return `<div class="card">
         <div class="row">
           <div class="grow">
@@ -568,7 +718,7 @@ function renderFaltas() {
   alvo.querySelectorAll('[data-del-falta]').forEach(b => b.addEventListener('click', () => {
     if (!confirm('Excluir esta falta?')) return;
     db.faltas = db.faltas.filter(f => f.id !== b.dataset.delFalta);
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Falta excluída');
   }));
   alvo.querySelectorAll('[data-toggle-rec]').forEach(c => c.addEventListener('change', () => {
     const f = db.faltas.find(x => x.id === c.dataset.toggleRec);
@@ -581,55 +731,66 @@ document.getElementById('form-falta').addEventListener('submit', ev => {
   const materiaId = document.getElementById('falta-materia').value;
   const data = document.getElementById('falta-data').value;
   const qtd = parseInt(document.getElementById('falta-qtd').value, 10) || 1;
-  if (!materiaId) { alert('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
+  if (!materiaId) { toast('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
   db.faltas.push({ id: uid(), materiaId, data, qtd, recuperada: false });
   salvar(); renderTudo();
   document.getElementById('falta-qtd').value = 1;
+  toast('Falta registrada');
 });
 
 /* ─────────── render: agenda ─────────── */
 function renderAgenda() {
   preencherSelectMaterias(document.getElementById('evento-materia'));
   const alvo = document.getElementById('lista-eventos');
+  const hoje = hojeISO();
   if (!db.eventos.length) {
     alvo.innerHTML = '<div class="vazio">Nenhuma prova ou atividade cadastrada.</div>';
     return;
   }
-  alvo.innerHTML = [...db.eventos]
-    .sort((a, b) => a.data.localeCompare(b.data))
-    .map(e => {
-      const mat = materiaPorId(e.materiaId);
-      const passado = e.data < hojeISO();
-      return `<div class="card" style="${e.feita || passado ? 'opacity:.6' : ''}">
-        <div class="row">
-          <span class="pill ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIVIDADE'}</span>
-          <div class="grow">
-            <strong style="font-size:14px">${esc(e.titulo)}</strong>
-            <div class="muted num">${esc(mat ? mat.nome : '?')} · ${diaSemana(e.data)}, ${formatarData(e.data)}</div>
-          </div>
+  const futuros = db.eventos.filter(e => !e.feita && e.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
+  const passados = db.eventos.filter(e => e.feita || e.data < hoje).sort((a, b) => b.data.localeCompare(a.data));
+
+  const cartao = (e, apagado) => {
+    const mat = materiaPorId(e.materiaId);
+    const prazo = !apagado ? chipPrazo(e.data) : null;
+    return `<div class="card" style="${apagado ? 'opacity:.55' : ''}">
+      <div class="row">
+        <span class="pill lisa ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIV.'}</span>
+        <div class="grow">
+          <strong style="font-size:14px">${esc(e.titulo)}</strong>
+          <div class="muted num trunca">${esc(mat ? mat.nome : '?')} · ${diaSemana(e.data)}, ${formatarData(e.data)}</div>
         </div>
-        <div class="acoes-dados">
-          <button class="small" data-feito="${e.id}">${e.feita ? 'Reabrir' : 'Concluído'}</button>
-          <button class="small ghost-danger" data-del-evento="${e.id}">Excluir</button>
-        </div>
-      </div>`;
-    }).join('');
+        ${prazo ? `<span class="pill lisa ${prazo.cls}">${prazo.texto}</span>` : ''}
+      </div>
+      <div class="acoes-dados">
+        <button class="small" data-feito="${e.id}">${e.feita ? 'Reabrir' : 'Concluído'}</button>
+        <button class="small ghost-danger" data-del-evento="${e.id}">Excluir</button>
+      </div>
+    </div>`;
+  };
+
+  alvo.innerHTML =
+    (futuros.length ? futuros.map(e => cartao(e, false)).join('') : '<div class="vazio">Nada pendente daqui para frente. 🎉</div>') +
+    (passados.length ? `<details class="passadas">
+        <summary>Passadas e concluídas (${passados.length}) ▾</summary>
+        ${passados.map(e => cartao(e, true)).join('')}
+      </details>` : '');
 
   alvo.querySelectorAll('[data-feito]').forEach(b => b.addEventListener('click', () => {
     const e = db.eventos.find(x => x.id === b.dataset.feito);
-    if (e) { e.feita = !e.feita; salvar(); renderTudo(); }
+    if (e) { e.feita = !e.feita; salvar(); renderTudo(); toast(e.feita ? 'Marcado como concluído' : 'Reaberto'); }
   }));
   alvo.querySelectorAll('[data-del-evento]').forEach(b => b.addEventListener('click', () => {
     if (!confirm('Excluir este item da agenda?')) return;
     db.eventos = db.eventos.filter(e => e.id !== b.dataset.delEvento);
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Item excluído');
   }));
 }
 
 document.getElementById('form-evento').addEventListener('submit', ev => {
   ev.preventDefault();
   const materiaId = document.getElementById('evento-materia').value;
-  if (!materiaId) { alert('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
+  if (!materiaId) { toast('Cadastre uma matéria primeiro, na aba Matérias.'); return; }
   db.eventos.push({
     id: uid(),
     tipo: document.getElementById('evento-tipo').value,
@@ -640,6 +801,7 @@ document.getElementById('form-evento').addEventListener('submit', ev => {
   });
   salvar(); renderTudo();
   ev.target.reset();
+  toast('Adicionado à agenda');
 });
 
 /* ─────────── render: matérias ─────────── */
@@ -648,13 +810,16 @@ let edAulaId = null;
 
 function renderMaterias() {
   const alvo = document.getElementById('lista-materias');
+  document.getElementById('materias-extra').textContent = db.materias.length || '';
   if (!db.materias.length) {
-    alvo.innerHTML = '<div class="vazio">Nenhuma matéria cadastrada ainda.</div>';
+    alvo.innerHTML = '<div class="vazio">Nenhuma matéria cadastrada ainda. Toque em <strong>＋ Nova matéria</strong> acima.</div>';
     return;
   }
-  alvo.innerHTML = db.materias.map(mat => {
+  const hoje = hojeISO();
+  alvo.innerHTML = [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(mat => {
     const r = resumoMateria(mat);
     const aulas = db.aulas.filter(a => a.materiaId === mat.id).sort((a, b) => a.data.localeCompare(b.data));
+    const dadas = aulas.filter(a => a.data <= hoje).length;
     const abrirPlano = aulas.some(a => a.id === edAulaId) ? ' open' : '';
     const cabecalho = edMateriaId === mat.id
       ? `<form class="painel" data-form-ed-materia="${mat.id}">
@@ -678,6 +843,7 @@ function renderMaterias() {
         <div class="grow">
           <h3>${esc(mat.nome)}</h3>
           <div class="muted num">${mat.totalAulas} aulas · limite ${mat.limitePct}% → máx. ${r.maxFaltas} faltas</div>
+          ${aulas.length ? `<div class="sutil num">Cronograma: ${dadas} de ${aulas.length} aulas dadas</div>` : ''}
         </div>
         <button class="small" data-ed-materia="${mat.id}">Editar</button>
         <button class="small ghost-danger" data-del-materia="${mat.id}">Excluir</button>
@@ -704,8 +870,8 @@ function renderMaterias() {
               </form></li>`
             : `<li class="row">
               <div class="grow"><span class="quando num">${formatarData(a.data)}</span> — ${esc(a.conteudo)}</div>
-              <button class="small" data-ed-aula="${a.id}" aria-label="Editar aula">✎</button>
-              <button class="small ghost-danger" data-del-aula="${a.id}" aria-label="Excluir aula">✕</button>
+              <button class="small icone" data-ed-aula="${a.id}" aria-label="Editar aula">✎</button>
+              <button class="small icone ghost-danger" data-del-aula="${a.id}" aria-label="Excluir aula">✕</button>
             </li>`).join('') || '<li class="muted">Nenhuma aula cadastrada.</li>'}
         </ul>
         ${aulas.length > 1 ? `<form class="painel" data-form-adiar="${mat.id}" style="margin-top:12px">
@@ -716,18 +882,18 @@ function renderMaterias() {
           </label>
           <button class="small" type="submit">Adiar: deslizar conteúdos para as próximas datas</button>
         </form>` : ''}
-        <form class="painel" data-form-aula="${mat.id}" style="margin-top:10px">
+        <form class="painel" data-form-aula="${mat.id}" style="margin-top:12px">
           <div class="campos-2">
             <label class="campo">Data
               <input type="date" name="data" required>
             </label>
             <label class="campo">Conteúdo da aula
-              <input type="text" name="conteudo" placeholder="Ex.: Derivadas — regra da cadeia" required>
+              <input type="text" name="conteudo" placeholder="Ex.: Regime de bens" required>
             </label>
           </div>
           <button class="small" type="submit">Adicionar aula ao plano</button>
         </form>
-        <form class="painel" data-form-importar="${mat.id}">
+        <form class="painel" data-form-importar="${mat.id}" style="margin-top:12px">
           <label class="campo">Importar plano em lote (uma aula por linha: <code>dd/mm/aaaa; conteúdo</code>)
             <textarea name="lote" placeholder="12/08/2026; Limites e continuidade&#10;14/08/2026; Derivadas — definição"></textarea>
           </label>
@@ -745,11 +911,11 @@ function renderMaterias() {
     db.aulas = db.aulas.filter(a => a.materiaId !== id);
     db.faltas = db.faltas.filter(f => f.materiaId !== id);
     db.eventos = db.eventos.filter(e => e.materiaId !== id);
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Matéria excluída');
   }));
   alvo.querySelectorAll('[data-del-aula]').forEach(b => b.addEventListener('click', () => {
     db.aulas = db.aulas.filter(a => a.id !== b.dataset.delAula);
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Aula removida do plano');
   }));
   alvo.querySelectorAll('[data-ed-materia]').forEach(b => b.addEventListener('click', () => {
     edMateriaId = b.dataset.edMateria; edAulaId = null; renderMaterias();
@@ -766,7 +932,7 @@ function renderMaterias() {
       mat.limitePct = parseInt(f.elements.limite.value, 10);
     }
     edMateriaId = null;
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Matéria atualizada');
   }));
   alvo.querySelectorAll('[data-ed-aula]').forEach(b => b.addEventListener('click', () => {
     edAulaId = b.dataset.edAula; edMateriaId = null; renderMaterias();
@@ -782,7 +948,7 @@ function renderMaterias() {
       aula.conteudo = f.elements.conteudo.value.trim();
     }
     edAulaId = null;
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Aula atualizada');
   }));
   alvo.querySelectorAll('[data-form-adiar]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
@@ -795,7 +961,7 @@ function renderMaterias() {
     for (let j = i; j < aulas.length; j++) {
       aulas[j].data = (j + 1 < aulas.length) ? datas[j + 1] : novaUltima;
     }
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Conteúdos adiados para as próximas datas');
   }));
   alvo.querySelectorAll('[data-form-aula]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
@@ -805,7 +971,7 @@ function renderMaterias() {
       data: f.elements.data.value,
       conteudo: f.elements.conteudo.value.trim()
     });
-    salvar(); renderTudo();
+    salvar(); renderTudo(); toast('Aula adicionada ao plano');
   }));
   alvo.querySelectorAll('[data-form-importar]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
@@ -822,7 +988,7 @@ function renderMaterias() {
       ok++;
     }
     salvar(); renderTudo();
-    alert(`${ok} aula(s) importada(s)` + (erro ? ` · ${erro} linha(s) ignorada(s) por formato inválido` : '') + '.');
+    toast(`${ok} aula(s) importada(s)` + (erro ? ` · ${erro} linha(s) ignorada(s)` : ''));
   }));
 }
 
@@ -837,6 +1003,7 @@ document.getElementById('form-materia').addEventListener('submit', ev => {
   salvar(); renderTudo();
   ev.target.reset();
   document.getElementById('materia-limite').value = 25;
+  toast('Matéria criada');
 });
 
 /* ─────────── lembretes de prova ─────────── */
@@ -864,10 +1031,10 @@ function dispararLembretes() {
 }
 
 document.getElementById('btn-lembretes').addEventListener('click', () => {
-  if (!('Notification' in window)) { alert('Este navegador não suporta notificações — o destaque na tela inicial continua funcionando.'); return; }
+  if (!('Notification' in window)) { toast('Este navegador não suporta notificações.'); return; }
   Notification.requestPermission().then(p => {
-    if (p === 'granted') { alert('Lembretes ativados! Você será avisado ao abrir o app na véspera de cada prova.'); dispararLembretes(); }
-    else { alert('Permissão negada. Você ainda verá o destaque de provas na tela inicial.'); }
+    if (p === 'granted') { toast('Lembretes ativados! 🔔'); dispararLembretes(); }
+    else { toast('Permissão negada — o destaque no Início continua funcionando.'); }
   });
 });
 
@@ -879,6 +1046,7 @@ document.getElementById('btn-exportar').addEventListener('click', () => {
   a.download = 'controle-faltas-backup-' + hojeISO() + '.json';
   a.click();
   URL.revokeObjectURL(a.href);
+  toast('Backup exportado');
 });
 document.getElementById('btn-importar').addEventListener('click', () => document.getElementById('arquivo-backup').click());
 document.getElementById('arquivo-backup').addEventListener('change', ev => {
@@ -891,9 +1059,9 @@ document.getElementById('arquivo-backup').addEventListener('change', ev => {
       if (!dados || !Array.isArray(dados.materias)) throw new Error('formato');
       if (!confirm('Importar backup? Isso substitui todos os dados atuais.')) return;
       db = { ...novoBanco(), ...dados };
-      salvar(); renderTudo();
+      salvar(); renderTudo(); toast('Backup importado com sucesso');
     } catch {
-      alert('Arquivo inválido — selecione um backup exportado por este app.');
+      toast('Arquivo inválido — selecione um backup exportado por este app.');
     }
   };
   leitor.readAsText(arq);
@@ -906,6 +1074,8 @@ function renderTudo() {
   renderFaltas();
   renderAgenda();
   renderMaterias();
+  const sem = infoSemestre();
+  document.getElementById('semana').textContent = sem ? `semana ${sem.atual} de ${sem.total}` : '';
 }
 
 document.getElementById('hoje').textContent = diaSemana(hojeISO()) + ', ' + formatarData(hojeISO());
