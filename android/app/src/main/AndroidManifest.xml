@@ -47,15 +47,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".WidgetConfigActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Faltae.Config">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
-            </intent-filter>
-        </activity>
-
         <receiver
             android:name=".SequenciaWidget"
             android:exported="true"

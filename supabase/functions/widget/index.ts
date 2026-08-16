@@ -1,6 +1,9 @@
 // Faltaê — dados da sequência para o widget Android (recurso Essencial).
-// Mesma regra do app: semanas perfeitas acumulam; só a sequência reinicia ao faltar.
-// Autenticação pelo token_calendario (o mesmo do feed de calendário).
+// O widget se identifica por um device_id próprio; o app conecta o aparelho
+// à conta automaticamente (tabela widget_aparelhos). Estados:
+//   desconectado → widget nunca foi conectado (ou o dono saiu da conta)
+//   sem_acesso   → conectado, mas o plano é grátis → convite pro Essencial
+//   ok           → dados da sequência (mesma regra do app)
 // Publicar com "Verify JWT" DESLIGADO (quem chama é o widget, sem login).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
@@ -17,19 +20,30 @@ const inicioDaSemana = (iso: string) => {
 }
 
 Deno.serve(async (req) => {
-  const token = new URL(req.url).searchParams.get('token')
-  if (!token || token.length < 32) return new Response('Não encontrado', { status: 404 })
+  const device = new URL(req.url).searchParams.get('device')
+  if (!device || device.length < 32 || device.length > 128) {
+    return new Response('Não encontrado', { status: 404 })
+  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
+
+  const { data: vinculo } = await supabase
+    .from('widget_aparelhos')
+    .select('user_id')
+    .eq('device_id', device)
+    .maybeSingle()
+  if (!vinculo) return Response.json({ estado: 'desconectado' })
+
   const { data } = await supabase
     .from('dados_usuario')
     .select('dados, plano')
-    .eq('token_calendario', token)
+    .eq('user_id', vinculo.user_id)
     .maybeSingle()
-  if (!data || data.plano === 'gratis') return new Response('Não encontrado', { status: 404 })
+  if (!data) return Response.json({ estado: 'desconectado' })
+  if (data.plano === 'gratis') return Response.json({ estado: 'sem_acesso' })
 
   const aulas: any[] = data.dados?.aulas ?? []
   const faltas: any[] = (data.dados?.faltas ?? []).filter((f: any) => !f.abonada)
@@ -75,7 +89,7 @@ Deno.serve(async (req) => {
   else mensagem = 'Semana perfeita garantida! 🎉'
 
   return Response.json(
-    { sequencia, total, dias, mensagem, atualizado: hoje },
+    { estado: 'ok', sequencia, total, dias, mensagem, atualizado: hoje },
     { headers: { 'Cache-Control': 'public, max-age=300' } },
   )
 })
