@@ -27,6 +27,9 @@ Painel do Supabase → **Edge Functions** → **Deploy new function** (pelo edit
 | `criar-cobranca` | `supabase/functions/criar-cobranca/index.ts` | **LIGADO** (padrão) |
 | `mercadopago-webhook` | `supabase/functions/mercadopago-webhook/index.ts` | **DESLIGADO** (quem chama é o Mercado Pago) |
 | `excluir-conta` | `supabase/functions/excluir-conta/index.ts` | **LIGADO** (padrão) |
+| `widget` | `supabase/functions/widget/index.ts` | **DESLIGADO** (quem chama é o widget Android) |
+
+A função `widget` alimenta o widget de sequência do celular (Android) e não depende do Mercado Pago — pode publicar antes das outras se quiser testar o widget primeiro.
 
 ## 4. Testar o fluxo inteiro (5 min)
 

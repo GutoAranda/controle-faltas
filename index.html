@@ -661,6 +661,20 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         </div>
       </details>
 
+      <details class="menu-sec" id="menu-widget">
+        <summary><span class="ico-menu">📱</span> Widget do celular</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Sua sequência na tela inicial do celular, sem abrir o app — recurso do plano Essencial, no aplicativo Android do Faltaê.</p>
+          <ol class="muted" style="margin:0 0 10px; padding-left:20px; font-size:13.5px">
+            <li>Toque e segure num espaço vazio da tela inicial → Widgets → Faltaê</li>
+            <li>Copie o código no botão abaixo</li>
+            <li>Cole na tela de configuração do widget</li>
+          </ol>
+          <button class="small" id="btn-codigo-widget" type="button">Copiar código do widget</button>
+          <p class="sutil" style="margin:8px 0 0">O código é pessoal — não compartilhe. É o mesmo que ativa o calendário automático.</p>
+        </div>
+      </details>
+
       <details class="menu-sec">
         <summary><span class="ico-menu">💾</span> Backup dos dados</summary>
         <div class="corpo-menu">
@@ -2191,34 +2205,53 @@ document.getElementById('form-sugestao').addEventListener('submit', async ev => 
   }
 });
 
-/* ─────────── assinatura de calendário (Essencial) ─────────── */
-document.getElementById('btn-assinar-cal').addEventListener('click', async () => {
+/* ─────────── token pessoal (calendário e widget — Essencial) ─────────── */
+async function obterTokenPessoal() {
   if (!usuarioNuvem || planoNuvem === 'gratis') {
-    toast('Assinar o calendário é um recurso do plano Essencial — crie sua conta no Menu.');
-    return;
+    toast('Recurso do plano Essencial — crie sua conta na seção Conta do Menu.');
+    return null;
   }
-  if (!nuvemDisponivel()) { toast('Sem conexão — tente quando estiver online.'); return; }
+  if (!nuvemDisponivel()) { toast('Sem conexão — tente quando estiver online.'); return null; }
   const { data, error: erroLeitura } = await nuvem.from('dados_usuario')
     .select('token_calendario').eq('user_id', usuarioNuvem.id).maybeSingle();
   if (erroLeitura) {
     toast(erroLeitura.code === '42703'
       ? 'Este recurso está chegando — o servidor ainda não foi atualizado.'
-      : 'Não deu pra buscar seu link — tente de novo.');
-    return;
+      : 'Não deu pra buscar seu código — tente de novo.');
+    return null;
   }
   let token = data && data.token_calendario;
   if (!token) {
     token = (crypto.randomUUID() + crypto.randomUUID()).replaceAll('-', '');
     const { error } = await nuvem.from('dados_usuario')
       .update({ token_calendario: token }).eq('user_id', usuarioNuvem.id);
-    if (error) { toast('O servidor ainda não liberou este recurso — avise o suporte.'); return; }
+    if (error) { toast('O servidor ainda não liberou este recurso — avise o suporte.'); return null; }
   }
+  return token;
+}
+
+/* assinatura de calendário */
+document.getElementById('btn-assinar-cal').addEventListener('click', async () => {
+  const token = await obterTokenPessoal();
+  if (!token) return;
   const urlCal = 'https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/calendario?token=' + token;
   try {
     await navigator.clipboard.writeText(urlCal);
     toast('Link copiado! No Google Calendar: Outras agendas › + › Com um URL.');
   } catch {
     prompt('Copie o link e assine no seu calendário:', urlCal);
+  }
+});
+
+/* código do widget Android */
+document.getElementById('btn-codigo-widget').addEventListener('click', async () => {
+  const token = await obterTokenPessoal();
+  if (!token) return;
+  try {
+    await navigator.clipboard.writeText(token);
+    toast('Código copiado! Agora cole na tela de configuração do widget.');
+  } catch {
+    prompt('Copie o código do widget:', token);
   }
 });
 
