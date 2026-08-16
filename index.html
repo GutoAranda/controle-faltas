@@ -580,21 +580,102 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         </div>
       </details>
 
-      <details class="menu-sec" id="menu-grade">
-        <summary><span class="ico-menu">🎓</span> Grade da turma</summary>
+      <details class="menu-sec" id="menu-materias">
+        <summary><span class="ico-menu">🎓</span> Minha grade <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 8px"><strong>Importar:</strong> pegue o código com um colega da turma e traga matérias, horários, aulas e provas de uma vez. Suas faltas e notas não são afetadas.</p>
-          <form id="form-importar-grade" style="display:flex; gap:8px; max-width:340px">
-            <input type="text" id="grade-codigo" placeholder="CÓDIGO" maxlength="8" autocapitalize="characters" autocomplete="off"
-              style="text-align:center; font-weight:800; letter-spacing:.14em; text-transform:uppercase">
-            <button class="primary" type="submit" style="flex:none">Importar</button>
-          </form>
+          <div id="grade-seguindo"></div>
+          <div id="lista-materias"></div>
+
+          <p class="muted" style="margin:16px 0 8px"><strong>Adicionar matérias</strong> — escolha o caminho:</p>
+          <div class="acoes-dados" style="margin-top:0">
+            <button class="small" type="button" data-add-painel="puc">🏛️ Minha turma — PUC</button>
+            <button class="small" type="button" data-add-painel="codigo">🔑 Tenho um código</button>
+            <button class="small" type="button" data-add-painel="manual">✏️ Criar do zero</button>
+          </div>
+
+          <div id="add-puc" hidden style="margin-top:12px">
+            <p class="muted" style="margin:0 0 8px">Sua turma inteira em um toque: matérias com dia, horário, professor, sala e <strong>todas as datas de aula do semestre</strong> (2026/2 · Monte Alegre). Faltas e notas ficam só suas.</p>
+            <div id="puc-indisponivel" class="sutil" hidden style="margin:0 0 8px">Sem conexão agora — tente de novo quando estiver online.</div>
+            <div class="campos-2" style="max-width:340px">
+              <label class="campo">Turno
+                <select id="puc-turno">
+                  <option value="N">Noite</option>
+                  <option value="M">Manhã</option>
+                </select>
+              </label>
+              <label class="campo">Turma
+                <select id="puc-turma"></select>
+              </label>
+            </div>
+            <button class="primary" id="btn-importar-turma" type="button" style="margin-top:10px">Trazer minha turma</button>
+            <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
+            <p class="muted" style="margin:0 0 8px"><strong>Do seu jeito:</strong> eletivas, prática jurídica ou matérias de outras turmas — adicione uma a uma.</p>
+            <label class="campo" style="max-width:340px">De onde
+              <select id="puc-origem"></select>
+            </label>
+            <label class="campo" style="max-width:420px; margin-top:8px">Disciplina
+              <select id="puc-disciplina"></select>
+            </label>
+            <button class="small" id="btn-add-avulsa" type="button" style="margin-top:10px">Adicionar esta disciplina</button>
+          </div>
+
+          <div id="add-codigo" hidden style="margin-top:12px">
+            <p class="muted" style="margin:0 0 8px">Peça o código a um colega da turma e traga matérias, horários, aulas e provas de uma vez. Suas faltas e notas não são afetadas — e as novidades da turma passam a chegar sozinhas.</p>
+            <form id="form-importar-grade" style="display:flex; gap:8px; max-width:340px">
+              <input type="text" id="grade-codigo" placeholder="CÓDIGO" maxlength="8" autocapitalize="characters" autocomplete="off"
+                style="text-align:center; font-weight:800; letter-spacing:.14em; text-transform:uppercase">
+              <button class="primary" type="submit" style="flex:none">Importar</button>
+            </form>
+          </div>
+
+          <div id="add-manual" hidden style="margin-top:12px">
+            <form class="painel" id="form-materia">
+              <label class="campo">Nome da matéria
+                <input type="text" id="materia-nome" placeholder="Ex.: Direito Civil IX" required>
+              </label>
+              <div class="campos-2">
+                <label class="campo">Total de aulas no semestre
+                  <input type="number" id="materia-total" min="1" max="500" placeholder="Ex.: 17" required>
+                </label>
+                <label class="campo">Limite de faltas (%)
+                  <input type="number" id="materia-limite" min="1" max="100" value="25" required>
+                </label>
+              </div>
+              <div class="campos-3">
+                <label class="campo">Dia da semana
+                  <select id="materia-dia">
+                    <option value="">—</option>
+                    <option value="seg">segunda</option><option value="ter">terça</option>
+                    <option value="qua">quarta</option><option value="qui">quinta</option>
+                    <option value="sex">sexta</option><option value="sáb">sábado</option>
+                  </select>
+                </label>
+                <label class="campo">Horário
+                  <input type="text" id="materia-horario" placeholder="18:50">
+                </label>
+                <label class="campo">Créditos
+                  <input type="number" id="materia-creditos" min="1" max="12" placeholder="3">
+                </label>
+              </div>
+              <div class="campos-2">
+                <label class="campo">Professor(a) <span class="sutil">(opcional)</span>
+                  <input type="text" id="materia-professor" placeholder="Ex.: Carlos Alberto Ferriani">
+                </label>
+                <label class="campo">Sala <span class="sutil">(opcional)</span>
+                  <input type="text" id="materia-sala" placeholder="Ex.: 321">
+                </label>
+              </div>
+              <button class="primary" type="submit">Salvar matéria</button>
+            </form>
+          </div>
+
           <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
-          <p class="muted" style="margin:0 0 8px"><strong>Compartilhar:</strong> publique sua grade e vire o herói da turma — cada colega importa tudo em um toque. Só a grade é compartilhada (faltas e notas ficam só suas). Publicou de novo com o mesmo nome? O código não muda e quem já importou recebe as novidades sozinho.</p>
-          <form id="form-compartilhar-grade" class="painel" style="max-width:340px">
+          <p class="muted" style="margin:0 0 8px"><strong>Compartilhar com a turma:</strong> publique sua grade e cada colega importa tudo em um toque — e quem importou recebe suas novidades sozinho, sempre no mesmo código. Faltas e notas ficam só suas.</p>
+          <form id="form-compartilhar-grade" class="painel" style="max-width:420px">
             <label class="campo">Nome da turma
               <input type="text" id="grade-titulo" placeholder="Ex.: Direito 9º período noturno — PUC" maxlength="80">
             </label>
+            <div id="grade-materias-escolha" style="margin:8px 0"></div>
             <button class="small" type="submit">Publicar a turma</button>
           </form>
           <div id="grade-resultado" hidden style="margin-top:12px">
@@ -604,85 +685,6 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
               <button class="small" type="button" id="btn-copiar-convite">Copiar convite</button>
             </div>
           </div>
-        </div>
-      </details>
-
-      <details class="menu-sec" id="menu-puc">
-        <summary><span class="ico-menu">🏛️</span> Grade pronta — PUC Direito</summary>
-        <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 8px">Sua turma inteira em um toque: matérias com dia, horário, professor, sala e <strong>todas as datas de aula do semestre</strong> (2026/2 · Monte Alegre). Faltas e notas ficam só suas.</p>
-          <div id="puc-indisponivel" class="sutil" hidden style="margin:0 0 8px">Sem conexão agora — tente de novo quando estiver online.</div>
-          <div class="campos-2" style="max-width:340px">
-            <label class="campo">Turno
-              <select id="puc-turno">
-                <option value="N">Noite</option>
-                <option value="M">Manhã</option>
-              </select>
-            </label>
-            <label class="campo">Turma
-              <select id="puc-turma"></select>
-            </label>
-          </div>
-          <button class="primary" id="btn-importar-turma" type="button" style="margin-top:10px">Trazer minha turma</button>
-          <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
-          <p class="muted" style="margin:0 0 8px"><strong>Grade do seu jeito:</strong> eletivas, prática jurídica ou matérias de outras turmas — adicione uma a uma.</p>
-          <label class="campo" style="max-width:340px">De onde
-            <select id="puc-origem"></select>
-          </label>
-          <label class="campo" style="max-width:420px; margin-top:8px">Disciplina
-            <select id="puc-disciplina"></select>
-          </label>
-          <button class="small" id="btn-add-avulsa" type="button" style="margin-top:10px">Adicionar esta disciplina</button>
-        </div>
-      </details>
-
-      <details class="menu-sec" id="menu-materias">
-        <summary><span class="ico-menu">📖</span> Minhas matérias <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
-        <div class="corpo-menu">
-          <details class="add" style="margin-top:12px">
-            <summary>Nova matéria</summary>
-            <div class="corpo">
-              <form class="painel" id="form-materia">
-                <label class="campo">Nome da matéria
-                  <input type="text" id="materia-nome" placeholder="Ex.: Direito Civil IX" required>
-                </label>
-                <div class="campos-2">
-                  <label class="campo">Total de aulas no semestre
-                    <input type="number" id="materia-total" min="1" max="500" placeholder="Ex.: 17" required>
-                  </label>
-                  <label class="campo">Limite de faltas (%)
-                    <input type="number" id="materia-limite" min="1" max="100" value="25" required>
-                  </label>
-                </div>
-                <div class="campos-3">
-                  <label class="campo">Dia da semana
-                    <select id="materia-dia">
-                      <option value="">—</option>
-                      <option value="seg">segunda</option><option value="ter">terça</option>
-                      <option value="qua">quarta</option><option value="qui">quinta</option>
-                      <option value="sex">sexta</option><option value="sáb">sábado</option>
-                    </select>
-                  </label>
-                  <label class="campo">Horário
-                    <input type="text" id="materia-horario" placeholder="18:50">
-                  </label>
-                  <label class="campo">Créditos
-                    <input type="number" id="materia-creditos" min="1" max="12" placeholder="3">
-                  </label>
-                </div>
-                <div class="campos-2">
-                  <label class="campo">Professor(a) <span class="sutil">(opcional)</span>
-                    <input type="text" id="materia-professor" placeholder="Ex.: Carlos Alberto Ferriani">
-                  </label>
-                  <label class="campo">Sala <span class="sutil">(opcional)</span>
-                    <input type="text" id="materia-sala" placeholder="Ex.: 321">
-                  </label>
-                </div>
-                <button class="primary" type="submit">Salvar matéria</button>
-              </form>
-            </div>
-          </details>
-          <div id="lista-materias"></div>
         </div>
       </details>
 
@@ -1199,24 +1201,14 @@ function renderInicio() {
     alvoHoje.innerHTML = `<div class="card" style="text-align:center; padding:24px 18px">
       <div style="font-size:34px; margin-bottom:6px">👋</div>
       <h3 style="margin-bottom:6px">Bem-vindo ao Faltaê!</h3>
-      <p class="muted" style="margin:0 0 12px"><strong>Sua turma já usa o Faltaê?</strong><br>Pegue o código com um colega e importe a grade inteira — matérias, horários, aulas e provas — em um toque.</p>
-      <form data-form-codigo style="display:flex; gap:8px; max-width:320px; margin:0 auto 16px">
-        <input type="text" data-campo-codigo placeholder="CÓDIGO DA TURMA" maxlength="8" autocapitalize="characters" autocomplete="off"
-          style="text-align:center; font-weight:800; letter-spacing:.14em; text-transform:uppercase">
-        <button class="primary" type="submit" style="flex:none">Importar</button>
-      </form>
-      <p class="sutil" style="margin:0 0 10px">— ou monte do zero —</p>
-      <button class="small" data-onboarding type="button">Criar minha primeira matéria</button>
+      <p class="muted" style="margin:0 0 14px">Suas matérias, faltas, provas e notas em um lugar só — quase sem digitar nada.</p>
+      <button class="primary" data-onboarding type="button">Montar minha grade</button>
+      <p class="sutil" style="margin:12px 0 0">Tem um código da turma? <a href="#" data-onboarding-codigo>Importar com o código</a></p>
     </div>`;
-    alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => {
-      irParaAba('menu');
-      document.getElementById('menu-materias').open = true;
-      document.querySelector('#menu-materias details.add').open = true;
-      document.getElementById('materia-nome').focus();
-    });
-    alvoHoje.querySelector('[data-form-codigo]').addEventListener('submit', ev => {
+    alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => abrirMinhaGrade());
+    alvoHoje.querySelector('[data-onboarding-codigo]').addEventListener('click', ev => {
       ev.preventDefault();
-      importarGradePorCodigo(alvoHoje.querySelector('[data-campo-codigo]').value);
+      abrirMinhaGrade('codigo');
     });
   } else if (!materiasHoje.length) {
     alvoHoje.innerHTML = '<div class="vazio">Sem aulas no plano para hoje. Bom descanso! 🎉</div>';
@@ -1303,15 +1295,7 @@ function renderInicio() {
   /* situação por matéria */
   const alvoMat = document.getElementById('inicio-materias');
   if (!db.materias.length) {
-    alvoMat.innerHTML = `<div class="vazio">Estuda Direito na PUC-SP? Monte sua grade inteira em um toque.<br>
-      <button class="primary small" id="btn-atalho-puc" type="button" style="margin-top:10px">🏛️ Escolher minha turma</button><br>
-      <span class="sutil">Ou cadastre suas matérias manualmente no Menu.</span></div>`;
-    const atalhoPUC = document.getElementById('btn-atalho-puc');
-    if (atalhoPUC) atalhoPUC.addEventListener('click', () => {
-      irParaAba('menu');
-      const sec = document.getElementById('menu-puc');
-      if (sec) { sec.open = true; sec.scrollIntoView({ behavior: 'smooth' }); }
-    });
+    alvoMat.innerHTML = '';
   } else {
     const ordenadas = [...db.materias]
       .map(mat => ({ mat, r: resumoMateria(mat) }))
@@ -1729,26 +1713,33 @@ function renderMaterias() {
               <button class="small icone ghost-danger" data-del-aula="${a.id}" aria-label="Excluir aula">✕</button>
             </li>`).join('') || '<li class="muted">Nenhuma aula cadastrada.</li>'}
         </ul>
-        ${aulas.length > 1 ? `<div class="acoes-dados">
-          <button class="small" type="button" data-atrasar="${mat.id}">🕐 Professor atrasou? Ajustar cronograma</button>
-        </div>` : ''}
-        <form class="painel" data-form-aula="${mat.id}" style="margin-top:12px">
-          <div class="campos-2">
-            <label class="campo">Data
-              <input type="date" name="data" required>
+        <div class="acoes-dados" style="margin-top:10px">
+          <button class="small primary" type="button" data-plano-prof="${mat.id}">📄 Preencher com o plano do professor</button>
+        </div>
+        <div data-painel-plano="${mat.id}"></div>
+        <details style="margin-top:10px">
+          <summary class="sutil">Mais opções</summary>
+          ${aulas.length > 1 ? `<div class="acoes-dados">
+            <button class="small" type="button" data-atrasar="${mat.id}">🕐 Professor atrasou? Ajustar cronograma</button>
+          </div>` : ''}
+          <form class="painel" data-form-aula="${mat.id}" style="margin-top:12px">
+            <div class="campos-2">
+              <label class="campo">Data
+                <input type="date" name="data" required>
+              </label>
+              <label class="campo">Conteúdo da aula
+                <input type="text" name="conteudo" placeholder="Ex.: Regime de bens" required>
+              </label>
+            </div>
+            <button class="small" type="submit">Adicionar aula ao plano</button>
+          </form>
+          <form class="painel" data-form-importar="${mat.id}" style="margin-top:12px">
+            <label class="campo">Adicionar em lote (uma aula por linha: <code>dd/mm/aaaa; conteúdo</code>)
+              <textarea name="lote" placeholder="12/08/2026; Limites e continuidade&#10;14/08/2026; Derivadas — definição"></textarea>
             </label>
-            <label class="campo">Conteúdo da aula
-              <input type="text" name="conteudo" placeholder="Ex.: Regime de bens" required>
-            </label>
-          </div>
-          <button class="small" type="submit">Adicionar aula ao plano</button>
-        </form>
-        <form class="painel" data-form-importar="${mat.id}" style="margin-top:12px">
-          <label class="campo">Importar plano em lote (uma aula por linha: <code>dd/mm/aaaa; conteúdo</code>)
-            <textarea name="lote" placeholder="12/08/2026; Limites e continuidade&#10;14/08/2026; Derivadas — definição"></textarea>
-          </label>
-          <button class="small" type="submit">Importar linhas</button>
-        </form>
+            <button class="small" type="submit">Importar linhas</button>
+          </form>
+        </details>
       </details>
     </div>`;
   }).join('');
@@ -1809,6 +1800,9 @@ function renderMaterias() {
   alvo.querySelectorAll('[data-atrasar]').forEach(b => b.addEventListener('click', () => {
     abrirSheetAtraso(b.dataset.atrasar);
   }));
+  alvo.querySelectorAll('[data-plano-prof]').forEach(b => b.addEventListener('click', () => {
+    montarPainelPlanoProf(b.dataset.planoProf);
+  }));
   alvo.querySelectorAll('[data-form-aula]').forEach(f => f.addEventListener('submit', ev => {
     ev.preventDefault();
     db.aulas.push({
@@ -1836,6 +1830,8 @@ function renderMaterias() {
     salvar(); renderTudo();
     toast(`${ok} aula(s) importada(s)` + (erro ? ` · ${erro} linha(s) ignorada(s)` : ''));
   }));
+  renderSeguindo();
+  renderEscolhaMaterias();
 }
 
 document.getElementById('form-materia').addEventListener('submit', ev => {
@@ -2278,9 +2274,69 @@ function atualizarDisciplinasPUC() {
 
 document.getElementById('puc-turno').addEventListener('change', prepararSecaoPUC);
 document.getElementById('puc-origem').addEventListener('change', atualizarDisciplinasPUC);
-document.getElementById('menu-puc').addEventListener('toggle', ev => {
-  if (ev.target.open) prepararSecaoPUC();
+
+/* ─────────── Minha grade: um seletor só pra adicionar matérias ─────────── */
+function abrirPainelAdd(qual, forcar) {
+  const alvo = document.getElementById('add-' + qual);
+  if (!alvo) return;
+  const abrir = forcar || alvo.hidden;
+  for (const p of ['puc', 'codigo', 'manual']) document.getElementById('add-' + p).hidden = true;
+  if (abrir) {
+    alvo.hidden = false;
+    if (qual === 'puc') prepararSecaoPUC();
+    if (qual === 'manual') setTimeout(() => document.getElementById('materia-nome').focus(), 60);
+    if (qual === 'codigo') setTimeout(() => document.getElementById('grade-codigo').focus(), 60);
+    alvo.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+document.querySelectorAll('[data-add-painel]').forEach(b =>
+  b.addEventListener('click', () => abrirPainelAdd(b.dataset.addPainel)));
+
+function abrirMinhaGrade(painel) {
+  irParaAba('menu');
+  const sec = document.getElementById('menu-materias');
+  sec.open = true;
+  if (painel) abrirPainelAdd(painel, true);
+  else sec.scrollIntoView({ behavior: 'smooth' });
+}
+
+document.getElementById('menu-materias').addEventListener('toggle', ev => {
+  if (!ev.target.open) return;
+  renderSeguindo();
+  renderEscolhaMaterias();
+  const campo = document.getElementById('grade-titulo');
+  if (campo && !campo.value) campo.value = localStorage.getItem('controleFaltas.ultimoTituloPublicado') || '';
 });
+
+/* seguindo: dá rosto ao mecanismo e oferece a saída */
+function renderSeguindo() {
+  const alvo = document.getElementById('grade-seguindo');
+  if (!alvo) return;
+  const seguidas = turmasSeguidas();
+  alvo.innerHTML = seguidas.map(t => `<div class="sutil" style="margin:10px 0 0">📬 Seguindo a turma <strong class="num">${esc(t.codigo)}</strong> — novidades do curador chegam sozinhas.
+    <a href="#" data-deixar-seguir="${esc(t.codigo)}">Deixar de seguir</a></div>`).join('');
+  alvo.querySelectorAll('[data-deixar-seguir]').forEach(a => a.addEventListener('click', ev => {
+    ev.preventDefault();
+    const cod = a.dataset.deixarSeguir;
+    localStorage.setItem('controleFaltas.turmasSeguidas', JSON.stringify(turmasSeguidas().filter(t => t.codigo !== cod)));
+    renderSeguindo();
+    toast(`Você deixou de seguir ${cod}. Suas matérias continuam como estão.`);
+  }));
+}
+
+/* o que entra no pacote da publicação: eletivas e afins começam de fora */
+function renderEscolhaMaterias() {
+  const NOME_PESSOAL = /^(eletiva|extensionista|optativa|tcc|estudos orientados|pr[áa]tica|npj)/i;
+  const alvo = document.getElementById('grade-materias-escolha');
+  if (!alvo) return;
+  if (!db.materias.length) { alvo.innerHTML = ''; return; }
+  alvo.innerHTML = '<div class="sutil" style="margin-bottom:4px">O que entra no pacote (eletivas e afins começam de fora, pra não poluir a turma):</div>' +
+    [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(m =>
+      `<label style="display:flex; gap:8px; align-items:center; font-size:13.5px; margin:3px 0">
+        <input type="checkbox" data-mat-pacote="${m.id}" ${NOME_PESSOAL.test(m.nome) ? '' : 'checked'}>
+        <span class="trunca">${esc(m.nome)}</span>
+      </label>`).join('');
+}
 
 document.getElementById('btn-importar-turma').addEventListener('click', async () => {
   const cat = await obterCatalogoPUC();
@@ -2382,7 +2438,315 @@ async function verificarTurmasSeguidas() {
   if (novidades.aulas) partes.push(`+${novidades.aulas} aulas`);
   if (novidades.eventos) partes.push(`+${novidades.eventos} provas/atividades`);
   if (novidades.enriquecidas) partes.push(`${novidades.enriquecidas} conteúdos de aula`);
-  if (partes.length) toast(`Sua turma tem novidades: ${partes.join(', ')} 📬`);
+  const origem = seguidas.length === 1 ? `Sua turma ${seguidas[0].codigo}` : 'Sua turma';
+  if (partes.length) toast(`${origem} tem novidades: ${partes.join(', ')} 📬`);
+}
+
+/* ─────────── plano do professor: o app lê o plano de ensino sozinho ───────
+   Calibrado no template institucional da PUC (Conteúdo Programático com
+   marcadores "Nª Aula"). PDF: leitura por geometria de colunas; texto colado:
+   heurística por linhas. Só preenche aulas vazias e provas que não existem. */
+const RE_MARCADOR_PLANO = /(\d{1,2})\s*ª?\s*(?:Aula|AULA)\b|\bAULA\b/;
+const RE_DATA_PLANO = /(\d{1,2})\s*[\/.]\s*(\d{1,2})(?:\s*[\/.]\s*(\d{4}))?/;
+
+function normDataPlano(m, anoBase) {
+  if (!m[3] && !m[0].includes('/')) return null;
+  const dia = parseInt(m[1], 10), mes = parseInt(m[2], 10);
+  const ano = m[3] ? parseInt(m[3], 10) : anoBase;
+  if (!ano || mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
+  return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+}
+
+function limparConteudoPlano(s) {
+  return s.replace(/\bAULA\b/g, ' ').replace(/\s+/g, ' ')
+    .replace(/\s([,.;:!?])/g, '$1')
+    .replace(/([A-Za-zÀ-ú])\s*-\s+([a-zà-ú])/g, '$1$2')
+    .replace(/^[\s\-–—.;:]+|[\s\-–—;:]+$/g, '')
+    .trim();
+}
+
+function ehRuidoPlano(l) {
+  return !l
+    || /^Pontif[íi]cia Universidade/i.test(l)
+    || /fim p[áa]gina/i.test(l)
+    || /Reitoria de Planejamento/i.test(l)
+    || /^Pr[óo]\s*-?\s*Reitoria/i.test(l)
+    || /^Data\s*\/?\s*(Semana)?$/i.test(l)
+    || /^Data\s*\/\s*Semana/i.test(l)
+    || /^Semana$/i.test(l)
+    || /^Conte[úu]do por Aula/i.test(l)
+    || /^Observa[çc][õo]es$/i.test(l);
+}
+const ehFimCronograma = l => /^(Metodologia|Estrat[ée]gias de Ensino)/i.test(l.trim()) && l.trim().length < 60;
+const ehCabecalhoAval = l => /^Avalia[çc][ãa]o\b/i.test(l.trim()) && l.trim().length < 30;
+
+function mapearPlano(aulas, slots) {
+  const ordenados = [...(slots || [])].sort();
+  const casadas = [], soltas = [], usadas = new Set();
+  aulas.forEach((a, idx) => {
+    let alvo = null;
+    if (a.data && ordenados.includes(a.data) && !usadas.has(a.data)) alvo = a.data;
+    else if (a.data) {
+      const dm = a.data.slice(5);
+      alvo = ordenados.find(s => s.slice(5) === dm && !usadas.has(s)) || null;
+    }
+    if (!alvo) {
+      const pos = (a.n || idx + 1) - 1;
+      if (ordenados[pos] && !usadas.has(ordenados[pos]) && !a.data) alvo = ordenados[pos];
+    }
+    if (alvo && a.conteudo) { casadas.push({ data: alvo, conteudo: a.conteudo, n: a.n || idx + 1 }); usadas.add(alvo); }
+    else if (a.conteudo || a.data) soltas.push(a);
+  });
+  return { casadas, soltas };
+}
+
+function extrairProvasPlano(linhas, slots, anoBase) {
+  const ordenados = [...(slots || [])].sort();
+  const minD = ordenados.length ? ordenados[0] : '0000';
+  const maxD = ordenados.length ? ordenados[ordenados.length - 1].slice(0, 8) + '31' : '9999-12-31';
+  const iniAval = linhas.findIndex(l => ehCabecalhoAval(l));
+  if (iniAval < 0) return [];
+  let fimAval = linhas.findIndex((l, i) => i > iniAval && /^Bibliograf/i.test(l.trim()));
+  if (fimAval < 0) fimAval = Math.min(linhas.length, iniAval + 40);
+  const provas = [];
+  for (let i = iniAval + 1; i < fimAval; i++) {
+    const linha = linhas[i].replace(/\s+/g, ' ').trim();
+    if (ehRuidoPlano(linha) || /^(Data da|Forma de Avalia|Tipo:|Pesos?$)/i.test(linha)) continue;
+    const m = linha.match(RE_DATA_PLANO);
+    if (!m || !m[3]) continue;
+    const data = normDataPlano(m, anoBase);
+    if (!data || data < minD || data > maxD) continue;
+    let titulo = linha.replace(new RegExp(RE_DATA_PLANO.source, 'g'), ' ')
+      .replace(/\b(Individual|Grupo|ou grupo)\b/gi, ' ')
+      .replace(/\b\d+([.,]\d+)?\s*$/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+    titulo = titulo.replace(/^[\s\-–—.,;]+|[\s\-–—.,;]+$/g, '').replace(/^e\s+|\s+e$/gi, '');
+    if (!titulo || titulo.length < 3) titulo = 'Avaliação';
+    if (titulo.length > 70) titulo = titulo.slice(0, 67) + '…';
+    const tipo = /semin[áa]rio|trabalho|atividade/i.test(titulo) ? 'atividade' : 'prova';
+    if (!provas.some(p => p.data === data)) provas.push({ data, titulo, tipo });
+  }
+  return provas;
+}
+
+function lerPlanoPosicional(paginas, slots) {
+  const anoBase = slots && slots.length ? parseInt(slots[0], 10) : new Date().getFullYear();
+  const itens = [];
+  paginas.forEach((pg, pi) => {
+    for (const it of pg) {
+      if (!it.str || !it.str.trim()) continue;
+      itens.push({ x: it.x, cx: it.x + (it.w || 0) / 2, gy: pi * 100000 + (100000 - it.y), str: it.str.trim() });
+    }
+  });
+  itens.sort((a, b) => a.gy - b.gy);
+  const secIni = itens.find(i => /Conte[úu]do\s+Program[áa]tico/i.test(i.str));
+  const secFim = itens.find(i => ehFimCronograma(i.str) && (!secIni || i.gy > secIni.gy));
+  const hData = itens.find(i => /^Data(\s*\/)?/i.test(i.str) && secIni && i.gy >= secIni.gy);
+  const hCont = itens.find(i => /Conte[úu]do por Aula/i.test(i.str));
+  const hObs = itens.find(i => /Observa[çc][õo]es/i.test(i.str));
+  if (!secIni || !hCont) return null;
+  const gy0 = hCont.gy + 1;
+  const gy1 = secFim ? secFim.gy : Infinity;
+  const limEsq = hData ? (hData.cx + hCont.cx) / 2 : hCont.cx - 150;
+  const limDir = hObs ? (hCont.cx + hObs.cx) / 2 : Infinity;
+  const corpo = itens.filter(i => i.gy > gy0 && i.gy < gy1 && !ehRuidoPlano(i.str));
+  const colData = corpo.filter(i => i.cx < limEsq);
+  const colCont = corpo.filter(i => i.cx >= limEsq && i.cx < limDir);
+  const ancoras = [];
+  for (const it of colData.sort((a, b) => a.gy - b.gy)) {
+    const ult = ancoras[ancoras.length - 1];
+    if (ult && it.gy - ult.fim < 16) { ult.txt += ' ' + it.str; ult.fim = it.gy; ult.gy = (ult.gy + it.gy) / 2; }
+    else ancoras.push({ gy: it.gy, fim: it.gy, txt: it.str });
+  }
+  const validas = ancoras.filter(a => RE_MARCADOR_PLANO.test(a.txt) || RE_DATA_PLANO.test(a.txt));
+  if (!validas.length) return null;
+  const aulas = validas.map((a, idx) => {
+    const mN = a.txt.match(/(\d{1,2})\s*ª?\s*(?:Aula|AULA)/i);
+    const mD = a.txt.match(RE_DATA_PLANO);
+    return { n: mN ? parseInt(mN[1], 10) : idx + 1, data: mD ? normDataPlano(mD, anoBase) : null, partes: [] };
+  });
+  for (const it of colCont.sort((a, b) => a.gy - b.gy)) {
+    let melhor = 0, dist = Infinity;
+    validas.forEach((a, i) => { const d = Math.abs(it.gy - a.gy); if (d < dist) { dist = d; melhor = i; } });
+    aulas[melhor].partes.push(it.str);
+  }
+  const prontas = aulas.map(a => ({ n: a.n, data: a.data, conteudo: limparConteudoPlano(a.partes.join(' ')) }))
+    .filter(a => a.conteudo || a.data);
+  const depois = itens.filter(i => secFim && i.gy >= secFim.gy);
+  const porLinha = new Map();
+  for (const it of depois) {
+    const chave = Math.round(it.gy / 6) * 6;
+    if (!porLinha.has(chave)) porLinha.set(chave, []);
+    porLinha.get(chave).push(it);
+  }
+  const linhasTexto = [...porLinha.entries()].sort((a, b) => a[0] - b[0])
+    .map(([, its]) => its.sort((a, b) => a.x - b.x).map(i => i.str).join(' '));
+  return { ...mapearPlano(prontas, slots), provas: extrairProvasPlano(linhasTexto, slots, anoBase), aulasLidas: prontas.length };
+}
+
+function lerPlanoTexto(textoBruto, slots) {
+  const anoBase = slots && slots.length ? parseInt(slots[0], 10) : new Date().getFullYear();
+  const linhas = String(textoBruto).split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim());
+  let ini = linhas.findIndex(l => /Conte[úu]do\s+Program[áa]tico/i.test(l));
+  let fim = linhas.findIndex((l, i) => i > ini && ehFimCronograma(l));
+  if (ini < 0) ini = 0; else ini++;
+  if (fim < 0) fim = linhas.length;
+  const corpo = linhas.slice(ini, fim).filter(l => !ehRuidoPlano(l));
+  const eAncora = l => RE_MARCADOR_PLANO.test(l) || (RE_DATA_PLANO.test(l) && l.replace(RE_DATA_PLANO, '').trim().length <= 3);
+  const antes = [];
+  const segs = [];
+  let atual = null;
+  for (const linha of corpo) {
+    if (eAncora(linha)) {
+      atual = { txt: linha, partes: [] };
+      const resto = linha.replace(RE_MARCADOR_PLANO, ' ').replace(RE_DATA_PLANO, ' ').trim();
+      if (resto && resto.length > 3) atual.partes.push(resto);
+      segs.push(atual);
+    } else if (atual) atual.partes.push(linha);
+    else antes.push(linha);
+  }
+  if (segs.length && antes.length) segs[0].partes.unshift(...antes);
+  const aulas = segs.map((s, idx) => {
+    const mN = s.txt.match(/(\d{1,2})\s*ª?\s*(?:Aula|AULA)/i);
+    let data = null;
+    const mD = s.txt.match(RE_DATA_PLANO);
+    if (mD) data = normDataPlano(mD, anoBase);
+    const partes = [];
+    for (let p of s.partes) {
+      if (!data) { const m2 = p.match(RE_DATA_PLANO); if (m2 && (m2[3] || p.length < 60)) { data = normDataPlano(m2, anoBase); p = p.replace(RE_DATA_PLANO, ' '); } }
+      p = p.trim(); if (p) partes.push(p);
+    }
+    return { n: mN ? parseInt(mN[1], 10) : idx + 1, data, conteudo: limparConteudoPlano(partes.join(' ')) };
+  }).filter(a => a.conteudo || a.data);
+  return { ...mapearPlano(aulas, slots), provas: extrairProvasPlano(linhas, slots, anoBase), aulasLidas: aulas.length };
+}
+
+/* pdf.js sob demanda — só baixa quando alguém realmente sobe um PDF */
+let pdfjsCarregando = null;
+function carregarPdfjs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfjsCarregando) pdfjsCarregando = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+    s.onload = () => {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+      res(window.pdfjsLib);
+    };
+    s.onerror = () => { pdfjsCarregando = null; rej(new Error('pdfjs indisponível')); };
+    document.head.appendChild(s);
+  });
+  return pdfjsCarregando;
+}
+
+async function extrairDeArquivoPDF(arquivo) {
+  const lib = await carregarPdfjs();
+  const buf = await arquivo.arrayBuffer();
+  const doc = await lib.getDocument({ data: buf }).promise;
+  const paginas = [];
+  let texto = '';
+  for (let p = 1; p <= doc.numPages; p++) {
+    const tc = await (await doc.getPage(p)).getTextContent();
+    paginas.push(tc.items.map(it => ({ x: it.transform[4], y: it.transform[5], w: it.width, str: it.str })));
+    const porY = new Map();
+    for (const it of tc.items) {
+      if (!it.str || !it.str.trim()) continue;
+      const y = Math.round(it.transform[5] / 4) * 4;
+      if (!porY.has(y)) porY.set(y, []);
+      porY.get(y).push({ x: it.transform[4], s: it.str });
+    }
+    texto += [...porY.entries()].sort((a, b) => b[0] - a[0])
+      .map(([, its]) => its.sort((a, b) => a.x - b.x).map(i => i.s).join(' ')).join('\n') + '\n';
+  }
+  return { paginas, texto };
+}
+
+function montarPainelPlanoProf(matId) {
+  const alvo = document.querySelector(`[data-painel-plano="${matId}"]`);
+  if (!alvo) return;
+  if (alvo.innerHTML) { alvo.innerHTML = ''; return; } // segundo toque fecha
+  const mat = materiaPorId(matId);
+  const slots = db.aulas.filter(a => a.materiaId === matId).map(a => a.data);
+  alvo.innerHTML = `<div class="painel" style="margin-top:10px">
+    <p class="sutil" style="margin:0 0 8px">Envie o PDF do plano de ensino do professor (ou cole o texto). O Faltaê lê, casa cada aula com o cronograma e ainda acha as provas. Nada sai do seu aparelho e nada que você já escreveu é tocado.</p>
+    <div class="acoes-dados" style="margin-top:0">
+      <button class="small" type="button" data-pp-pdf>📄 Ler um PDF</button>
+      <input type="file" data-pp-arquivo accept="application/pdf" hidden>
+    </div>
+    <label class="campo" style="margin-top:10px">…ou cole o texto do plano
+      <textarea data-pp-texto placeholder="Cole aqui o plano inteiro, do jeito que estiver"></textarea>
+    </label>
+    <button class="small" type="button" data-pp-ler>Ler o que colei</button>
+    <div data-pp-resultado style="margin-top:10px"></div>
+  </div>`;
+  if (!slots.length) {
+    alvo.querySelector('[data-pp-resultado]').innerHTML =
+      `<p class="sutil">⚠️ "${esc(mat.nome)}" ainda não tem datas de aula — traga sua turma oficial primeiro (ou adicione as datas em Mais opções) pra eu ter onde encaixar os conteúdos.</p>`;
+  }
+  const arquivoInput = alvo.querySelector('[data-pp-arquivo]');
+  alvo.querySelector('[data-pp-pdf]').addEventListener('click', () => arquivoInput.click());
+  arquivoInput.addEventListener('change', async () => {
+    const arq = arquivoInput.files[0];
+    if (!arq) return;
+    const res = alvo.querySelector('[data-pp-resultado]');
+    res.innerHTML = '<p class="sutil">Lendo o PDF…</p>';
+    try {
+      const { paginas, texto } = await extrairDeArquivoPDF(arq);
+      const pos = lerPlanoPosicional(paginas, slots);
+      const txt = lerPlanoTexto(texto, slots);
+      const nota = r => r ? r.casadas.length * 2 + r.provas.length : -1;
+      const r = nota(pos) >= nota(txt) ? pos : txt;
+      if (!r || (!r.casadas.length && !r.provas.length)) {
+        res.innerHTML = '<p class="sutil">Não consegui casar nada — se o PDF for escaneado (foto), cole o texto do plano ou digite em Mais opções.</p>';
+        return;
+      }
+      renderResultadoPlano(res, matId, r);
+    } catch {
+      res.innerHTML = '<p class="sutil">Não deu pra ler o PDF aqui (sem conexão?). Cole o texto do plano que funciona igual.</p>';
+    }
+  });
+  alvo.querySelector('[data-pp-ler]').addEventListener('click', () => {
+    const texto = alvo.querySelector('[data-pp-texto]').value;
+    const res = alvo.querySelector('[data-pp-resultado]');
+    if (!texto.trim()) { toast('Cole o texto do plano primeiro.'); return; }
+    const r = lerPlanoTexto(texto, slots);
+    if (!r.casadas.length && !r.provas.length) {
+      res.innerHTML = '<p class="sutil">Não consegui casar nada — confere se veio a parte "Conteúdo Programático" do plano.</p>';
+      return;
+    }
+    renderResultadoPlano(res, matId, r);
+  });
+}
+
+function renderResultadoPlano(res, matId, r) {
+  const vaziasPorData = new Map(db.aulas.filter(a => a.materiaId === matId && !a.conteudo).map(a => [a.data, a]));
+  const uteis = r.casadas.filter(c => vaziasPorData.has(c.data));
+  const provasNovas = r.provas.filter(p => !db.eventos.some(e => e.materiaId === matId && e.data === p.data));
+  const linhaAula = c => `<li class="row"><span class="quando num">${formatarData(c.data).slice(0, 5)}</span>
+    <div class="grow" style="margin-left:8px">${vaziasPorData.has(c.data) ? '' : '<span class="sutil">(já preenchida — mantida) </span>'}${esc(c.conteudo.length > 90 ? c.conteudo.slice(0, 87) + '…' : c.conteudo)}</div></li>`;
+  res.innerHTML = `
+    <p class="muted" style="margin:0 0 6px">Li o plano: <strong>${r.casadas.length}</strong> aula${r.casadas.length === 1 ? '' : 's'} casada${r.casadas.length === 1 ? '' : 's'} com o cronograma${r.provas.length ? ` e <strong>${r.provas.length}</strong> prova${r.provas.length === 1 ? '' : 's'}/atividade${r.provas.length === 1 ? '' : 's'}` : ''}.</p>
+    <ul class="lista-conteudo">${r.casadas.map(linhaAula).join('')}</ul>
+    ${r.soltas.length ? `<p class="sutil" style="margin:6px 0 0">? ${r.soltas.length} item${r.soltas.length === 1 ? '' : 's'} sem par no cronograma (feriado ou data fora do plano) — ficou de fora.</p>` : ''}
+    ${provasNovas.length ? `<ul class="lista-conteudo" style="margin-top:6px">${provasNovas.map(p =>
+      `<li>📅 <span class="num">${formatarData(p.data).slice(0, 5)}</span> ${p.tipo === 'prova' ? 'Prova' : 'Atividade'}: ${esc(p.titulo)}</li>`).join('')}</ul>` : ''}
+    <div class="acoes-dados" style="margin-top:10px">
+      <button class="small primary" type="button" data-pp-aplicar>Aplicar: preencher ${uteis.length} aula${uteis.length === 1 ? '' : 's'}${provasNovas.length ? ` + ${provasNovas.length} prova${provasNovas.length === 1 ? '' : 's'}` : ''}</button>
+      <button class="small" type="button" data-pp-cancelar>Cancelar</button>
+    </div>`;
+  res.querySelector('[data-pp-cancelar]').addEventListener('click', () => { res.innerHTML = ''; });
+  res.querySelector('[data-pp-aplicar]').addEventListener('click', () => {
+    let preenchidas = 0;
+    for (const c of uteis) {
+      const aula = vaziasPorData.get(c.data);
+      if (aula && !aula.conteudo) { aula.conteudo = c.conteudo; preenchidas++; }
+    }
+    for (const p of provasNovas) {
+      db.eventos.push({ id: uid(), materiaId: matId, tipo: p.tipo === 'atividade' ? 'atividade' : 'prova', titulo: p.titulo, data: p.data, descricao: null, feita: false });
+    }
+    salvar(); renderTudo();
+    toast(`${preenchidas} conteúdo${preenchidas === 1 ? '' : 's'}${provasNovas.length ? ` e ${provasNovas.length} prova${provasNovas.length === 1 ? '' : 's'}` : ''} no lugar ✓`,
+      'Publicar pra turma', () => abrirMinhaGrade());
+  });
 }
 
 document.getElementById('form-importar-grade').addEventListener('submit', ev => {
@@ -2407,12 +2771,18 @@ document.getElementById('form-compartilhar-grade').addEventListener('submit', as
   if (!usuarioNuvem) { toast('Crie uma conta grátis (seção Conta acima) pra publicar a grade.'); return; }
   const titulo = document.getElementById('grade-titulo').value.trim();
   if (!titulo) { toast('Dê um nome pra turma — ex.: "Direito 9º noturno — PUC".'); return; }
+  // o aluno escolhe o que entra; sem checkbox renderizado, vai tudo (compatibilidade)
+  const caixas = [...document.querySelectorAll('[data-mat-pacote]')];
+  const marcadas = new Set(caixas.filter(c => c.checked).map(c => c.dataset.matPacote));
+  const entra = id => !caixas.length || marcadas.has(id);
+  if (caixas.length && !marcadas.size) { toast('Marque pelo menos uma matéria pra publicar.'); return; }
   // só a estrutura da turma sai daqui — faltas, notas e recuperações NUNCA entram no pacote
   const dados = {
-    materias: db.materias.map(m => ({ id: m.id, nome: m.nome, totalAulas: m.totalAulas, limitePct: m.limitePct, diaSemana: m.diaSemana, horario: m.horario, creditos: m.creditos, professor: m.professor || null, sala: m.sala || null })),
-    aulas: db.aulas.map(a => ({ id: a.id, materiaId: a.materiaId, data: a.data, conteudo: a.conteudo })),
-    eventos: db.eventos.map(e => ({ id: e.id, materiaId: e.materiaId, tipo: e.tipo, titulo: e.titulo, data: e.data, descricao: e.descricao || null }))
+    materias: db.materias.filter(m => entra(m.id)).map(m => ({ id: m.id, nome: m.nome, totalAulas: m.totalAulas, limitePct: m.limitePct, diaSemana: m.diaSemana, horario: m.horario, creditos: m.creditos, professor: m.professor || null, sala: m.sala || null })),
+    aulas: db.aulas.filter(a => entra(a.materiaId)).map(a => ({ id: a.id, materiaId: a.materiaId, data: a.data, conteudo: a.conteudo })),
+    eventos: db.eventos.filter(e => entra(e.materiaId)).map(e => ({ id: e.id, materiaId: e.materiaId, tipo: e.tipo, titulo: e.titulo, data: e.data, descricao: e.descricao || null }))
   };
+  localStorage.setItem('controleFaltas.ultimoTituloPublicado', titulo);
   // mesmo curador + mesmo nome = atualiza no MESMO código (quem segue recebe
   // sozinho). Se existirem códigos duplicados da época em que cada publicação
   // gerava um novo, todos são atualizados juntos — ninguém fica pra trás.
