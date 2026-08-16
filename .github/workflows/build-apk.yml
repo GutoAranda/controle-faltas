@@ -1,0 +1,32 @@
+name: Compilar APK do Faltaê
+
+# Compila SEM assinar — nenhuma chave ou senha no CI.
+# A assinatura acontece na máquina do dono, com o keystore local.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Compilar (sem assinatura)
+        working-directory: android
+        run: gradle assembleRelease --no-daemon
+
+      - name: Publicar APK como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: faltae-apk-sem-assinar
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
