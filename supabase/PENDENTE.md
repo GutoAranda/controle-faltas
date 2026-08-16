@@ -6,7 +6,7 @@ O código está pronto e publicado no app. Falta apertar estes botões — nesta
 
 Painel do Supabase → **SQL Editor** → cole o conteúdo de `supabase/sql/pendente.sql` → **Run**.
 
-Cria a tabela de sugestões, a coluna `plano_valido_ate` e o rebaixamento automático de planos vencidos (todo dia às 03:15).
+Cria a tabela de sugestões, a coluna `plano_valido_ate`, o rebaixamento automático de planos vencidos (todo dia às 03:15) e o **seguir a turma** (seção 2c: curador atualiza a grade no mesmo código e quem importou recebe sozinho). O script é idempotente — pode rodar de novo por inteiro mesmo se já rodou antes.
 
 ## 2. Pegar a credencial do Mercado Pago (5 min)
 

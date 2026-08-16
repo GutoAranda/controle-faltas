@@ -47,6 +47,18 @@ grant insert (device_id, user_id) on public.widget_aparelhos to authenticated;
 grant update (user_id) on public.widget_aparelhos to authenticated;
 grant delete on public.widget_aparelhos to authenticated;
 
+-- ── 2c. Seguir a turma: curador atualiza a grade no MESMO código ────────────
+-- Antes, cada publicação gerava código novo (a importação era uma fotografia).
+-- Agora o app atualiza a linha existente quando o mesmo curador publica com o
+-- mesmo nome, e quem importou recebe as novidades sozinho ao abrir o app
+-- (checagem leve do atualizado_em). Só o dono da grade pode atualizá-la, e
+-- apenas título/dados/data — o código e o dono são imutáveis.
+alter table public.grades_compartilhadas add column if not exists atualizado_em timestamptz not null default now();
+drop policy if exists "curador atualiza a propria grade" on public.grades_compartilhadas;
+create policy "curador atualiza a propria grade" on public.grades_compartilhadas
+  for update to authenticated using (criado_por = auth.uid()) with check (criado_por = auth.uid());
+grant update (titulo, dados, atualizado_em) on public.grades_compartilhadas to authenticated;
+
 -- ── 3. Rebaixamento automático de planos vencidos (roda todo dia às 03:15) ─
 create extension if not exists pg_cron;
 select cron.unschedule('rebaixar-planos-vencidos')

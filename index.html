@@ -590,12 +590,12 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             <button class="primary" type="submit" style="flex:none">Importar</button>
           </form>
           <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
-          <p class="muted" style="margin:0 0 8px"><strong>Compartilhar:</strong> publique sua grade e vire o herói da turma — cada colega importa tudo em um toque. Só a grade é compartilhada (faltas e notas ficam só suas).</p>
+          <p class="muted" style="margin:0 0 8px"><strong>Compartilhar:</strong> publique sua grade e vire o herói da turma — cada colega importa tudo em um toque. Só a grade é compartilhada (faltas e notas ficam só suas). Publicou de novo com o mesmo nome? O código não muda e quem já importou recebe as novidades sozinho.</p>
           <form id="form-compartilhar-grade" class="painel" style="max-width:340px">
             <label class="campo">Nome da turma
               <input type="text" id="grade-titulo" placeholder="Ex.: Direito 9º período noturno — PUC" maxlength="80">
             </label>
-            <button class="small" type="submit">Gerar código da turma</button>
+            <button class="small" type="submit">Publicar a turma</button>
           </form>
           <div id="grade-resultado" hidden style="margin-top:12px">
             <p class="muted" style="margin:0 0 6px">Pronto! Manda pro grupo da turma:</p>
@@ -2138,6 +2138,7 @@ document.getElementById('btn-criar-conta').addEventListener('click', async () =>
 let ultimaPuxada = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
+  verificarTurmasSeguidas(); // novidades do curador (tem throttle próprio, funciona sem conta)
   if (!usuarioNuvem || planoNuvem === 'gratis') return;
   if (Date.now() - ultimaPuxada < 30000) return;
   ultimaPuxada = Date.now();
@@ -2320,23 +2321,84 @@ async function importarGradePorCodigo(codigo) {
   codigo = (codigo || '').trim().toUpperCase();
   if (!codigo) { toast('Digite o código da turma.'); return; }
   if (!nuvemDisponivel()) { toast('Sem conexão — tente quando estiver online.'); return; }
-  const { data, error } = await nuvem.from('grades_compartilhadas').select('titulo, dados').eq('codigo', codigo).maybeSingle();
+  let { data, error } = await nuvem.from('grades_compartilhadas').select('titulo, dados, atualizado_em').eq('codigo', codigo).maybeSingle();
+  if (error && error.code === '42703') // banco ainda sem a coluna atualizado_em — importa mesmo assim
+    ({ data, error } = await nuvem.from('grades_compartilhadas').select('titulo, dados').eq('codigo', codigo).maybeSingle());
   if (error) { toast('Não deu pra buscar agora — tente de novo em instantes.'); return; }
   if (!data) { toast('Código não encontrado — confere com quem te passou.'); return; }
   const d = data.dados || {};
   const resumo = `${(d.materias || []).length} matérias, ${(d.aulas || []).length} aulas e ${(d.eventos || []).length} provas/atividades`;
   if (!confirm(`Importar a grade "${data.titulo}"?\n\n${resumo}.\nSuas faltas e notas não mudam.`)) return;
   const r = aplicarGrade(d);
+  seguirTurma(codigo, data.atualizado_em || null);
   irParaAba('inicio');
   toast(r.materias + r.aulas + r.eventos
     ? `Grade importada: +${r.materias} matérias, +${r.aulas} aulas, +${r.eventos} provas 🎉`
     : 'Você já tinha tudo dessa grade — nada foi duplicado.');
 }
 
+/* ─────────── seguir a turma: novidades do curador chegam sozinhas ───────────
+   Quem importa um código passa a "seguir" aquela turma. Ao abrir o app (ou
+   voltar pra ele), uma consulta leve confere só o atualizado_em de cada código
+   seguido; se o curador republicou, baixa o pacote e re-roda a fusão — que é
+   idempotente, então só a novidade entra. Funciona até sem conta (leitura de
+   grade é pública). */
+function turmasSeguidas() {
+  try { return JSON.parse(localStorage.getItem('controleFaltas.turmasSeguidas') || '[]'); } catch { return []; }
+}
+
+function seguirTurma(codigo, atualizadoEm) {
+  const lista = turmasSeguidas().filter(t => t.codigo !== codigo);
+  lista.push({ codigo, em: atualizadoEm || null });
+  localStorage.setItem('controleFaltas.turmasSeguidas', JSON.stringify(lista));
+}
+
+let ultimaChecagemTurmas = 0;
+async function verificarTurmasSeguidas() {
+  const seguidas = turmasSeguidas();
+  if (!seguidas.length || !nuvemDisponivel()) return;
+  if (Date.now() - ultimaChecagemTurmas < 300000) return; // no máximo a cada 5 min
+  ultimaChecagemTurmas = Date.now();
+  const { data, error } = await nuvem.from('grades_compartilhadas')
+    .select('codigo, atualizado_em').in('codigo', seguidas.map(t => t.codigo));
+  if (error || !data) return; // banco ainda sem a coluna, ou sem rede — fica pra próxima
+  const novidades = { materias: 0, aulas: 0, eventos: 0, enriquecidas: 0 };
+  let mudou = false;
+  for (const remota of data) {
+    const local = seguidas.find(t => t.codigo === remota.codigo);
+    if (!local || (local.em && remota.atualizado_em && remota.atualizado_em <= local.em)) continue;
+    const { data: cheia } = await nuvem.from('grades_compartilhadas')
+      .select('dados').eq('codigo', remota.codigo).maybeSingle();
+    if (!cheia || !cheia.dados) continue;
+    const r = aplicarGrade(cheia.dados);
+    novidades.materias += r.materias; novidades.aulas += r.aulas;
+    novidades.eventos += r.eventos; novidades.enriquecidas += r.enriquecidas;
+    local.em = remota.atualizado_em || local.em;
+    mudou = true;
+  }
+  if (mudou) localStorage.setItem('controleFaltas.turmasSeguidas', JSON.stringify(seguidas));
+  const partes = [];
+  if (novidades.materias) partes.push(`+${novidades.materias} matérias`);
+  if (novidades.aulas) partes.push(`+${novidades.aulas} aulas`);
+  if (novidades.eventos) partes.push(`+${novidades.eventos} provas/atividades`);
+  if (novidades.enriquecidas) partes.push(`${novidades.enriquecidas} conteúdos de aula`);
+  if (partes.length) toast(`Sua turma tem novidades: ${partes.join(', ')} 📬`);
+}
+
 document.getElementById('form-importar-grade').addEventListener('submit', ev => {
   ev.preventDefault();
   importarGradePorCodigo(document.getElementById('grade-codigo').value);
 });
+
+function mostrarCodigoGrade(codigo) {
+  document.getElementById('grade-resultado').hidden = false;
+  document.getElementById('grade-codigo-gerado').textContent = codigo;
+  document.getElementById('btn-copiar-convite').onclick = async () => {
+    const convite = `Entra no Faltaê da nossa turma 🎯 ${location.origin}${location.pathname}?grade=${codigo}\nImporta a grade inteira (matérias, horários e provas) em um toque. Grátis, sem cadastro.`;
+    try { await navigator.clipboard.writeText(convite); toast('Convite copiado — cola no grupo da turma!'); }
+    catch { prompt('Copie o convite:', convite); }
+  };
+}
 
 document.getElementById('form-compartilhar-grade').addEventListener('submit', async ev => {
   ev.preventDefault();
@@ -2351,17 +2413,27 @@ document.getElementById('form-compartilhar-grade').addEventListener('submit', as
     aulas: db.aulas.map(a => ({ id: a.id, materiaId: a.materiaId, data: a.data, conteudo: a.conteudo })),
     eventos: db.eventos.map(e => ({ id: e.id, materiaId: e.materiaId, tipo: e.tipo, titulo: e.titulo, data: e.data, descricao: e.descricao || null }))
   };
+  // mesmo curador + mesmo nome = atualiza no MESMO código (quem segue recebe sozinho)
+  const { data: minhas } = await nuvem.from('grades_compartilhadas')
+    .select('codigo').eq('criado_por', usuarioNuvem.id).eq('titulo', titulo).limit(1);
+  if (minhas && minhas.length) {
+    // o select de volta confirma que a linha foi mesmo atualizada — RLS sem
+    // permissão "atualiza" 0 linhas sem dar erro, e aí o certo é código novo
+    const { data: upd, error: erroUpd } = await nuvem.from('grades_compartilhadas')
+      .update({ dados, atualizado_em: new Date().toISOString() }).eq('codigo', minhas[0].codigo)
+      .select('codigo');
+    if (!erroUpd && upd && upd.length) {
+      mostrarCodigoGrade(minhas[0].codigo);
+      toast('Turma atualizada no mesmo código — quem já importou recebe sozinho 📬');
+      return;
+    }
+    // banco ainda sem permissão de atualizar (SQL pendente) — publica com código novo, como antes
+  }
   for (let tentativa = 0; tentativa < 4; tentativa++) {
     const codigo = gerarCodigoTurma();
     const { error } = await nuvem.from('grades_compartilhadas').insert({ codigo, titulo, dados, criado_por: usuarioNuvem.id });
     if (!error) {
-      document.getElementById('grade-resultado').hidden = false;
-      document.getElementById('grade-codigo-gerado').textContent = codigo;
-      document.getElementById('btn-copiar-convite').onclick = async () => {
-        const convite = `Entra no Faltaê da nossa turma 🎯 ${location.origin}${location.pathname}?grade=${codigo}\nImporta a grade inteira (matérias, horários e provas) em um toque. Grátis, sem cadastro.`;
-        try { await navigator.clipboard.writeText(convite); toast('Convite copiado — cola no grupo da turma!'); }
-        catch { prompt('Copie o convite:', convite); }
-      };
+      mostrarCodigoGrade(codigo);
       toast('Grade da turma publicada! 🎓');
       return;
     }
@@ -2657,5 +2729,6 @@ if (retornoPagamento) {
       avisarLoginWidget();
     }
   } catch { /* offline — segue local */ }
+  verificarTurmasSeguidas();
 })();
 </script>
