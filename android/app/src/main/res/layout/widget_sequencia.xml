@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_raiz"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_fundo"
+    android:padding="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/fogo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🔥 —"
+            android:textColor="#EDEEF6"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/trofeu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏆 —"
+            android:textColor="#A6ABC2"
+            android:textSize="13sp"
+            android:maxLines="1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
+
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:layout_marginEnd="5dp">
+            <TextView android:id="@+id/chip1" android:layout_width="match_parent" android:layout_height="32dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/rot1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="seg" android:textColor="#8A90AC" android:textSize="11sp" android:layout_marginTop="3dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:layout_marginEnd="5dp">
+            <TextView android:id="@+id/chip2" android:layout_width="match_parent" android:layout_height="32dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/rot2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ter" android:textColor="#8A90AC" android:textSize="11sp" android:layout_marginTop="3dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:layout_marginEnd="5dp">
+            <TextView android:id="@+id/chip3" android:layout_width="match_parent" android:layout_height="32dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/rot3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="qua" android:textColor="#8A90AC" android:textSize="11sp" android:layout_marginTop="3dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center" android:layout_marginEnd="5dp">
+            <TextView android:id="@+id/chip4" android:layout_width="match_parent" android:layout_height="32dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/rot4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="qui" android:textColor="#8A90AC" android:textSize="11sp" android:layout_marginTop="3dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
+            <TextView android:id="@+id/chip5" android:layout_width="match_parent" android:layout_height="32dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/rot5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="sex" android:textColor="#8A90AC" android:textSize="11sp" android:layout_marginTop="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#A6ABC2"
+        android:textSize="11sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+</LinearLayout>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Faltae" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Faltae.Splash">
+        <item name="android:windowBackground">@color/fundo</item>
+    </style>
+    <style name="Theme.Faltae.Config" parent="android:Theme.Material.Light">
+        <item name="android:colorAccent">@color/indigo</item>
+        <item name="android:colorPrimary">@color/indigo</item>
+        <item name="android:colorPrimaryDark">@color/indigo</item>
+    </style>
+</resources>
