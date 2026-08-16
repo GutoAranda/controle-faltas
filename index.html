@@ -216,15 +216,22 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   .tile .valor { font-family: var(--fonte-display); font-size: 24px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
   .tile .rotulo { font-size: 10.5px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .07em; margin-top: 3px; }
 
-  /* ── ofensiva ── */
-  .ofensiva { display: flex; align-items: center; gap: 14px; }
-  .ofensiva .chama { font-size: 34px; line-height: 1; filter: grayscale(1) opacity(.45); }
-  .ofensiva.acesa .chama { filter: none; }
-  .ofensiva .num-semanas { font-family: var(--fonte-display); font-size: 26px; font-weight: 800; line-height: 1.1; }
-  .semana-dots { display: flex; gap: 5px; margin-top: 7px; }
-  .semana-dots span { width: 14px; height: 14px; border-radius: 5px; background: var(--surface-2); }
-  .semana-dots span.ok { background: var(--faisca); }
-  .semana-dots span.falta { background: var(--danger-soft); border: 1px solid var(--danger); }
+  /* ── sequência: semana em foco (seg–sex) ── */
+  .semana-foco { display: flex; gap: 8px; }
+  .semana-foco .dia { flex: 1; max-width: 58px; text-align: center; }
+  .semana-foco .quadro {
+    height: 44px; border-radius: 11px; background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; box-sizing: border-box;
+  }
+  .semana-foco .presente .quadro { background: var(--faisca); color: var(--faisca-ink); }
+  .semana-foco .falta .quadro { background: var(--danger-soft); color: var(--danger); border: 1px solid var(--danger); }
+  .semana-foco .hoje .quadro { background: transparent; border: 2px solid var(--accent); color: var(--accent); font-size: 12px; font-weight: 700; }
+  .semana-foco .futuro .quadro { background: transparent; border: 1.5px dashed var(--line); }
+  .semana-foco .livre .quadro { opacity: .45; }
+  .semana-foco .rotulo { font-size: 11px; font-weight: 700; color: var(--ink-3); margin-top: 4px; }
+  .semana-foco .hoje .rotulo { color: var(--accent); }
+  .selos { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--line); }
 
   details.add { margin-bottom: 10px; }
   details.add > summary {
@@ -710,7 +717,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       <details class="menu-sec">
         <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Versão 2.5 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
+          <p class="muted" style="margin:12px 0 4px">Versão 2.6 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
             <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
             <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
@@ -857,45 +864,43 @@ function infoSemestre() {
   return { atual: Math.min(total, Math.max(1, decorrido)), total, ini, fim };
 }
 
-/* ─────────── cálculos: ofensiva (sequência semanal) ─────────── */
+/* ─────────── cálculos: sequência e semanas perfeitas ───────────
+   Regra do produto: semanas perfeitas ACUMULAM no semestre (o total nunca zera);
+   só a sequência de semanas consecutivas reinicia quando há falta não abonada.
+   Só semanas já fechadas entram nos contadores; a semana atual aparece nos dias. */
 function calcOfensiva() {
   const hoje = hojeISO();
   const segAtual = inicioDaSemana(hoje);
-  const historico = [];
-  let streak = 0;
-  let quebrada = false;
-  for (let i = 0; i < 30; i++) {
+  const primeira = db.aulas.length ? db.aulas.map(a => a.data).sort()[0] : hoje;
+  let total = 0;
+  let sequencia = 0;
+  let contando = true;
+  for (let i = 1; i <= 60; i++) {
     const seg = somarDias(segAtual, -7 * i);
     const dom = somarDias(seg, 6);
-    const temAulas = db.aulas.some(a => a.data >= seg && a.data <= dom && a.data <= hoje);
+    if (dom < primeira) break;
+    const temAulas = db.aulas.some(a => a.data >= seg && a.data <= dom);
     const temFalta = db.faltas.some(f => !f.abonada && f.data >= seg && f.data <= dom);
-    let status;
-    if (!temAulas && !temFalta) status = 'neutra';
-    else if (temFalta) status = 'falta';
-    else status = 'ok';
-    if (i < 8) historico.push({ seg, status });
-    if (!quebrada) {
-      if (status === 'falta') quebrada = true;
-      else if (status === 'ok') streak++;
-    }
-    if (seg < (db.aulas.length ? db.aulas.map(a => a.data).sort()[0] : hoje)) break;
+    if (temFalta) { contando = false; continue; }
+    if (temAulas) { total++; if (contando) sequencia++; }
   }
-  return { streak, historico: historico.reverse() };
-}
+  const faltouNestaSemana = db.faltas.some(f => !f.abonada && f.data >= segAtual && f.data <= somarDias(segAtual, 6));
+  if (faltouNestaSemana) sequencia = 0;
 
-function calcSequenciaDiaria() {
-  const hoje = hojeISO();
-  const primeira = db.aulas.length ? db.aulas.map(a => a.data).sort()[0] : hoje;
-  let dias = 0;
-  for (let i = 0; i < 200; i++) {
-    const d = somarDias(hoje, -i);
-    if (d < primeira) break;
-    const temFalta = db.faltas.some(f => !f.abonada && f.data === d);
-    if (temFalta) break;
-    const temAula = db.aulas.some(a => a.data === d);
-    if (temAula) dias++;
-  }
-  return dias;
+  const dias = ['seg', 'ter', 'qua', 'qui', 'sex'].map((rotulo, i) => {
+    const data = somarDias(segAtual, i);
+    const temAula = db.aulas.some(a => a.data === data);
+    const falta = db.faltas.some(f => !f.abonada && f.data === data);
+    let estado;
+    if (falta) estado = 'falta';
+    else if (data === hoje) estado = 'hoje';
+    else if (data > hoje) estado = temAula ? 'futuro' : 'livre';
+    else estado = temAula ? 'presente' : 'livre';
+    return { rotulo, data, temAula, estado };
+  });
+  const restantes = dias.filter(d => d.data >= hoje && d.temAula && d.estado !== 'falta').length;
+  const temAulaNaSemana = dias.some(d => d.temAula);
+  return { sequencia, total, dias, restantes, faltouNestaSemana, temAulaNaSemana };
 }
 
 /* ─────────── cálculos: notas PUC ─────────── */
@@ -1195,31 +1200,32 @@ function renderInicio() {
     salvar(); renderTudo();
   }));
 
-  /* ofensiva */
+  /* sequência: semana em foco */
   const alvoOf = document.getElementById('inicio-ofensiva');
   if (!db.aulas.length) {
     alvoOf.innerHTML = '<p class="muted" style="margin:0">Cadastre seus cronogramas para acompanhar sua sequência de presença semanal.</p>';
   } else {
     const of = calcOfensiva();
-    const dias = calcSequenciaDiaria();
-    const acesa = of.streak > 0 || dias > 0;
-    alvoOf.innerHTML = `<div class="ofensiva ${acesa ? 'acesa' : ''}">
-      <div class="chama">🔥</div>
-      <div class="grow">
-        <div class="row" style="gap:16px; align-items:baseline">
-          <div><span class="num-semanas num">${dias}</span> <span class="muted">dia${dias === 1 ? '' : 's'} presente${dias === 1 ? '' : 's'}</span></div>
-          <div><span class="num-semanas num" style="font-size:19px">${of.streak}</span> <span class="muted">semana${of.streak === 1 ? '' : 's'} perfeita${of.streak === 1 ? '' : 's'}</span></div>
-        </div>
-        <div class="muted">${acesa ? 'sem faltar — segue firme!' : 'Um dia de aula sem faltar acende a chama.'}</div>
-        <div class="semana-dots" aria-label="Últimas ${of.historico.length} semanas">
-          ${of.historico.map(h => `<span class="${h.status === 'ok' ? 'ok' : (h.status === 'falta' ? 'falta' : '')}" title="semana de ${formatarData(h.seg).slice(0, 5)}"></span>`).join('')}
-        </div>
+    let msg;
+    if (of.faltouNestaSemana) msg = 'A sequência reiniciou — seu total de semanas perfeitas segue valendo.';
+    else if (!of.temAulaNaSemana) msg = 'Semana sem aulas no plano — sua sequência está protegida.';
+    else if (of.restantes > 0) msg = `Mais ${of.restantes} dia${of.restantes === 1 ? '' : 's'} de aula e a semana fecha perfeita.`;
+    else msg = 'Semana perfeita garantida! 🎉';
+    const marca = d => d.estado === 'presente' ? '✓' : (d.estado === 'falta' ? '✕' : (d.estado === 'hoje' ? 'hoje' : ''));
+    const nomeEstado = { presente: 'presente', falta: 'falta', hoje: 'hoje', futuro: 'aula futura', livre: 'sem aula' };
+    alvoOf.innerHTML = `
+      <div class="semana-foco" aria-label="Sua semana: ${of.dias.map(d => d.rotulo + ' ' + nomeEstado[d.estado]).join(', ')}">
+        ${of.dias.map(d => `<div class="dia ${d.estado}"><div class="quadro" aria-hidden="true">${marca(d)}</div><div class="rotulo">${d.rotulo}</div></div>`).join('')}
       </div>
-      ${acesa ? '<button class="icone" id="btn-brag" type="button" title="Compartilhar sequência" aria-label="Compartilhar sequência">📤</button>' : ''}
-    </div>`;
+      <div class="selos">
+        <span class="pill lisa warn num">🔥 ${of.sequencia} semana${of.sequencia === 1 ? '' : 's'} seguida${of.sequencia === 1 ? '' : 's'}</span>
+        <span class="pill lisa accent num">🏆 ${of.total} no semestre</span>
+        ${of.sequencia > 0 || of.total > 0 ? '<button class="icone" id="btn-brag" type="button" title="Compartilhar sequência" aria-label="Compartilhar sequência" style="margin-left:auto">📤</button>' : ''}
+      </div>
+      <div class="muted" style="margin-top:8px">${msg}</div>`;
     const btnBrag = document.getElementById('btn-brag');
     if (btnBrag) btnBrag.addEventListener('click', () => {
-      const texto = `🔥 ${dias} dia${dias === 1 ? '' : 's'} de aula sem faltar${of.streak ? ` e ${of.streak} semana${of.streak === 1 ? '' : 's'} perfeita${of.streak === 1 ? '' : 's'}` : ''} — controlando tudo no Faltaê.\nhttps://gutoaranda.github.io/controle-faltas/`;
+      const texto = `🔥 ${of.sequencia} semana${of.sequencia === 1 ? '' : 's'} seguida${of.sequencia === 1 ? '' : 's'} sem faltar e 🏆 ${of.total} semana${of.total === 1 ? '' : 's'} perfeita${of.total === 1 ? '' : 's'} no semestre — controlando tudo no Faltaê.\nhttps://gutoaranda.github.io/controle-faltas/`;
       if (navigator.share) navigator.share({ text: texto }).catch(() => {});
       else navigator.clipboard.writeText(texto).then(() => toast('Copiado — cola no grupo! 📤')).catch(() => {});
     });
