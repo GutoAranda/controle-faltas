@@ -59,6 +59,18 @@
                 android:resource="@xml/widget_info" />
         </receiver>
 
+        <receiver
+            android:name=".SequenciaWidgetClaro"
+            android:exported="true"
+            android:label="@string/widget_nome_claro">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_claro" />
+        </receiver>
+
         <service
             android:name="com.google.androidbrowserhelper.trusted.DelegationService"
             android:enabled="true"

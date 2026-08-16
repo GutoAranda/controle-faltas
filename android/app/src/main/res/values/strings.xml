@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Faltaê</string>
-    <string name="widget_nome">Faltaê — Sequência</string>
+    <string name="widget_nome">Faltaê — Sequência (escuro)</string>
+    <string name="widget_nome_claro">Faltaê — Sequência (claro)</string>
     <string name="asset_statements">[{ \"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": { \"namespace\": \"web\", \"site\": \"https://gutoaranda.github.io\" } }]</string>
 </resources>

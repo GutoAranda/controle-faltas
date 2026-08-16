@@ -42,7 +42,10 @@ drop policy if exists "desconectar aparelho" on public.widget_aparelhos;
 create policy "desconectar aparelho" on public.widget_aparelhos
   for delete to authenticated using (user_id = auth.uid());
 revoke all on public.widget_aparelhos from anon, authenticated;
-grant insert (device_id, user_id), update (user_id), delete on public.widget_aparelhos to authenticated;
+-- (permissões de coluna e de tabela têm que ir em comandos separados no Postgres)
+grant insert (device_id, user_id) on public.widget_aparelhos to authenticated;
+grant update (user_id) on public.widget_aparelhos to authenticated;
+grant delete on public.widget_aparelhos to authenticated;
 
 -- ── 3. Rebaixamento automático de planos vencidos (roda todo dia às 03:15) ─
 create extension if not exists pg_cron;

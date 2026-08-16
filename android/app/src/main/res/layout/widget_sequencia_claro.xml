@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/widget_fundo"
+    android:background="@drawable/widget_fundo_claro"
     android:padding="14dp">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="—"
-            android:textColor="#A3E635"
+            android:textColor="#4056C7"
             android:textSize="34sp"
             android:textStyle="bold"
             android:includeFontPadding="false" />
@@ -30,7 +30,7 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="semanas seguidas 🔥"
-            android:textColor="#8A90AC"
+            android:textColor="#565C74"
             android:textSize="12sp"
             android:maxLines="2" />
 
@@ -38,13 +38,13 @@
             android:id="@+id/trofeu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/pill_escuro"
+            android:background="@drawable/pill_claro"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
             android:paddingTop="4dp"
             android:paddingBottom="4dp"
             android:text=""
-            android:textColor="#A6ABC2"
+            android:textColor="#965009"
             android:textSize="11sp"
             android:maxLines="1" />
 
@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:text="↻"
-            android:textColor="#8B9BEC"
+            android:textColor="#4056C7"
             android:textSize="15sp"
             android:textStyle="bold"
             android:contentDescription="Atualizar widget" />
@@ -66,11 +66,11 @@
         android:orientation="horizontal"
         android:layout_marginTop="12dp">
 
-        <TextView android:id="@+id/chip1" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="11sp" android:textStyle="bold" android:text="seg" />
-        <TextView android:id="@+id/chip2" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="11sp" android:textStyle="bold" android:text="ter" />
-        <TextView android:id="@+id/chip3" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="11sp" android:textStyle="bold" android:text="qua" />
-        <TextView android:id="@+id/chip4" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="11sp" android:textStyle="bold" android:text="qui" />
-        <TextView android:id="@+id/chip5" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:gravity="center" android:background="@drawable/chip_livre" android:textSize="11sp" android:textStyle="bold" android:text="sex" />
+        <TextView android:id="@+id/chip1" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre_claro" android:textSize="11sp" android:textStyle="bold" android:text="seg" />
+        <TextView android:id="@+id/chip2" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre_claro" android:textSize="11sp" android:textStyle="bold" android:text="ter" />
+        <TextView android:id="@+id/chip3" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre_claro" android:textSize="11sp" android:textStyle="bold" android:text="qua" />
+        <TextView android:id="@+id/chip4" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:gravity="center" android:background="@drawable/chip_livre_claro" android:textSize="11sp" android:textStyle="bold" android:text="qui" />
+        <TextView android:id="@+id/chip5" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1" android:gravity="center" android:background="@drawable/chip_livre_claro" android:textSize="11sp" android:textStyle="bold" android:text="sex" />
     </LinearLayout>
 
     <TextView
@@ -78,7 +78,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textColor="#8A90AC"
+        android:textColor="#565C74"
         android:textSize="11sp"
         android:maxLines="1"
         android:ellipsize="end" />
