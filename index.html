@@ -666,12 +666,10 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Sua sequência na tela inicial do celular, sem abrir o app — recurso do plano Essencial, no aplicativo Android do Faltaê.</p>
           <ol class="muted" style="margin:0 0 10px; padding-left:20px; font-size:13.5px">
-            <li>Toque e segure num espaço vazio da tela inicial → Widgets → Faltaê</li>
-            <li>Copie o código no botão abaixo</li>
-            <li>Cole na tela de configuração do widget</li>
+            <li>Toque e segure num espaço vazio da tela inicial → Widgets → Faltaê — Sequência</li>
+            <li>Toque no widget: ele abre o app e se conecta sozinho à sua conta</li>
           </ol>
-          <button class="small" id="btn-codigo-widget" type="button">Copiar código do widget</button>
-          <p class="sutil" style="margin:8px 0 0">O código é pessoal — não compartilhe. É o mesmo que ativa o calendário automático.</p>
+          <p class="sutil" style="margin:8px 0 0">Sem código e sem configuração — logado aqui, o widget se resolve. Saiu da conta? O widget desconecta junto.</p>
         </div>
       </details>
 
@@ -731,7 +729,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       <details class="menu-sec">
         <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Versão 2.6 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
+          <p class="muted" style="margin:12px 0 4px">Versão 2.7 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
             <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
             <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
@@ -2023,6 +2021,7 @@ async function aposLogin(user) {
   usuarioNuvem = user;
   renderConta();
   await puxarNuvem();
+  tentarConectarWidget();
 }
 
 function botoesConta(carregando, rotulo) {
@@ -2243,17 +2242,33 @@ document.getElementById('btn-assinar-cal').addEventListener('click', async () =>
   }
 });
 
-/* código do widget Android */
-document.getElementById('btn-codigo-widget').addEventListener('click', async () => {
-  const token = await obterTokenPessoal();
-  if (!token) return;
-  try {
-    await navigator.clipboard.writeText(token);
-    toast('Código copiado! Agora cole na tela de configuração do widget.');
-  } catch {
-    prompt('Copie o código do widget:', token);
-  }
-});
+/* widget Android: o widget abre o app com ?widget=ID e a conexão é automática */
+const widgetParam = new URLSearchParams(location.search).get('widget');
+if (widgetParam && /^[A-Za-z0-9]{32,128}$/.test(widgetParam)) {
+  localStorage.setItem('controleFaltas.widgetPendente', widgetParam);
+  history.replaceState(null, '', location.pathname);
+}
+
+async function tentarConectarWidget() {
+  const pendente = localStorage.getItem('controleFaltas.widgetPendente');
+  if (!pendente || !usuarioNuvem || !nuvemDisponivel()) return;
+  const { error } = await nuvem.from('widget_aparelhos')
+    .upsert({ device_id: pendente, user_id: usuarioNuvem.id });
+  if (error) return; // tabela ainda não criada ou sem rede — o widget tenta de novo na próxima abertura
+  localStorage.setItem('controleFaltas.widgetConectado', pendente);
+  localStorage.removeItem('controleFaltas.widgetPendente');
+  toast(planoNuvem === 'gratis'
+    ? 'Widget conectado! Assine o Essencial pra ver sua sequência nele.'
+    : 'Widget conectado! Ele atualiza em instantes. 🔥');
+}
+
+function avisarLoginWidget() {
+  if (!localStorage.getItem('controleFaltas.widgetPendente') || usuarioNuvem) return;
+  irParaAba('menu');
+  const sec = document.getElementById('menu-conta');
+  if (sec) sec.open = true;
+  toast('Entre (ou crie sua conta) pra conectar o widget.');
+}
 
 /* ─────────── tema (claro / escuro / sistema) ─────────── */
 function aplicarTema(tema) {
@@ -2315,6 +2330,11 @@ if (codigoConvite) {
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
   if (!confirm('Sair da conta? Seus dados continuam salvos neste aparelho.')) return;
+  const widgetConectado = localStorage.getItem('controleFaltas.widgetConectado');
+  if (widgetConectado && nuvemDisponivel()) {
+    await nuvem.from('widget_aparelhos').delete().eq('device_id', widgetConectado).then(() => {});
+    localStorage.removeItem('controleFaltas.widgetConectado');
+  }
   if (nuvemDisponivel()) await nuvem.auth.signOut();
   usuarioNuvem = null;
   planoNuvem = 'gratis';
@@ -2393,13 +2413,16 @@ if (retornoPagamento) {
 
 (async function iniciarConta() {
   renderConta();
-  if (!nuvemDisponivel()) return;
+  if (!nuvemDisponivel()) { avisarLoginWidget(); return; }
   try {
     const { data } = await nuvem.auth.getSession();
     if (data.session) {
       usuarioNuvem = data.session.user;
       renderConta();
       puxarNuvem();
+      tentarConectarWidget();
+    } else {
+      avisarLoginWidget();
     }
   } catch { /* offline — segue local */ }
 })();
