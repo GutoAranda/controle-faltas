@@ -451,6 +451,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     position: fixed; inset: 0; z-index: 300; background: var(--bg);
     overflow-y: auto; display: flex; justify-content: center;
   }
+  #tela-auth[hidden] { display: none; }
   body.auth-aberta { overflow: hidden; }
   .auth-caixa { width: 100%; max-width: 380px; padding: 52px 20px 40px; align-self: flex-start; }
   .auth-logo { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; }
