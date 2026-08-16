@@ -2413,22 +2413,21 @@ document.getElementById('form-compartilhar-grade').addEventListener('submit', as
     aulas: db.aulas.map(a => ({ id: a.id, materiaId: a.materiaId, data: a.data, conteudo: a.conteudo })),
     eventos: db.eventos.map(e => ({ id: e.id, materiaId: e.materiaId, tipo: e.tipo, titulo: e.titulo, data: e.data, descricao: e.descricao || null }))
   };
-  // mesmo curador + mesmo nome = atualiza no MESMO código (quem segue recebe sozinho)
-  const { data: minhas } = await nuvem.from('grades_compartilhadas')
-    .select('codigo').eq('criado_por', usuarioNuvem.id).eq('titulo', titulo).limit(1);
-  if (minhas && minhas.length) {
-    // o select de volta confirma que a linha foi mesmo atualizada — RLS sem
-    // permissão "atualiza" 0 linhas sem dar erro, e aí o certo é código novo
-    const { data: upd, error: erroUpd } = await nuvem.from('grades_compartilhadas')
-      .update({ dados, atualizado_em: new Date().toISOString() }).eq('codigo', minhas[0].codigo)
-      .select('codigo');
-    if (!erroUpd && upd && upd.length) {
-      mostrarCodigoGrade(minhas[0].codigo);
-      toast('Turma atualizada no mesmo código — quem já importou recebe sozinho 📬');
-      return;
-    }
-    // banco ainda sem permissão de atualizar (SQL pendente) — publica com código novo, como antes
+  // mesmo curador + mesmo nome = atualiza no MESMO código (quem segue recebe
+  // sozinho). Se existirem códigos duplicados da época em que cada publicação
+  // gerava um novo, todos são atualizados juntos — ninguém fica pra trás.
+  // O select de volta confirma a atualização: RLS sem permissão "atualiza"
+  // 0 linhas SEM dar erro, e nesse caso o certo é publicar com código novo.
+  const { data: upd, error: erroUpd } = await nuvem.from('grades_compartilhadas')
+    .update({ dados, atualizado_em: new Date().toISOString() })
+    .eq('criado_por', usuarioNuvem.id).eq('titulo', titulo)
+    .select('codigo');
+  if (!erroUpd && upd && upd.length) {
+    mostrarCodigoGrade(upd.map(l => l.codigo).sort()[0]);
+    toast('Turma atualizada no mesmo código — quem já importou recebe sozinho 📬');
+    return;
   }
+  // nada pra atualizar (primeira publicação) ou banco sem a permissão — código novo
   for (let tentativa = 0; tentativa < 4; tentativa++) {
     const codigo = gerarCodigoTurma();
     const { error } = await nuvem.from('grades_compartilhadas').insert({ codigo, titulo, dados, criado_por: usuarioNuvem.id });
