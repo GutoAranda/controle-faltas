@@ -408,6 +408,44 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     main, header.app .inner, nav.abas .inner { max-width: 880px; }
   }
 
+  /* minha grade: lista agrupada por dia */
+  .dia-titulo {
+    font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-3); margin: 14px 2px 6px;
+  }
+  .dia-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .mat-linha {
+    display: flex; align-items: center; gap: 10px; padding: 11px 12px; cursor: pointer;
+  }
+  #lista-materias .dia-card > div + div .mat-linha,
+  #lista-materias .dia-card > div + div { border-top: 1px solid var(--line); }
+  .mat-linha:hover { background: color-mix(in srgb, var(--accent-soft) 35%, transparent); }
+  .mat-hora { flex: none; width: 42px; font-size: 12.5px; font-weight: 700; color: var(--accent); }
+  .mat-nome { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .mat-meta { font-size: 11.5px; color: var(--ink-3); margin-top: 1px; }
+  .mat-seta { color: var(--ink-3); font-size: 16px; transition: transform .15s; }
+  .mat-linha.aberta .mat-seta { transform: rotate(90deg); }
+  .mat-detalhe { padding: 2px 12px 12px; }
+  .seguindo-card {
+    display: flex; gap: 9px; align-items: center; background: var(--accent-soft);
+    border-radius: 12px; padding: 9px 11px; margin: 10px 0 0; font-size: 13px; color: var(--ink);
+  }
+  .card-opcao {
+    display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 11px 12px; font: inherit; cursor: pointer; margin-top: 8px; color: var(--ink);
+  }
+  .card-opcao:hover, .card-opcao:focus-visible { border-color: var(--accent); }
+  .card-opcao .ico { flex: none; font-size: 18px; margin-top: 1px; }
+  .card-opcao strong { font-size: 13.5px; }
+  .card-opcao .sutil { display: inline-block; margin-top: 1px; }
+  summary.linha-acao {
+    cursor: pointer; color: var(--accent); font-weight: 700; font-size: 13.5px;
+    padding: 10px 2px; list-style: none;
+  }
+  summary.linha-acao::-webkit-details-marker { display: none; }
+  #compartilhar-wrap[open] summary.linha-acao .mat-seta { transform: rotate(90deg); }
+
   /* tela de entrada (conta obrigatória) */
   #tela-auth {
     position: fixed; inset: 0; z-index: 300; background: var(--bg);
@@ -634,15 +672,24 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
           <div id="grade-seguindo"></div>
           <div id="lista-materias"></div>
 
-          <p class="muted" style="margin:16px 0 8px"><strong>Adicionar matérias</strong> — escolha o caminho:</p>
-          <div class="acoes-dados" style="margin-top:0">
-            <button class="small" type="button" data-add-painel="puc">🏛️ Minha turma — PUC</button>
-            <button class="small" type="button" data-add-painel="codigo">🔑 Tenho um código</button>
-            <button class="small" type="button" data-add-painel="manual">✏️ Criar do zero</button>
+          <button class="primary" type="button" id="btn-add-materias" style="width:100%; margin-top:14px">＋ Adicionar matérias</button>
+          <div id="add-escolha" hidden style="margin-top:8px">
+            <button class="card-opcao" type="button" data-add-painel="puc">
+              <span class="ico" aria-hidden="true">🏛️</span>
+              <span><strong>Minha turma — PUC</strong><br><span class="sutil">a turma inteira, com horários e todas as datas do semestre</span></span>
+            </button>
+            <button class="card-opcao" type="button" data-add-painel="codigo">
+              <span class="ico" aria-hidden="true">🔑</span>
+              <span><strong>Tenho um código</strong><br><span class="sutil">um colega publicou a turma — importe tudo de uma vez</span></span>
+            </button>
+            <button class="card-opcao" type="button" data-add-painel="manual">
+              <span class="ico" aria-hidden="true">✏️</span>
+              <span><strong>Criar do zero</strong><br><span class="sutil">monte matéria por matéria, do seu jeito</span></span>
+            </button>
           </div>
 
           <div id="add-puc" hidden style="margin-top:12px">
-            <p class="muted" style="margin:0 0 8px">Sua turma inteira em um toque: matérias com dia, horário, professor, sala e <strong>todas as datas de aula do semestre</strong> (2026/2 · Monte Alegre). Faltas e notas ficam só suas.</p>
+            <p class="muted" style="margin:0 0 8px">Matérias com dia, horário, professor, sala e todas as datas de aula (2026/2 · Monte Alegre). Faltas e notas ficam só suas.</p>
             <div id="puc-indisponivel" class="sutil" hidden style="margin:0 0 8px">Sem conexão agora — tente de novo quando estiver online.</div>
             <div class="campos-2" style="max-width:340px">
               <label class="campo">Turno
@@ -717,22 +764,24 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             </form>
           </div>
 
-          <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
-          <p class="muted" style="margin:0 0 8px"><strong>Compartilhar com a turma:</strong> publique sua grade e cada colega importa tudo em um toque — e quem importou recebe suas novidades sozinho, sempre no mesmo código. Faltas e notas ficam só suas.</p>
-          <form id="form-compartilhar-grade" class="painel" style="max-width:420px">
-            <label class="campo">Nome da turma
-              <input type="text" id="grade-titulo" placeholder="Ex.: Direito 9º período noturno — PUC" maxlength="80">
-            </label>
-            <div id="grade-materias-escolha" style="margin:8px 0"></div>
-            <button class="small" type="submit">Publicar a turma</button>
-          </form>
-          <div id="grade-resultado" hidden style="margin-top:12px">
-            <p class="muted" style="margin:0 0 6px">Pronto! Manda pro grupo da turma:</p>
-            <div class="row" style="gap:8px">
-              <strong id="grade-codigo-gerado" class="num" style="font-size:22px; letter-spacing:.14em"></strong>
-              <button class="small" type="button" id="btn-copiar-convite">Copiar convite</button>
+          <details id="compartilhar-wrap" style="margin-top:6px">
+            <summary class="linha-acao">🔗 Compartilhar com a turma <span class="mat-seta" aria-hidden="true" style="float:right">›</span></summary>
+            <p class="muted" style="margin:10px 0 8px">Publique sua grade: cada colega importa tudo em um toque e recebe suas novidades sozinho, sempre no mesmo código. Faltas e notas ficam só suas.</p>
+            <form id="form-compartilhar-grade" class="painel" style="max-width:420px">
+              <label class="campo">Nome da turma
+                <input type="text" id="grade-titulo" placeholder="Ex.: Direito 9º período noturno — PUC" maxlength="80">
+              </label>
+              <div id="grade-materias-escolha" style="margin:8px 0"></div>
+              <button class="small" type="submit">Publicar a turma</button>
+            </form>
+            <div id="grade-resultado" hidden style="margin-top:12px">
+              <p class="muted" style="margin:0 0 6px">Pronto! Manda pro grupo da turma:</p>
+              <div class="row" style="gap:8px">
+                <strong id="grade-codigo-gerado" class="num" style="font-size:22px; letter-spacing:.14em"></strong>
+                <button class="small" type="button" id="btn-copiar-convite">Copiar convite</button>
+              </div>
             </div>
-          </div>
+          </details>
         </div>
       </details>
 
@@ -1178,6 +1227,7 @@ function abrirSheetMateria(matId) {
     { ico: '📖', rotulo: 'Ver plano de aula', fn: () => {
       irParaAba('menu');
       document.getElementById('menu-materias').open = true;
+      matAbertaId = matId;
       renderMaterias();
       const card = document.getElementById('mat-' + matId);
       if (card) {
@@ -1187,7 +1237,7 @@ function abrirSheetMateria(matId) {
       }
     }},
     { ico: '✎', rotulo: 'Editar matéria', fn: () => {
-      edMateriaId = matId; renderMaterias(); irParaAba('menu');
+      edMateriaId = matId; matAbertaId = matId; renderMaterias(); irParaAba('menu');
       document.getElementById('menu-materias').open = true;
       const card = document.getElementById('mat-' + matId);
       if (card) card.scrollIntoView({ block: 'start' });
@@ -1253,7 +1303,7 @@ function renderInicio() {
       <button class="primary" data-onboarding type="button">Montar minha grade</button>
       <p class="sutil" style="margin:12px 0 0">Tem um código da turma? <a href="#" data-onboarding-codigo>Importar com o código</a></p>
     </div>`;
-    alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => abrirMinhaGrade());
+    alvoHoje.querySelector('[data-onboarding]').addEventListener('click', () => abrirMinhaGrade('escolha'));
     alvoHoje.querySelector('[data-onboarding-codigo]').addEventListener('click', ev => {
       ev.preventDefault();
       abrirMinhaGrade('codigo');
@@ -1671,22 +1721,60 @@ function renderNotas() {
 /* ─────────── render: matérias (no menu) ─────────── */
 let edMateriaId = null;
 let edAulaId = null;
+let matAbertaId = null;
 
 function renderMaterias() {
   const alvo = document.getElementById('lista-materias');
   document.getElementById('materias-extra').textContent = db.materias.length ? `(${db.materias.length})` : '';
   if (!db.materias.length) {
-    alvo.innerHTML = '<div class="vazio" style="margin-top:10px">Nenhuma matéria ainda. Toque em <strong>＋ Nova matéria</strong> acima.</div>';
+    alvo.innerHTML = '<div class="vazio" style="margin-top:10px">Nenhuma matéria ainda. Toque em <strong>＋ Adicionar matérias</strong> abaixo.</div>';
+    renderSeguindo();
+    renderEscolhaMaterias();
     return;
   }
   const hoje = hojeISO();
-  alvo.innerHTML = [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(mat => {
-    const r = resumoMateria(mat);
-    const aulas = db.aulas.filter(a => a.materiaId === mat.id).sort((a, b) => a.data.localeCompare(b.data));
-    const dadas = aulas.filter(a => a.data <= hoje).length;
-    const abrirPlano = aulas.some(a => a.id === edAulaId) ? ' open' : '';
-    const meta = [mat.diaSemana, mat.horario, mat.sala ? 'sala ' + mat.sala : null, mat.creditos ? mat.creditos + ' créd.' : null, mat.professor].filter(Boolean).join(' · ');
-    const cabecalho = edMateriaId === mat.id
+  // editar ou mexer no plano exige a matéria expandida
+  if (edMateriaId) matAbertaId = edMateriaId;
+  if (edAulaId) {
+    const a = db.aulas.find(x => x.id === edAulaId);
+    if (a) matAbertaId = a.materiaId;
+  }
+  const DIAS = [['seg', 'Segunda'], ['ter', 'Terça'], ['qua', 'Quarta'], ['qui', 'Quinta'], ['sex', 'Sexta'], ['sáb', 'Sábado'], [null, 'Sem dia definido']];
+  alvo.innerHTML = DIAS.map(([dia, rotulo]) => {
+    const mats = db.materias
+      .filter(m => (m.diaSemana || null) === dia)
+      .sort((a, b) => (a.horario || '99').localeCompare(b.horario || '99') || a.nome.localeCompare(b.nome));
+    if (!mats.length) return '';
+    return `<div class="dia-titulo">${rotulo}</div><div class="dia-card">` +
+      mats.map(mat => linhaMateria(mat, hoje)).join('') + '</div>';
+  }).join('');
+  ligarEventosMaterias(alvo);
+  renderSeguindo();
+  renderEscolhaMaterias();
+}
+
+function linhaMateria(mat, hoje) {
+  const r = resumoMateria(mat);
+  const aulas = db.aulas.filter(a => a.materiaId === mat.id).sort((a, b) => a.data.localeCompare(b.data));
+  const dadas = aulas.filter(a => a.data <= hoje).length;
+  const aberta = matAbertaId === mat.id;
+  const meta = [mat.sala ? 'sala ' + mat.sala : null, mat.professor, aulas.length ? `${dadas} de ${aulas.length} aulas` : `${mat.totalAulas} aulas`].filter(Boolean).join(' · ');
+  return `<div id="mat-${mat.id}">
+    <div class="mat-linha${aberta ? ' aberta' : ''}" data-abrir-mat="${mat.id}" role="button" tabindex="0" aria-expanded="${aberta}">
+      <span class="mat-hora num">${esc(mat.horario || '—')}</span>
+      <div class="grow" style="min-width:0">
+        <div class="mat-nome trunca">${esc(mat.nome)}</div>
+        <div class="mat-meta trunca num">${esc(meta)}</div>
+      </div>
+      <span class="mat-seta" aria-hidden="true">›</span>
+    </div>
+    ${aberta ? `<div class="mat-detalhe">${detalheMateria(mat, r, aulas, dadas)}</div>` : ''}
+  </div>`;
+}
+
+function detalheMateria(mat, r, aulas, dadas) {
+  const abrirPlano = aulas.some(a => a.id === edAulaId) ? ' open' : '';
+  const cabecalho = edMateriaId === mat.id
       ? `<form class="painel" data-form-ed-materia="${mat.id}" style="margin-top:10px">
           <label class="campo">Nome da matéria
             <input type="text" name="nome" value="${esc(mat.nome)}" required>
@@ -1727,16 +1815,11 @@ function renderMaterias() {
           </div>
         </form>`
       : `<div class="row">
-        <div class="grow">
-          <h3>${esc(mat.nome)}</h3>
-          <div class="muted num">${mat.totalAulas} aulas · limite ${mat.limitePct}% → máx. ${r.maxFaltas} faltas${meta ? ' · ' + esc(meta) : ''}</div>
-          ${aulas.length ? `<div class="sutil num">Cronograma: ${dadas} de ${aulas.length} aulas dadas</div>` : ''}
-        </div>
+        <div class="grow muted num">${mat.totalAulas} aulas · limite ${mat.limitePct}% → máx. ${r.maxFaltas} faltas${mat.creditos ? ' · ' + mat.creditos + ' créd.' : ''}</div>
         <button class="small" data-ed-materia="${mat.id}">Editar</button>
         <button class="small ghost-danger" data-del-materia="${mat.id}">Excluir</button>
       </div>`;
-    return `<div class="card" id="mat-${mat.id}" style="margin-top:10px">
-      ${cabecalho}
+    return `${cabecalho}
       <details class="plano"${abrirPlano}>
         <summary>Plano de aula (${aulas.length} aula${aulas.length === 1 ? '' : 's'}) ▾</summary>
         <ul class="lista-conteudo" style="margin-top:10px">
@@ -1788,10 +1871,30 @@ function renderMaterias() {
             <button class="small" type="submit">Importar linhas</button>
           </form>
         </details>
-      </details>
-    </div>`;
-  }).join('');
+      </details>`;
+}
 
+function ligarEventosMaterias(alvo) {
+  alvo.querySelectorAll('[data-abrir-mat]').forEach(l => {
+    const alternar = () => {
+      const id = l.dataset.abrirMat;
+      matAbertaId = matAbertaId === id ? null : id;
+      if (edMateriaId && edMateriaId !== matAbertaId) edMateriaId = null;
+      if (edAulaId) {
+        const a = db.aulas.find(x => x.id === edAulaId);
+        if (a && a.materiaId !== matAbertaId) edAulaId = null;
+      }
+      renderMaterias();
+      if (matAbertaId) {
+        const el = document.getElementById('mat-' + matAbertaId);
+        if (el) el.scrollIntoView({ block: 'nearest' });
+      }
+    };
+    l.addEventListener('click', alternar);
+    l.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); alternar(); }
+    });
+  });
   alvo.querySelectorAll('[data-del-materia]').forEach(b => b.addEventListener('click', () => {
     const mat = materiaPorId(b.dataset.delMateria);
     if (!confirm(`Excluir "${mat.nome}" e todas as faltas, aulas, notas e eventos dela?`)) return;
@@ -1878,8 +1981,6 @@ function renderMaterias() {
     salvar(); renderTudo();
     toast(`${ok} aula(s) importada(s)` + (erro ? ` · ${erro} linha(s) ignorada(s)` : ''));
   }));
-  renderSeguindo();
-  renderEscolhaMaterias();
 }
 
 document.getElementById('form-materia').addEventListener('submit', ev => {
@@ -2404,6 +2505,7 @@ function abrirPainelAdd(qual, forcar) {
   const abrir = forcar || alvo.hidden;
   for (const p of ['puc', 'codigo', 'manual']) document.getElementById('add-' + p).hidden = true;
   if (abrir) {
+    document.getElementById('add-escolha').hidden = false;
     alvo.hidden = false;
     if (qual === 'puc') prepararSecaoPUC();
     if (qual === 'manual') setTimeout(() => document.getElementById('materia-nome').focus(), 60);
@@ -2414,12 +2516,31 @@ function abrirPainelAdd(qual, forcar) {
 document.querySelectorAll('[data-add-painel]').forEach(b =>
   b.addEventListener('click', () => abrirPainelAdd(b.dataset.addPainel)));
 
+document.getElementById('btn-add-materias').addEventListener('click', () => {
+  const escolha = document.getElementById('add-escolha');
+  const fechar = !escolha.hidden;
+  escolha.hidden = fechar;
+  if (fechar) for (const p of ['puc', 'codigo', 'manual']) document.getElementById('add-' + p).hidden = true;
+  else escolha.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
 function abrirMinhaGrade(painel) {
   irParaAba('menu');
   const sec = document.getElementById('menu-materias');
   sec.open = true;
-  if (painel) abrirPainelAdd(painel, true);
-  else sec.scrollIntoView({ behavior: 'smooth' });
+  if (painel === 'compartilhar') {
+    const wrap = document.getElementById('compartilhar-wrap');
+    wrap.open = true;
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else if (painel === 'escolha') {
+    const escolha = document.getElementById('add-escolha');
+    escolha.hidden = false;
+    escolha.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else if (painel) {
+    abrirPainelAdd(painel, true);
+  } else {
+    sec.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 document.getElementById('menu-materias').addEventListener('toggle', ev => {
@@ -2435,8 +2556,12 @@ function renderSeguindo() {
   const alvo = document.getElementById('grade-seguindo');
   if (!alvo) return;
   const seguidas = turmasSeguidas();
-  alvo.innerHTML = seguidas.map(t => `<div class="sutil" style="margin:10px 0 0">📬 Seguindo a turma <strong class="num">${esc(t.codigo)}</strong> — novidades do curador chegam sozinhas.
-    <a href="#" data-deixar-seguir="${esc(t.codigo)}">Deixar de seguir</a></div>`).join('');
+  alvo.innerHTML = seguidas.map(t => `<div class="seguindo-card">
+    <span aria-hidden="true">📬</span>
+    <div class="grow" style="min-width:0">Seguindo a turma <strong class="num">${esc(t.codigo)}</strong><br>
+      <span class="sutil">novidades do curador chegam sozinhas</span></div>
+    <button class="small icone" type="button" data-deixar-seguir="${esc(t.codigo)}" aria-label="Deixar de seguir ${esc(t.codigo)}" title="Deixar de seguir">✕</button>
+  </div>`).join('');
   alvo.querySelectorAll('[data-deixar-seguir]').forEach(a => a.addEventListener('click', ev => {
     ev.preventDefault();
     const cod = a.dataset.deixarSeguir;
@@ -2867,7 +2992,7 @@ function renderResultadoPlano(res, matId, r) {
     }
     salvar(); renderTudo();
     toast(`${preenchidas} conteúdo${preenchidas === 1 ? '' : 's'}${provasNovas.length ? ` e ${provasNovas.length} prova${provasNovas.length === 1 ? '' : 's'}` : ''} no lugar ✓`,
-      'Publicar pra turma', () => abrirMinhaGrade());
+      'Publicar pra turma', () => abrirMinhaGrade('compartilhar'));
   });
 }
 
