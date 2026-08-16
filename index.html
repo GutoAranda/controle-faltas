@@ -2431,8 +2431,10 @@ document.getElementById('btn-assinar-cal').addEventListener('click', async () =>
 
 /* widget Android: o widget abre o app com ?widget=ID e a conexão é automática */
 const widgetParam = new URLSearchParams(location.search).get('widget');
+let widgetRecemChegado = false; // só o toque no widget mostra erro; retentativas em recargas são silenciosas
 if (widgetParam && /^[A-Za-z0-9]{32,128}$/.test(widgetParam)) {
   localStorage.setItem('controleFaltas.widgetPendente', widgetParam);
+  widgetRecemChegado = true;
   history.replaceState(null, '', location.pathname);
 }
 
@@ -2447,7 +2449,7 @@ async function tentarConectarWidget() {
       .update({ user_id: usuarioNuvem.id }).eq('device_id', pendente));
   }
   if (error) {
-    toast(error.code === '42P01'
+    if (widgetRecemChegado) toast(error.code === '42P01'
       ? 'O servidor ainda não foi atualizado pro widget (falta rodar o SQL).'
       : 'Não deu pra conectar o widget agora: ' + (error.message || 'erro desconhecido'));
     return;
