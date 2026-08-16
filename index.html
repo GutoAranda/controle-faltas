@@ -607,6 +607,35 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         </div>
       </details>
 
+      <details class="menu-sec" id="menu-puc">
+        <summary><span class="ico-menu">🏛️</span> Grade pronta — PUC Direito</summary>
+        <div class="corpo-menu">
+          <p class="muted" style="margin:12px 0 8px">Sua turma inteira em um toque: matérias com dia, horário, professor, sala e <strong>todas as datas de aula do semestre</strong> (2026/2 · Monte Alegre). Faltas e notas ficam só suas.</p>
+          <div id="puc-indisponivel" class="sutil" hidden style="margin:0 0 8px">Sem conexão agora — tente de novo quando estiver online.</div>
+          <div class="campos-2" style="max-width:340px">
+            <label class="campo">Turno
+              <select id="puc-turno">
+                <option value="N">Noite</option>
+                <option value="M">Manhã</option>
+              </select>
+            </label>
+            <label class="campo">Turma
+              <select id="puc-turma"></select>
+            </label>
+          </div>
+          <button class="primary" id="btn-importar-turma" type="button" style="margin-top:10px">Trazer minha turma</button>
+          <div style="border-top:1px solid var(--line); margin:16px 0 12px"></div>
+          <p class="muted" style="margin:0 0 8px"><strong>Grade do seu jeito:</strong> eletivas, prática jurídica ou matérias de outras turmas — adicione uma a uma.</p>
+          <label class="campo" style="max-width:340px">De onde
+            <select id="puc-origem"></select>
+          </label>
+          <label class="campo" style="max-width:420px; margin-top:8px">Disciplina
+            <select id="puc-disciplina"></select>
+          </label>
+          <button class="small" id="btn-add-avulsa" type="button" style="margin-top:10px">Adicionar esta disciplina</button>
+        </div>
+      </details>
+
       <details class="menu-sec" id="menu-materias">
         <summary><span class="ico-menu">📖</span> Minhas matérias <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
@@ -639,6 +668,14 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
                   </label>
                   <label class="campo">Créditos
                     <input type="number" id="materia-creditos" min="1" max="12" placeholder="3">
+                  </label>
+                </div>
+                <div class="campos-2">
+                  <label class="campo">Professor(a) <span class="sutil">(opcional)</span>
+                    <input type="text" id="materia-professor" placeholder="Ex.: Carlos Alberto Ferriani">
+                  </label>
+                  <label class="campo">Sala <span class="sutil">(opcional)</span>
+                    <input type="text" id="materia-sala" placeholder="Ex.: 321">
                   </label>
                 </div>
                 <button class="primary" type="submit">Salvar matéria</button>
@@ -729,7 +766,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       <details class="menu-sec">
         <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
-          <p class="muted" style="margin:12px 0 4px">Versão 2.7 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
+          <p class="muted" style="margin:12px 0 4px">Versão 2.8 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
             <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
             <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
@@ -1190,7 +1227,7 @@ function renderInicio() {
       return `<div class="aula-hoje">
         <div class="info">
           <div class="nome trunca">${esc(mat.nome)}</div>
-          <div class="sutil trunca">${conteudo}</div>
+          <div class="sutil trunca">${[mat.horario, mat.sala ? 'sala ' + mat.sala : null, conteudo || null].filter(Boolean).map(esc).join(' · ')}</div>
         </div>
         <button class="btn-falta small ${marcada ? 'marcada' : ''}" data-falta-hoje="${mat.id}" aria-pressed="${marcada}">
           ${marcada ? 'Faltei ✓' : 'Faltei'}
@@ -1266,7 +1303,15 @@ function renderInicio() {
   /* situação por matéria */
   const alvoMat = document.getElementById('inicio-materias');
   if (!db.materias.length) {
-    alvoMat.innerHTML = '<div class="vazio">Cadastre suas matérias no <strong>Menu</strong> para começar.</div>';
+    alvoMat.innerHTML = `<div class="vazio">Estuda Direito na PUC-SP? Monte sua grade inteira em um toque.<br>
+      <button class="primary small" id="btn-atalho-puc" type="button" style="margin-top:10px">🏛️ Escolher minha turma</button><br>
+      <span class="sutil">Ou cadastre suas matérias manualmente no Menu.</span></div>`;
+    const atalhoPUC = document.getElementById('btn-atalho-puc');
+    if (atalhoPUC) atalhoPUC.addEventListener('click', () => {
+      irParaAba('menu');
+      const sec = document.getElementById('menu-puc');
+      if (sec) { sec.open = true; sec.scrollIntoView({ behavior: 'smooth' }); }
+    });
   } else {
     const ordenadas = [...db.materias]
       .map(mat => ({ mat, r: resumoMateria(mat) }))
@@ -1608,7 +1653,7 @@ function renderMaterias() {
     const aulas = db.aulas.filter(a => a.materiaId === mat.id).sort((a, b) => a.data.localeCompare(b.data));
     const dadas = aulas.filter(a => a.data <= hoje).length;
     const abrirPlano = aulas.some(a => a.id === edAulaId) ? ' open' : '';
-    const meta = [mat.diaSemana, mat.horario, mat.creditos ? mat.creditos + ' créd.' : null].filter(Boolean).join(' · ');
+    const meta = [mat.diaSemana, mat.horario, mat.sala ? 'sala ' + mat.sala : null, mat.creditos ? mat.creditos + ' créd.' : null, mat.professor].filter(Boolean).join(' · ');
     const cabecalho = edMateriaId === mat.id
       ? `<form class="painel" data-form-ed-materia="${mat.id}" style="margin-top:10px">
           <label class="campo">Nome da matéria
@@ -1634,6 +1679,14 @@ function renderMaterias() {
             </label>
             <label class="campo">Créditos
               <input type="number" name="creditos" min="1" max="12" value="${mat.creditos || ''}">
+            </label>
+          </div>
+          <div class="campos-2">
+            <label class="campo">Professor(a)
+              <input type="text" name="professor" value="${esc(mat.professor || '')}">
+            </label>
+            <label class="campo">Sala
+              <input type="text" name="sala" value="${esc(mat.sala || '')}">
             </label>
           </div>
           <div class="acoes-dados">
@@ -1731,6 +1784,8 @@ function renderMaterias() {
       mat.diaSemana = f.elements.dia.value || null;
       mat.horario = f.elements.horario.value.trim() || null;
       mat.creditos = parseInt(f.elements.creditos.value, 10) || null;
+      mat.professor = f.elements.professor.value.trim() || null;
+      mat.sala = f.elements.sala.value.trim() || null;
     }
     edMateriaId = null;
     salvar(); renderTudo(); toast('Matéria atualizada');
@@ -1796,7 +1851,9 @@ document.getElementById('form-materia').addEventListener('submit', ev => {
     limitePct: parseInt(document.getElementById('materia-limite').value, 10),
     diaSemana: document.getElementById('materia-dia').value || null,
     horario: document.getElementById('materia-horario').value.trim() || null,
-    creditos: parseInt(document.getElementById('materia-creditos').value, 10) || null
+    creditos: parseInt(document.getElementById('materia-creditos').value, 10) || null,
+    professor: document.getElementById('materia-professor').value.trim() || null,
+    sala: document.getElementById('materia-sala').value.trim() || null
   });
   salvar(); renderTudo();
   ev.target.reset();
@@ -2085,20 +2142,32 @@ function gerarCodigoTurma() {
 
 function aplicarGrade(d) {
   const mapa = {};
-  let nm = 0, na = 0, ne = 0;
+  let nm = 0, na = 0, ne = 0, enriquecidas = 0;
   for (const m of (d.materias || [])) {
     if (!m || !m.nome) continue;
     const jaTem = db.materias.find(x => x.nome.trim().toLowerCase() === String(m.nome).trim().toLowerCase());
-    if (jaTem) { mapa[m.id] = jaTem.id; continue; }
+    if (jaTem) {
+      mapa[m.id] = jaTem.id;
+      // matéria já existe (ex.: veio da grade oficial): completa o que estiver faltando, sem sobrescrever nada do aluno
+      for (const campo of ['totalAulas', 'diaSemana', 'horario', 'creditos', 'professor', 'sala']) {
+        if (jaTem[campo] == null && m[campo] != null) jaTem[campo] = m[campo];
+      }
+      continue;
+    }
     const novoId = uid();
     mapa[m.id] = novoId;
-    db.materias.push({ id: novoId, nome: String(m.nome), totalAulas: m.totalAulas || null, limitePct: m.limitePct || 25, diaSemana: m.diaSemana || null, horario: m.horario || null, creditos: m.creditos || null });
+    db.materias.push({ id: novoId, nome: String(m.nome), totalAulas: m.totalAulas || null, limitePct: m.limitePct || 25, diaSemana: m.diaSemana || null, horario: m.horario || null, creditos: m.creditos || null, professor: m.professor || null, sala: m.sala || null });
     nm++;
   }
   for (const a of (d.aulas || [])) {
     const materiaId = mapa[a.materiaId];
     if (!materiaId || !a.data) continue;
-    if (db.aulas.some(x => x.materiaId === materiaId && x.data === a.data)) continue;
+    const jaTem = db.aulas.find(x => x.materiaId === materiaId && x.data === a.data);
+    if (jaTem) {
+      // data já existe (esqueleto da grade oficial): o conteúdo do curador preenche o vazio
+      if (!jaTem.conteudo && a.conteudo) { jaTem.conteudo = a.conteudo; enriquecidas++; }
+      continue;
+    }
     db.aulas.push({ id: uid(), materiaId, data: a.data, conteudo: a.conteudo || '' });
     na++;
   }
@@ -2110,8 +2179,126 @@ function aplicarGrade(d) {
     ne++;
   }
   salvar(); renderTudo();
-  return { materias: nm, aulas: na, eventos: ne };
+  return { materias: nm, aulas: na, eventos: ne, enriquecidas };
 }
+
+/* ─────────── grade pronta: catálogo oficial PUC Direito 2026/2 ─────────── */
+let catalogoPUC = null;
+async function obterCatalogoPUC() {
+  if (catalogoPUC) return catalogoPUC;
+  if (window.__CATALOGO_PUC) { catalogoPUC = window.__CATALOGO_PUC; return catalogoPUC; }
+  try {
+    const r = await fetch('catalogo-puc-2026-2.json');
+    if (r.ok) catalogoPUC = await r.json();
+  } catch { /* offline sem cache — a seção avisa */ }
+  return catalogoPUC;
+}
+
+const DIA_NUM = { seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, 'sáb': 6 };
+function datasDoSemestre(diaSemana, sem) {
+  const datas = [];
+  const alvo = DIA_NUM[diaSemana];
+  if (!alvo) return datas;
+  const d = new Date(sem.inicio + 'T12:00:00');
+  const fim = new Date(sem.fim + 'T12:00:00');
+  while (d.getDay() !== alvo) d.setDate(d.getDate() + 1);
+  while (d <= fim) {
+    const iso = d.toISOString().slice(0, 10);
+    if (!sem.semAula.includes(iso)) datas.push(iso);
+    d.setDate(d.getDate() + 7);
+  }
+  return datas;
+}
+
+function pacoteOficial(disciplinas, sem) {
+  const materias = [], aulas = [];
+  for (const item of disciplinas) {
+    const id = uid();
+    const datas = datasDoSemestre(item.d, sem);
+    materias.push({ id, nome: item.n, totalAulas: datas.length || null, limitePct: 25, diaSemana: item.d, horario: item.h, creditos: null, professor: item.p || null, sala: item.s || null });
+    for (const data of datas) aulas.push({ id: uid(), materiaId: id, data, conteudo: '' });
+  }
+  return { materias, aulas, eventos: [] };
+}
+
+const rotuloDisc = i => `${i.n} — ${i.d} ${i.h}${i.p ? ' · ' + i.p : ''}`;
+
+async function prepararSecaoPUC() {
+  const cat = await obterCatalogoPUC();
+  document.getElementById('puc-indisponivel').hidden = !!cat;
+  if (!cat) return;
+  const turno = document.getElementById('puc-turno').value;
+  const selTurma = document.getElementById('puc-turma');
+  selTurma.innerHTML = Object.keys(cat.turmas).filter(t => t.startsWith(turno)).sort()
+    .map(t => `<option value="${t}">${t}</option>`).join('');
+
+  const selOrigem = document.getElementById('puc-origem');
+  const categorias = [...new Set(cat.avulsas.map(a => a.c))];
+  selOrigem.innerHTML =
+    `<optgroup label="Eletivas e mais">${categorias.map(c => `<option value="c:${c}">${c}s</option>`).join('')}</optgroup>` +
+    `<optgroup label="Turmas — Noite">${Object.keys(cat.turmas).filter(t => t.startsWith('N')).sort().map(t => `<option value="t:${t}">Turma ${t}</option>`).join('')}</optgroup>` +
+    `<optgroup label="Turmas — Manhã">${Object.keys(cat.turmas).filter(t => t.startsWith('M')).sort().map(t => `<option value="t:${t}">Turma ${t}</option>`).join('')}</optgroup>`;
+  atualizarDisciplinasPUC();
+}
+
+function atualizarDisciplinasPUC() {
+  if (!catalogoPUC) return;
+  const origem = document.getElementById('puc-origem').value;
+  const sel = document.getElementById('puc-disciplina');
+  let lista = [];
+  if (origem.startsWith('c:')) {
+    const cat = origem.slice(2);
+    const turno = document.getElementById('puc-turno').value === 'N' ? 'noite' : 'manha';
+    const doTurno = catalogoPUC.avulsas.filter(a => a.c === cat && a.t === turno);
+    const outroTurno = catalogoPUC.avulsas.filter(a => a.c === cat && a.t !== turno);
+    lista = [...doTurno, ...outroTurno];
+  } else if (origem.startsWith('t:')) {
+    lista = catalogoPUC.turmas[origem.slice(2)] || [];
+  }
+  sel.innerHTML = lista.map((i, idx) => `<option value="${origem}|${idx}">${esc(rotuloDisc(i))}</option>`).join('')
+    || '<option value="">—</option>';
+}
+
+document.getElementById('puc-turno').addEventListener('change', prepararSecaoPUC);
+document.getElementById('puc-origem').addEventListener('change', atualizarDisciplinasPUC);
+document.getElementById('menu-puc').addEventListener('toggle', ev => {
+  if (ev.target.open) prepararSecaoPUC();
+});
+
+document.getElementById('btn-importar-turma').addEventListener('click', async () => {
+  const cat = await obterCatalogoPUC();
+  if (!cat) { toast('Sem conexão — tente quando estiver online.'); return; }
+  const turma = document.getElementById('puc-turma').value;
+  const disciplinas = cat.turmas[turma];
+  if (!disciplinas) return;
+  if (!confirm(`Trazer a turma ${turma}?\n\n${disciplinas.length} matérias com dia, horário, professor, sala e todas as datas de aula do semestre. Nada que você já tem é duplicado.`)) return;
+  const r = aplicarGrade(pacoteOficial(disciplinas, cat.semestre));
+  irParaAba('inicio');
+  toast(r.materias || r.aulas
+    ? `Turma ${turma} montada: +${r.materias} matérias e +${r.aulas} datas de aula 🏛️`
+    : 'Você já tinha tudo dessa turma — nada foi duplicado.');
+});
+
+document.getElementById('btn-add-avulsa').addEventListener('click', async () => {
+  const cat = await obterCatalogoPUC();
+  if (!cat) { toast('Sem conexão — tente quando estiver online.'); return; }
+  const valor = document.getElementById('puc-disciplina').value;
+  if (!valor) return;
+  const [origem, idx] = [valor.slice(0, valor.lastIndexOf('|')), Number(valor.slice(valor.lastIndexOf('|') + 1))];
+  let item = null;
+  if (origem.startsWith('c:')) {
+    const catNome = origem.slice(2);
+    const turno = document.getElementById('puc-turno').value === 'N' ? 'noite' : 'manha';
+    const doTurno = catalogoPUC.avulsas.filter(a => a.c === catNome && a.t === turno);
+    const outroTurno = catalogoPUC.avulsas.filter(a => a.c === catNome && a.t !== turno);
+    item = [...doTurno, ...outroTurno][idx];
+  } else if (origem.startsWith('t:')) {
+    item = (catalogoPUC.turmas[origem.slice(2)] || [])[idx];
+  }
+  if (!item) return;
+  const r = aplicarGrade(pacoteOficial([item], cat.semestre));
+  toast(r.materias ? `"${item.n}" adicionada com ${r.aulas} datas de aula ✓` : 'Essa disciplina você já tem.');
+});
 
 async function importarGradePorCodigo(codigo) {
   codigo = (codigo || '').trim().toUpperCase();
@@ -2144,7 +2331,7 @@ document.getElementById('form-compartilhar-grade').addEventListener('submit', as
   if (!titulo) { toast('Dê um nome pra turma — ex.: "Direito 9º noturno — PUC".'); return; }
   // só a estrutura da turma sai daqui — faltas, notas e recuperações NUNCA entram no pacote
   const dados = {
-    materias: db.materias.map(m => ({ id: m.id, nome: m.nome, totalAulas: m.totalAulas, limitePct: m.limitePct, diaSemana: m.diaSemana, horario: m.horario, creditos: m.creditos })),
+    materias: db.materias.map(m => ({ id: m.id, nome: m.nome, totalAulas: m.totalAulas, limitePct: m.limitePct, diaSemana: m.diaSemana, horario: m.horario, creditos: m.creditos, professor: m.professor || null, sala: m.sala || null })),
     aulas: db.aulas.map(a => ({ id: a.id, materiaId: a.materiaId, data: a.data, conteudo: a.conteudo })),
     eventos: db.eventos.map(e => ({ id: e.id, materiaId: e.materiaId, tipo: e.tipo, titulo: e.titulo, data: e.data, descricao: e.descricao || null }))
   };
