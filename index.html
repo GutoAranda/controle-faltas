@@ -2007,6 +2007,22 @@ async function empurrarNuvem() {
 
 async function puxarNuvem() {
   if (!usuarioNuvem || !nuvemDisponivel()) return;
+
+  // aluno grátis não sincroniza — baixa só o plano (1 palavra) em vez da linha
+  // inteira (dezenas de KB); se detectar upgrade, cai pro fluxo completo abaixo
+  if (localStorage.getItem('controleFaltas.plano') === 'gratis') {
+    const { data: leve, error: erroLeve } = await nuvem.from('dados_usuario')
+      .select('plano').eq('user_id', usuarioNuvem.id).maybeSingle();
+    if (erroLeve) return;
+    if (leve && (leve.plano || 'gratis') === 'gratis') { planoNuvem = 'gratis'; renderConta(); return; }
+    if (!leve) {
+      await nuvem.from('dados_usuario').insert({ user_id: usuarioNuvem.id, dados: db });
+      planoNuvem = 'gratis';
+      renderConta();
+      return;
+    }
+  }
+
   const { data, error } = await nuvem.from('dados_usuario')
     .select('dados, plano, atualizado_em')
     .eq('user_id', usuarioNuvem.id)
