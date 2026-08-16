@@ -31,6 +31,16 @@ Painel do Supabase → **Edge Functions** → **Deploy new function** (pelo edit
 
 A função `widget` alimenta o widget de sequência do celular (Android) e não depende do Mercado Pago — pode publicar antes das outras se quiser testar o widget primeiro.
 
+## 3b. Autorizar o link de "Esqueci minha senha" (2 min)
+
+O app agora tem redefinição de senha — o email de redefinição precisa voltar pra URL do app, e o Supabase só redireciona pra URLs autorizadas:
+
+Painel do Supabase → **Authentication** → **URL Configuration**:
+- **Site URL**: `https://gutoaranda.github.io/controle-faltas/`
+- **Redirect URLs** → adicione: `https://gutoaranda.github.io/controle-faltas/`
+
+Sem isso, o link do email cai numa página errada e o aluno não consegue trocar a senha.
+
 ## 4. Testar o fluxo inteiro (5 min)
 
 1. No app, entre com a conta de teste → Menu → Conta → **Assinar o Essencial — R$ 15**.

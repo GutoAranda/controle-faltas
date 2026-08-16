@@ -408,6 +408,35 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     main, header.app .inner, nav.abas .inner { max-width: 880px; }
   }
 
+  /* tela de entrada (conta obrigatória) */
+  #tela-auth {
+    position: fixed; inset: 0; z-index: 300; background: var(--bg);
+    overflow-y: auto; display: flex; justify-content: center;
+  }
+  body.auth-aberta { overflow: hidden; }
+  .auth-caixa { width: 100%; max-width: 380px; padding: 52px 20px 40px; align-self: flex-start; }
+  .auth-logo { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; }
+  .auth-logo svg { width: 46px; height: 46px; flex: none; }
+  .auth-logo span { font-size: 27px; font-weight: 800; letter-spacing: -0.5px; color: var(--ink); }
+  .auth-logo .e { color: var(--accent); }
+  .auth-titulo { font-size: 22px; font-weight: 800; color: var(--ink); margin: 0 0 4px; }
+  .auth-sub { color: var(--ink-2); font-size: 14px; margin: 0 0 20px; }
+  .senha-wrap { position: relative; display: block; }
+  .senha-wrap input { width: 100%; padding-right: 48px; box-sizing: border-box; }
+  .ver-senha {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    border: 0; background: none; cursor: pointer; padding: 8px 10px;
+    font-size: 17px; line-height: 1; color: var(--ink-3); border-radius: 8px;
+  }
+  .ver-senha:hover, .ver-senha:focus-visible { color: var(--ink); }
+  #auth-msg { font-size: 13.5px; line-height: 1.45; margin: 0; padding: 10px 12px; border-radius: 10px; }
+  #auth-msg.erro { background: color-mix(in srgb, var(--danger) 12%, var(--bg)); color: var(--danger); }
+  #auth-msg.ok { background: color-mix(in srgb, var(--ok) 12%, var(--bg)); color: var(--ok); }
+  .auth-links { margin: 18px 0 0; display: grid; gap: 10px; font-size: 14px; color: var(--ink-2); }
+  .auth-links a { color: var(--accent); font-weight: 700; cursor: pointer; text-decoration: none; }
+  .auth-links a:hover, .auth-links a:focus-visible { text-decoration: underline; }
+  .auth-nota { margin: 26px 0 0; }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -422,6 +451,36 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     <div class="contexto"><strong id="hoje"></strong><br><span id="semana"></span><span id="nuvem-ind" hidden title="Sincronização ativa"> · ☁️</span></div>
   </div>
 </header>
+
+<!-- ══════════ TELA DE ENTRADA (conta obrigatória) ══════════ -->
+<div id="tela-auth" hidden>
+  <div class="auth-caixa">
+    <div class="auth-logo">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#4056C7"/><circle cx="60" cy="60" r="39" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="8"/><path d="M 60 21 A 39 39 0 1 1 21 60" fill="none" stroke="#FFF" stroke-width="8" stroke-linecap="round"/><path d="M46 46 74 74 M74 46 46 74" stroke="#A3E635" stroke-width="11" stroke-linecap="round"/></svg>
+      <span>falta<span class="e">ê</span></span>
+    </div>
+    <p class="auth-titulo" id="auth-titulo">Que bom te ver!</p>
+    <p class="auth-sub" id="auth-sub">Entre pra continuar de onde parou.</p>
+    <form class="painel" id="auth-form" novalidate>
+      <label class="campo" id="auth-l-email">Email
+        <input type="email" id="auth-email" autocomplete="email" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="voce@email.com">
+      </label>
+      <label class="campo" id="auth-l-senha">Senha
+        <span class="senha-wrap">
+          <input type="password" id="auth-senha" autocomplete="current-password" minlength="6" placeholder="mínimo 6 caracteres">
+          <button type="button" class="ver-senha" id="auth-ver-senha" aria-label="Mostrar senha" aria-pressed="false">👁</button>
+        </span>
+      </label>
+      <p id="auth-msg" hidden></p>
+      <button class="primary" type="submit" id="auth-btn">Entrar</button>
+    </form>
+    <div class="auth-links">
+      <a id="auth-esqueci">Esqueci minha senha</a>
+      <p style="margin:0"><span id="auth-troca-txt">Primeira vez aqui?</span> <a id="auth-trocar">Criar conta grátis</a></p>
+    </div>
+    <p class="sutil auth-nota">Suas faltas e notas ficam salvas no seu aparelho — a conta identifica você e habilita os recursos da turma.</p>
+  </div>
+</div>
 
 <main>
   <!-- ══════════ INÍCIO ══════════ -->
@@ -544,19 +603,8 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         <summary><span class="ico-menu">👤</span> Conta e sincronização <span class="sutil num" id="conta-resumo" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
           <div id="conta-deslogado">
-            <p class="muted" style="margin:12px 0 8px">Crie uma conta para sincronizar suas faltas, provas e notas entre o celular e o computador — recurso do plano Essencial.</p>
-            <form class="painel" id="form-conta">
-              <label class="campo">Email
-                <input type="email" id="conta-email" autocomplete="email" placeholder="voce@email.com" required>
-              </label>
-              <label class="campo">Senha
-                <input type="password" id="conta-senha" autocomplete="current-password" minlength="6" placeholder="mínimo 6 caracteres" required>
-              </label>
-              <div class="acoes-dados" style="margin-top:10px">
-                <button class="primary" type="submit" id="btn-entrar">Entrar</button>
-                <button class="small" type="button" id="btn-criar-conta">Criar conta</button>
-              </div>
-            </form>
+            <p class="muted" style="margin:12px 0 8px">Você não está conectado.</p>
+            <button class="primary" type="button" id="btn-abrir-auth">Entrar ou criar conta</button>
           </div>
           <div id="conta-logado" hidden>
             <p class="muted" style="margin:12px 0 4px">Conectado como <strong id="conta-usuario"></strong></p>
@@ -2088,46 +2136,120 @@ function renderConta() {
 
 async function aposLogin(user) {
   usuarioNuvem = user;
+  localStorage.setItem('controleFaltas.contaOk', user.email || '1');
+  esconderAuth();
   renderConta();
   await puxarNuvem();
   tentarConectarWidget();
 }
 
-function botoesConta(carregando, rotulo) {
-  const entrar = document.getElementById('btn-entrar');
-  const criar = document.getElementById('btn-criar-conta');
-  entrar.disabled = criar.disabled = carregando;
-  entrar.textContent = carregando && rotulo === 'entrar' ? 'Entrando…' : 'Entrar';
-  criar.textContent = carregando && rotulo === 'criar' ? 'Criando…' : 'Criar conta';
+/* ─────────── tela de entrada (conta obrigatória) ─────────── */
+const TEXTOS_AUTH = {
+  entrar:    { titulo: 'Que bom te ver!', sub: 'Entre pra continuar de onde parou.', btn: 'Entrar', autoSenha: 'current-password' },
+  criar:     { titulo: 'Crie sua conta grátis', sub: 'Leva menos de um minuto — só email e senha.', btn: 'Criar conta grátis', autoSenha: 'new-password' },
+  reset:     { titulo: 'Redefinir senha', sub: 'A gente manda um link pro seu email pra você criar uma senha nova.', btn: 'Enviar link por email', autoSenha: null },
+  novaSenha: { titulo: 'Crie uma senha nova', sub: 'Escolha a nova senha da sua conta.', btn: 'Salvar nova senha', autoSenha: 'new-password' },
+};
+let modoAuth = 'entrar';
+
+function msgAuth(texto, tipo) {
+  const el = document.getElementById('auth-msg');
+  el.hidden = !texto;
+  el.textContent = texto || '';
+  el.className = tipo || '';
 }
 
-document.getElementById('form-conta').addEventListener('submit', async ev => {
-  ev.preventDefault();
-  if (!nuvemDisponivel()) { toast('Sem conexão — tente de novo quando estiver online.'); return; }
-  const email = document.getElementById('conta-email').value.trim();
-  const senha = document.getElementById('conta-senha').value;
-  botoesConta(true, 'entrar');
-  try {
-    const { data, error } = await nuvem.auth.signInWithPassword({ email, password: senha });
-    if (error) { toast(traduzErroAuth(error)); return; }
-    toast('Bem-vindo de volta!');
-    await aposLogin(data.user);
-  } finally { botoesConta(false); }
+function renderAuthModo(modo) {
+  modoAuth = modo;
+  const t = TEXTOS_AUTH[modo];
+  document.getElementById('auth-titulo').textContent = t.titulo;
+  document.getElementById('auth-sub').textContent = t.sub;
+  document.getElementById('auth-btn').textContent = t.btn;
+  document.getElementById('auth-l-email').hidden = modo === 'novaSenha';
+  document.getElementById('auth-l-senha').hidden = modo === 'reset';
+  const senha = document.getElementById('auth-senha');
+  senha.setAttribute('autocomplete', t.autoSenha || 'off');
+  document.getElementById('auth-esqueci').hidden = modo !== 'entrar';
+  const trocaTxt = document.getElementById('auth-troca-txt');
+  const trocar = document.getElementById('auth-trocar');
+  trocaTxt.parentElement.hidden = modo === 'novaSenha';
+  if (modo === 'criar') { trocaTxt.textContent = 'Já tem conta?'; trocar.textContent = 'Entrar'; }
+  else if (modo === 'reset') { trocaTxt.textContent = 'Lembrou a senha?'; trocar.textContent = 'Voltar e entrar'; }
+  else { trocaTxt.textContent = 'Primeira vez aqui?'; trocar.textContent = 'Criar conta grátis'; }
+  msgAuth('');
+}
+
+function mostrarAuth(modo) {
+  renderAuthModo(modo || 'entrar');
+  document.getElementById('tela-auth').hidden = false;
+  document.body.classList.add('auth-aberta');
+  const foco = modoAuth === 'novaSenha' ? 'auth-senha' : 'auth-email';
+  setTimeout(() => document.getElementById(foco).focus(), 50);
+}
+
+function esconderAuth() {
+  document.getElementById('tela-auth').hidden = true;
+  document.body.classList.remove('auth-aberta');
+}
+
+document.getElementById('auth-ver-senha').addEventListener('click', () => {
+  const inp = document.getElementById('auth-senha');
+  const btn = document.getElementById('auth-ver-senha');
+  const mostrar = inp.type === 'password';
+  inp.type = mostrar ? 'text' : 'password';
+  btn.textContent = mostrar ? '🙈' : '👁';
+  btn.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+  btn.setAttribute('aria-pressed', String(mostrar));
+  inp.focus();
 });
 
-document.getElementById('btn-criar-conta').addEventListener('click', async () => {
-  if (!nuvemDisponivel()) { toast('Sem conexão — tente de novo quando estiver online.'); return; }
-  const email = document.getElementById('conta-email').value.trim();
-  const senha = document.getElementById('conta-senha').value;
-  if (!email || senha.length < 6) { toast('Preencha email e senha (mínimo 6 caracteres).'); return; }
-  botoesConta(true, 'criar');
+document.getElementById('auth-esqueci').addEventListener('click', () => renderAuthModo('reset'));
+document.getElementById('auth-trocar').addEventListener('click', () =>
+  renderAuthModo(modoAuth === 'entrar' ? 'criar' : 'entrar'));
+document.getElementById('btn-abrir-auth').addEventListener('click', () => mostrarAuth('entrar'));
+
+document.getElementById('auth-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if (!nuvemDisponivel()) { msgAuth('Sem conexão — conecte-se à internet e tente de novo.', 'erro'); return; }
+  const email = document.getElementById('auth-email').value.trim();
+  const senha = document.getElementById('auth-senha').value;
+  if (modoAuth !== 'novaSenha' && !email) { msgAuth('Preencha seu email.', 'erro'); return; }
+  if (modoAuth !== 'reset' && senha.length < 6) { msgAuth('A senha precisa ter pelo menos 6 caracteres.', 'erro'); return; }
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true;
+  btn.textContent = 'Um instante…';
   try {
-    const { data, error } = await nuvem.auth.signUp({ email, password: senha });
-    if (error) { toast(traduzErroAuth(error)); return; }
-    if (!data.session) { toast('Conta criada! Confirme seu email para entrar.'); return; }
-    toast('Conta criada!');
-    await aposLogin(data.user);
-  } finally { botoesConta(false); }
+    if (modoAuth === 'entrar') {
+      const { data, error } = await nuvem.auth.signInWithPassword({ email, password: senha });
+      if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
+      toast('Bem-vindo de volta!');
+      await aposLogin(data.user);
+    } else if (modoAuth === 'criar') {
+      const { data, error } = await nuvem.auth.signUp({ email, password: senha });
+      if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
+      if (!data.session) {
+        renderAuthModo('entrar');
+        msgAuth('Conta criada! Confirme seu email (o link está na sua caixa de entrada) e entre aqui.', 'ok');
+        return;
+      }
+      toast('Conta criada! Bem-vindo ao Faltaê 💚');
+      await aposLogin(data.user);
+    } else if (modoAuth === 'reset') {
+      const { error } = await nuvem.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
+      msgAuth('Se existir conta com ' + email + ', o link de redefinição já está a caminho. Confira também o spam.', 'ok');
+    } else if (modoAuth === 'novaSenha') {
+      const { data, error } = await nuvem.auth.updateUser({ password: senha });
+      if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
+      toast('Senha atualizada!');
+      await aposLogin(data.user);
+    }
+  } catch (e) {
+    msgAuth(traduzErroAuth(e), 'erro');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = TEXTOS_AUTH[modoAuth].btn;
+  }
 });
 
 /* volta pro app (troca de aparelho/aba): puxa novidades da nuvem, no máximo a cada 30s */
@@ -3013,8 +3135,10 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
   planoNuvem = 'gratis';
   localStorage.removeItem('controleFaltas.plano');
   localStorage.removeItem('controleFaltas.ultimaSync');
+  localStorage.removeItem('controleFaltas.contaOk');
   renderConta();
   toast('Você saiu da conta.');
+  mostrarAuth('entrar');
 });
 
 document.getElementById('btn-sync-agora').addEventListener('click', async () => {
@@ -3064,8 +3188,10 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   planoNuvem = 'gratis';
   localStorage.removeItem('controleFaltas.plano');
   localStorage.removeItem('controleFaltas.ultimaSync');
+  localStorage.removeItem('controleFaltas.contaOk');
   renderConta();
   toast('Conta excluída. Seus dados continuam salvos neste aparelho.');
+  mostrarAuth('entrar');
 });
 
 /* retorno do pagamento (?pagamento=ok) */
@@ -3086,18 +3212,30 @@ if (retornoPagamento) {
 
 (async function iniciarConta() {
   renderConta();
-  if (!nuvemDisponivel()) { avisarLoginWidget(); return; }
+  const veioRecovery = /type=recovery/.test(location.hash);
+  // sem a biblioteca da nuvem (demo/offline): não dá pra logar — o app segue local, sem bloquear
+  if (!nuvemDisponivel()) { avisarLoginWidget(); verificarTurmasSeguidas(); return; }
+  nuvem.auth.onAuthStateChange(evento => {
+    if (evento === 'PASSWORD_RECOVERY') mostrarAuth('novaSenha');
+  });
   try {
     const { data } = await nuvem.auth.getSession();
     if (data.session) {
       usuarioNuvem = data.session.user;
+      localStorage.setItem('controleFaltas.contaOk', usuarioNuvem.email || '1');
       renderConta();
       puxarNuvem();
       tentarConectarWidget();
+      if (veioRecovery) mostrarAuth('novaSenha');
     } else {
       avisarLoginWidget();
+      mostrarAuth('entrar');
+      if (veioRecovery) msgAuth('O link de redefinição expirou — peça um novo em "Esqueci minha senha".', 'erro');
     }
-  } catch { /* offline — segue local */ }
+  } catch {
+    // nuvem fora do ar: quem já entrou alguma vez segue local; quem nunca entrou precisa de conexão
+    if (!localStorage.getItem('controleFaltas.contaOk')) mostrarAuth('entrar');
+  }
   verificarTurmasSeguidas();
 })();
 </script>
