@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+// assinatura local opcional: no CI o APK sai sem assinar e é assinado na máquina do dono
+def ksFile = file('../keystore.properties')
+def ks = new Properties()
+if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
+
+android {
+    namespace 'io.github.gutoaranda.controlefaltas'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'io.github.gutoaranda.controlefaltas'
+        minSdk 21
+        targetSdk 34
+        versionCode 10
+        versionName '2.6'
+    }
+
+    if (ksFile.exists()) {
+        signingConfigs {
+            release {
+                storeFile file(ks['storeFile'])
+                storePassword ks['storePassword']
+                keyAlias ks['keyAlias']
+                keyPassword ks['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (ksFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
