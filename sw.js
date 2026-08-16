@@ -1,4 +1,4 @@
-const CACHE = 'faltae-v33';
+const CACHE = 'faltae-v34';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './catalogo-puc-2026-2.json'];
 
 self.addEventListener('install', ev => {
