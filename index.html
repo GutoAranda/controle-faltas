@@ -2438,27 +2438,44 @@ if (widgetParam && /^[A-Za-z0-9]{32,128}$/.test(widgetParam)) {
   history.replaceState(null, '', location.pathname);
 }
 
+function widgetConectou(pendente) {
+  localStorage.setItem('controleFaltas.widgetConectado', pendente);
+  localStorage.removeItem('controleFaltas.widgetPendente');
+  toast(planoNuvem === 'gratis'
+    ? 'Widget conectado! Assine o Essencial pra ver sua sequência nele.'
+    : 'Widget conectado! Ele atualiza em instantes. 🔥');
+}
+
 async function tentarConectarWidget() {
   const pendente = localStorage.getItem('controleFaltas.widgetPendente');
   if (!pendente || !usuarioNuvem || !nuvemDisponivel()) return;
-  // insere; se o aparelho já estava vinculado (troca de conta), só atualiza o dono
+
+  // este aparelho já pareou este widget nesta conta? então não há nada a fazer
+  if (localStorage.getItem('controleFaltas.widgetConectado') === pendente) {
+    localStorage.removeItem('controleFaltas.widgetPendente');
+    if (widgetRecemChegado) toast('Widget conectado ✓');
+    return;
+  }
+
   let { error } = await nuvem.from('widget_aparelhos')
     .insert({ device_id: pendente, user_id: usuarioNuvem.id });
+
   if (error && error.code === '23505') {
+    // o vínculo já existe: só este aparelho conhece o próprio código, então foi ele
+    // quem gravou numa tentativa anterior. Tenta assumir (cobre troca de conta)…
     ({ error } = await nuvem.from('widget_aparelhos')
       .update({ user_id: usuarioNuvem.id }).eq('device_id', pendente));
+    // …e se o servidor negar a atualização, o vínculo antigo continua valendo — segue conectado
+    if (error && error.code === '42501') { widgetConectou(pendente); return; }
   }
+
   if (error) {
     if (widgetRecemChegado) toast(error.code === '42P01'
       ? 'O servidor ainda não foi atualizado pro widget (falta rodar o SQL).'
       : 'Não deu pra conectar o widget agora: ' + (error.message || 'erro desconhecido'));
     return;
   }
-  localStorage.setItem('controleFaltas.widgetConectado', pendente);
-  localStorage.removeItem('controleFaltas.widgetPendente');
-  toast(planoNuvem === 'gratis'
-    ? 'Widget conectado! Assine o Essencial pra ver sua sequência nele.'
-    : 'Widget conectado! Ele atualiza em instantes. 🔥');
+  widgetConectou(pendente);
 }
 
 function avisarLoginWidget() {
