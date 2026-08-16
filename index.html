@@ -2252,9 +2252,19 @@ if (widgetParam && /^[A-Za-z0-9]{32,128}$/.test(widgetParam)) {
 async function tentarConectarWidget() {
   const pendente = localStorage.getItem('controleFaltas.widgetPendente');
   if (!pendente || !usuarioNuvem || !nuvemDisponivel()) return;
-  const { error } = await nuvem.from('widget_aparelhos')
-    .upsert({ device_id: pendente, user_id: usuarioNuvem.id });
-  if (error) return; // tabela ainda não criada ou sem rede — o widget tenta de novo na próxima abertura
+  // insere; se o aparelho já estava vinculado (troca de conta), só atualiza o dono
+  let { error } = await nuvem.from('widget_aparelhos')
+    .insert({ device_id: pendente, user_id: usuarioNuvem.id });
+  if (error && error.code === '23505') {
+    ({ error } = await nuvem.from('widget_aparelhos')
+      .update({ user_id: usuarioNuvem.id }).eq('device_id', pendente));
+  }
+  if (error) {
+    toast(error.code === '42P01'
+      ? 'O servidor ainda não foi atualizado pro widget (falta rodar o SQL).'
+      : 'Não deu pra conectar o widget agora: ' + (error.message || 'erro desconhecido'));
+    return;
+  }
   localStorage.setItem('controleFaltas.widgetConectado', pendente);
   localStorage.removeItem('controleFaltas.widgetPendente');
   toast(planoNuvem === 'gratis'
