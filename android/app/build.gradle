@@ -15,8 +15,8 @@ android {
         applicationId 'io.github.gutoaranda.controlefaltas'
         minSdk 21
         targetSdk 34
-        versionCode 12
-        versionName '2.8'
+        versionCode 13
+        versionName '3.5'
     }
 
     if (ksFile.exists()) {
