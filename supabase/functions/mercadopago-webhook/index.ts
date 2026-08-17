@@ -1,5 +1,6 @@
 // Faltaê — webhook do Mercado Pago: quando um pagamento é aprovado,
-// promove o usuário a Essencial por 30 dias (renova somando ao saldo).
+// promove o usuário a Essencial pelos dias do passe pago — 30 (mensal)
+// ou 180 (semestral) — sempre somando ao saldo que ainda resta.
 // Publicar com "Verify JWT" DESLIGADO (quem chama é o Mercado Pago).
 // Segredo necessário: MP_ACCESS_TOKEN.
 // Segurança: nunca confiamos no corpo da notificação — buscamos o pagamento
@@ -39,7 +40,14 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
-  // 30 dias a partir de agora, ou somando ao que ainda resta (renovação antecipada não perde dias)
+  // quantos dias creditar: vem da metadata da cobrança; se faltar (cobrança antiga),
+  // deduz pelo valor pago — R$ 50+ só existe no passe semestral
+  let dias = Number(pagamento?.metadata?.dias)
+  if (!Number.isFinite(dias) || dias < 1 || dias > 366) {
+    dias = Number(pagamento?.transaction_amount) >= 50 ? 180 : 30
+  }
+
+  // a partir de agora, ou somando ao que ainda resta (renovação antecipada não perde dias)
   const { data: atual } = await supabase
     .from('dados_usuario')
     .select('plano_valido_ate')
@@ -49,7 +57,7 @@ Deno.serve(async (req) => {
   const base = atual?.plano_valido_ate && new Date(atual.plano_valido_ate) > new Date()
     ? new Date(atual.plano_valido_ate)
     : new Date()
-  base.setDate(base.getDate() + 30)
+  base.setDate(base.getDate() + dias)
 
   const { error } = await supabase
     .from('dados_usuario')

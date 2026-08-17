@@ -1,5 +1,5 @@
-// Faltaê — cria uma cobrança de R$ 15 (Pix/cartão) no Mercado Pago
-// e devolve o link de pagamento. 1 pagamento = 30 dias de Essencial.
+// Faltaê — cria uma cobrança (Pix/cartão) no Mercado Pago e devolve o link de pagamento.
+// Dois passes: mensal (R$ 15 = 30 dias) e semestral (R$ 59,90 = 180 dias).
 // Publicar com "Verify JWT" LIGADO (o app chama com o usuário logado).
 // Segredo necessário: MP_ACCESS_TOKEN (painel do Mercado Pago → Suas integrações → credenciais de produção).
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -8,6 +8,19 @@ const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
 }
+
+const PASSES = {
+  mensal: {
+    titulo: 'Faltaê Essencial — 30 dias',
+    preco: 15,
+    dias: 30,
+  },
+  semestral: {
+    titulo: 'Faltaê Essencial — semestre inteiro (6 meses)',
+    preco: 59.90,
+    dias: 180,
+  },
+} as const
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -26,18 +39,23 @@ Deno.serve(async (req) => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ erro: 'não autenticado' }, { status: 401, headers: cors })
 
+  // qual passe o app pediu (sem corpo ou valor desconhecido = mensal, compatível com versões antigas)
+  const corpo = await req.json().catch(() => ({}))
+  const passe = PASSES[corpo?.passe as keyof typeof PASSES] ?? PASSES.mensal
+
   const resposta = await fetch('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',
     headers: { Authorization: `Bearer ${mpToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       items: [{
-        title: 'Faltaê Essencial — 30 dias',
+        title: passe.titulo,
         description: 'Sincronização na nuvem, matérias ilimitadas e calendário automático',
         quantity: 1,
         currency_id: 'BRL',
-        unit_price: 15,
+        unit_price: passe.preco,
       }],
       external_reference: user.id, // é assim que o webhook sabe quem pagou
+      metadata: { dias: passe.dias }, // e é assim que ele sabe quantos dias creditar
       payer: { email: user.email },
       statement_descriptor: 'FALTAE',
       back_urls: {
