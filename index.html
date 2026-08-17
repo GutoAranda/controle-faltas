@@ -2226,6 +2226,10 @@ function gerarRelatorio() {
     </table>` : '';
 
   const mediaPresenca = presencas.length ? Math.round(presencas.reduce((s, p) => s + p, 0) / presencas.length) : null;
+  const faltasDisponiveis = dados.reduce((s, d) => s + d.r.restam, 0);
+  const mbs = dados.flatMap(d => [d.rp.mb1, d.rp.mb2]).filter(v => v != null);
+  const mediaNotas = mbs.length ? arred1(mbs.reduce((s, v) => s + v, 0) / mbs.length) : null;
+  const provasFuturas = db.eventos.filter(e => e.tipo === 'prova' && e.data >= hoje).length;
   const primeirAula = db.aulas.length ? db.aulas.map(a => a.data).sort()[0] : hoje;
   const semestre = primeirAula.slice(0, 4) + '/' + (Number(primeirAula.slice(5, 7)) <= 6 ? '1' : '2');
   const agora = new Date();
@@ -2236,16 +2240,17 @@ function gerarRelatorio() {
   * { box-sizing: border-box; }
   body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #14172B; margin: 0; background: #EDEFF4; }
   .folha { max-width: 780px; margin: 0 auto; background: #FFF; min-height: 100vh; }
-  .capa { background: #4056C7; color: #FFF; padding: 34px 40px 28px; }
+  .capa { background: #4056C7; color: #FFF; padding: 30px 40px 26px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .capa .marca { font-size: 15px; font-weight: 800; letter-spacing: -.3px; opacity: .95; }
   .capa .marca b { color: #A3E635; }
-  .capa h1 { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin: 10px 0 2px; }
+  .capa h1 { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin: 8px 0 2px; }
   .capa .sem { font-size: 14px; opacity: .85; }
+  .capa svg { flex: none; }
   .info { display: flex; gap: 28px; flex-wrap: wrap; padding: 16px 40px; border-bottom: 1px solid #E5E7F0; font-size: 12px; color: #666C81; }
   .info strong { display: block; color: #14172B; font-size: 13px; font-weight: 600; }
   .miolo { padding: 26px 40px 34px; }
-  .cartoes { display: flex; gap: 12px; margin: 0 0 26px; }
-  .cartao { flex: 1; border: 1px solid #E5E7F0; border-radius: 14px; padding: 14px 16px; }
+  .cartoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 26px; }
+  .cartao { border: 1px solid #E5E7F0; border-radius: 14px; padding: 14px 16px; }
   .cartao .valor { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
   .cartao .rotulo { font-size: 11px; color: #666C81; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-top: 2px; }
   .cartao.destaque { background: #4056C7; border-color: #4056C7; color: #FFF; }
@@ -2269,9 +2274,17 @@ function gerarRelatorio() {
 </style></head><body>
 <div class="folha">
   <div class="capa">
-    <div class="marca">falta<b>ê</b></div>
-    <h1>Relatório do semestre</h1>
-    <div class="sem">${semestre} · frequência e notas</div>
+    <div>
+      <div class="marca">falta<b>ê</b></div>
+      <h1>Relatório do semestre</h1>
+      <div class="sem">${semestre} · frequência e notas</div>
+    </div>
+    <svg viewBox="0 0 120 120" width="86" height="86" aria-hidden="true">
+      <rect width="120" height="120" rx="27" fill="rgba(255,255,255,.12)"/>
+      <circle cx="60" cy="60" r="39" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="8"/>
+      <path d="M 60 21 A 39 39 0 1 1 21 60" fill="none" stroke="#FFF" stroke-width="8" stroke-linecap="round"/>
+      <path d="M46 46 74 74 M74 46 46 74" stroke="#A3E635" stroke-width="11" stroke-linecap="round"/>
+    </svg>
   </div>
   <div class="info">
     <div><strong>${esc((usuarioNuvem && usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.nome) || (usuarioNuvem && usuarioNuvem.email) || '—')}</strong>aluno(a)</div>
@@ -2282,8 +2295,11 @@ function gerarRelatorio() {
   <div class="miolo">
     <div class="cartoes">
       <div class="cartao destaque"><div class="valor">${mediaPresenca != null ? mediaPresenca + '%' : '—'}</div><div class="rotulo">Presença média</div></div>
-      <div class="cartao"><div class="valor">${faltasTotais}</div><div class="rotulo">Falta${faltasTotais === 1 ? '' : 's'} no semestre</div></div>
+      <div class="cartao"><div class="valor">${mediaNotas != null ? nf(mediaNotas) : '—'}</div><div class="rotulo">Média das notas</div></div>
       <div class="cartao"><div class="valor" style="color:${emRisco ? '#A30F33' : '#3F5F0A'}">${emRisco}</div><div class="rotulo">Matérias em atenção</div></div>
+      <div class="cartao"><div class="valor">${faltasTotais}</div><div class="rotulo">Falta${faltasTotais === 1 ? '' : 's'} usada${faltasTotais === 1 ? '' : 's'}</div></div>
+      <div class="cartao"><div class="valor" style="color:#3F5F0A">${faltasDisponiveis}</div><div class="rotulo">Faltas ainda disponíveis</div></div>
+      <div class="cartao"><div class="valor">${provasFuturas}</div><div class="rotulo">Prova${provasFuturas === 1 ? '' : 's'} pela frente</div></div>
     </div>
     <h2 class="secao">Visão geral por matéria</h2>
     <table class="tab-geral">
