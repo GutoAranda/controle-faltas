@@ -510,6 +510,10 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
           <button type="button" class="ver-senha" id="auth-ver-senha" aria-label="Mostrar senha" aria-pressed="false">👁</button>
         </span>
       </label>
+      <label class="check" id="auth-l-marketing" hidden>
+        <input type="checkbox" id="auth-marketing">
+        Quero receber novidades do Faltaê por email <span class="sutil">(opcional — dá pra mudar depois no Menu)</span>
+      </label>
       <p id="auth-msg" hidden></p>
       <button class="primary" type="submit" id="auth-btn">Entrar</button>
     </form>
@@ -660,6 +664,10 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
               <button class="small" id="btn-sync-agora">Sincronizar agora</button>
               <button class="small" id="btn-sair">Sair</button>
             </div>
+            <label class="check" style="margin-top:12px">
+              <input type="checkbox" id="chk-marketing">
+              Receber novidades do Faltaê por email
+            </label>
             <div style="border-top:1px solid var(--line); margin:14px 0 10px"></div>
             <button class="small ghost-danger" id="btn-excluir-conta" type="button">Excluir minha conta…</button>
             <p class="sutil" style="margin:6px 0 0">Apaga sua conta e tudo que está na nuvem, sem volta. Os dados deste aparelho continuam aqui.</p>
@@ -2227,6 +2235,7 @@ function renderConta() {
   document.getElementById('conta-upgrade').hidden = planoNuvem !== 'gratis';
   resumo.textContent = usuarioNuvem.email;
   document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
+  document.getElementById('chk-marketing').checked = !!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.aceita_marketing);
   document.getElementById('nuvem-ind').hidden = planoNuvem === 'gratis';
   const nomePlano = planoNuvem === 'pro' ? 'Pro' : (planoNuvem === 'essencial' ? 'Essencial' : 'Grátis');
   const ultima = localStorage.getItem('controleFaltas.ultimaSync');
@@ -2269,6 +2278,7 @@ function renderAuthModo(modo) {
   document.getElementById('auth-btn').textContent = t.btn;
   document.getElementById('auth-l-email').hidden = modo === 'novaSenha';
   document.getElementById('auth-l-senha').hidden = modo === 'reset';
+  document.getElementById('auth-l-marketing').hidden = modo !== 'criar';
   const senha = document.getElementById('auth-senha');
   senha.setAttribute('autocomplete', t.autoSenha || 'off');
   document.getElementById('auth-esqueci').hidden = modo !== 'entrar';
@@ -2327,7 +2337,11 @@ document.getElementById('auth-form').addEventListener('submit', async ev => {
       toast('Bem-vindo de volta!');
       await aposLogin(data.user);
     } else if (modoAuth === 'criar') {
-      const { data, error } = await nuvem.auth.signUp({ email, password: senha });
+      const aceitaMkt = document.getElementById('auth-marketing').checked;
+      const { data, error } = await nuvem.auth.signUp({
+        email, password: senha,
+        options: { data: { aceita_marketing: aceitaMkt, consentimento_marketing_em: aceitaMkt ? new Date().toISOString() : null } }
+      });
       if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
       if (!data.session) {
         renderAuthModo('entrar');
@@ -3265,6 +3279,17 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
   renderConta();
   toast('Você saiu da conta.');
   mostrarAuth('entrar');
+});
+
+document.getElementById('chk-marketing').addEventListener('change', async ev => {
+  const aceita = ev.target.checked;
+  if (!usuarioNuvem || !nuvemDisponivel()) { ev.target.checked = !aceita; toast('Sem conexão — tente de novo quando estiver online.'); return; }
+  const { data, error } = await nuvem.auth.updateUser({
+    data: { aceita_marketing: aceita, consentimento_marketing_em: aceita ? new Date().toISOString() : null }
+  });
+  if (error) { ev.target.checked = !aceita; toast('Não deu pra salvar agora — tente de novo.'); return; }
+  usuarioNuvem = data.user;
+  toast(aceita ? 'Combinado! Novidades chegam por email.' : 'Sem problemas — nada de emails promocionais.');
 });
 
 document.getElementById('btn-sync-agora').addEventListener('click', async () => {
