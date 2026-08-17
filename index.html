@@ -408,6 +408,21 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     main, header.app .inner, nav.abas .inner { max-width: 880px; }
   }
 
+  /* passes do Essencial */
+  .passes { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; max-width: 420px; }
+  .passe {
+    display: grid; gap: 2px; text-align: left; font: inherit; cursor: pointer;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    color: var(--ink);
+  }
+  .passe.heroi { border: 2px solid var(--accent); }
+  .passe:hover, .passe:focus-visible { border-color: var(--accent); }
+  .passe:disabled { opacity: .6; cursor: wait; }
+  .passe-selo { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+  .passe.heroi .passe-selo { color: var(--accent); }
+  .passe-preco { font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
+  .passe-eq { font-size: 11.5px; color: var(--ink-3); }
+
   /* minha grade: lista agrupada por dia */
   .dia-titulo {
     font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
@@ -653,9 +668,20 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             <p class="muted" style="margin:12px 0 4px">Conectado como <strong id="conta-usuario"></strong></p>
             <p class="sutil num" id="conta-status" style="margin:0 0 8px"></p>
             <div id="conta-upgrade" hidden>
-              <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático.</p>
-              <div class="acoes-dados" style="margin-top:0">
-                <button class="primary small" id="btn-assinar-essencial" type="button">Assinar o Essencial — R$ 15</button>
+              <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático. Pagamento avulso via Pix — sem assinatura, sem renovação automática.</p>
+              <div class="passes">
+                <button class="passe heroi" type="button" data-assinar="semestral">
+                  <span class="passe-selo">Semestre inteiro</span>
+                  <span class="passe-preco num">R$ 59,90</span>
+                  <span class="passe-eq num">sai a R$ 9,98/mês · um Pix só</span>
+                </button>
+                <button class="passe" type="button" data-assinar="mensal">
+                  <span class="passe-selo">30 dias</span>
+                  <span class="passe-preco num">R$ 15</span>
+                  <span class="passe-eq">pra experimentar</span>
+                </button>
+              </div>
+              <div class="acoes-dados" style="margin-top:8px">
                 <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
               </div>
               <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
@@ -3299,12 +3325,12 @@ document.getElementById('btn-sync-agora').addEventListener('click', async () => 
 });
 
 /* ─────────── assinar o Essencial (Mercado Pago) ─────────── */
-document.getElementById('btn-assinar-essencial').addEventListener('click', async () => {
+document.querySelectorAll('[data-assinar]').forEach(btn => btn.addEventListener('click', async () => {
   if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
-  const btn = document.getElementById('btn-assinar-essencial');
-  btn.disabled = true; btn.textContent = 'Gerando cobrança…';
+  const todos = document.querySelectorAll('[data-assinar]');
+  todos.forEach(b => b.disabled = true);
   try {
-    const { data, error } = await nuvem.functions.invoke('criar-cobranca');
+    const { data, error } = await nuvem.functions.invoke('criar-cobranca', { body: { passe: btn.dataset.assinar } });
     if (error || !data || !data.url) {
       toast('O pagamento automático está chegando — por enquanto, fale com o suporte pra ativar seu plano.');
       return;
@@ -3313,9 +3339,9 @@ document.getElementById('btn-assinar-essencial').addEventListener('click', async
     window.open(data.url, '_blank', 'noopener');
     toast('Pague pelo Mercado Pago (Pix ou cartão) e volte aqui — seu plano ativa sozinho.');
   } finally {
-    btn.disabled = false; btn.textContent = 'Assinar o Essencial — R$ 15';
+    todos.forEach(b => b.disabled = false);
   }
-});
+}));
 
 document.getElementById('btn-ja-paguei').addEventListener('click', async () => {
   await puxarNuvem();
