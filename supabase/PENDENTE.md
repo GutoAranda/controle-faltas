@@ -26,8 +26,12 @@ Painel do Supabase → **Edge Functions** → **Deploy new function** (pelo edit
 |---|---|---|
 | `criar-cobranca` | `supabase/functions/criar-cobranca/index.ts` | **LIGADO** (padrão) |
 | `mercadopago-webhook` | `supabase/functions/mercadopago-webhook/index.ts` | **DESLIGADO** (quem chama é o Mercado Pago) |
+| `criar-assinatura` | `supabase/functions/criar-assinatura/index.ts` | **LIGADO** (padrão) |
+| `cancelar-assinatura` | `supabase/functions/cancelar-assinatura/index.ts` | **LIGADO** (padrão) |
 | `excluir-conta` | `supabase/functions/excluir-conta/index.ts` | **LIGADO** (padrão) |
 | `widget` | `supabase/functions/widget/index.ts` | **DESLIGADO** (quem chama é o widget Android) |
+
+⚠️ Renovação automática (17/08): além de publicar `criar-assinatura` e `cancelar-assinatura`, é preciso **repastar a `mercadopago-webhook`** (ganhou o tratamento de assinaturas) e **rodar a seção 2d do pendente.sql** (coluna `assinatura_id` + leitura do vencimento).
 
 A função `widget` alimenta o widget de sequência do celular (Android) e não depende do Mercado Pago — pode publicar antes das outras se quiser testar o widget primeiro.
 
