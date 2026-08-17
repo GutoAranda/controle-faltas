@@ -288,6 +288,11 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent);
     display: grid; place-items: center; font-size: 16px; flex: none;
   }
+  details.menu-sec > summary .ico-menu svg {
+    width: 19px; height: 19px; fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+  }
+  details.menu-sec > summary .ico-menu svg .cheio { fill: currentColor; stroke: none; }
   details.menu-sec > summary::after { content: '▾'; margin-left: auto; color: var(--ink-3); }
   details.menu-sec[open] > summary::after { content: '▴'; }
   details.menu-sec .corpo-menu { padding: 4px 16px 16px; border-top: 1px solid var(--line); }
@@ -679,7 +684,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     <div class="menu-lista">
 
       <details class="menu-sec" id="menu-conta">
-        <summary><span class="ico-menu">👤</span> Conta e sincronização <span class="sutil num" id="conta-resumo" style="margin-left:6px"></span></summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.3"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/></svg></span> Conta e sincronização <span class="sutil num" id="conta-resumo" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
           <div id="conta-deslogado">
             <p class="muted" style="margin:12px 0 8px">Você não está conectado.</p>
@@ -762,7 +767,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec" id="menu-materias">
-        <summary><span class="ico-menu">🎓</span> Minha grade <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M9 5V3M15 5V3M8.5 13h.5M11.5 13h.5M14.5 13h.5M8.5 16.5h.5M11.5 16.5h.5"/></svg></span> Minha grade <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
           <div id="grade-seguindo"></div>
           <div id="lista-materias"></div>
@@ -881,7 +886,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec" id="menu-portal">
-        <summary><span class="ico-menu">🎓</span> Puxar do portal (PUC)</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 16.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.4 1.3A3.6 3.6 0 0 1 16.5 16.5"/><path d="M12 10.5v6M9.5 14l2.5 2.5 2.5-2.5"/></svg></span> Puxar do portal (PUC)</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Traga suas <strong>notas e faltas oficiais</strong> do portal da PUC pro Faltaê. Sua senha nunca sai do seu navegador — a gente não guarda nada.</p>
           <ol class="muted" style="margin:0 0 10px; padding-left:20px; font-size:13.5px">
@@ -900,7 +905,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec" id="menu-relatorio">
-        <summary><span class="ico-menu">📊</span> Relatório do semestre</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 15.5v2.5M12 12v6M15 9.5v8.5"/></svg></span> Relatório do semestre</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Frequência e notas de todas as matérias num documento organizado — pra imprimir, salvar em PDF ou mandar pra quem precisa ver que está tudo em dia. 😉</p>
           <button class="primary" id="btn-relatorio" type="button">Gerar relatório</button>
@@ -909,7 +914,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec" id="menu-aparencia">
-        <summary><span class="ico-menu">🌗</span> Aparência</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path class="cheio" d="M12 4a8 8 0 0 0 0 16z"/></svg></span> Aparência</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Tema do app neste aparelho.</p>
           <div class="acoes-dados" role="radiogroup" aria-label="Tema do app" style="margin-top:0">
@@ -921,7 +926,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec" id="menu-widget">
-        <summary><span class="ico-menu">📱</span> Widget do celular</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2.5"/><rect x="9" y="7" width="6" height="5" rx="1"/><path d="M10.5 18h3"/></svg></span> Widget do celular</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Sua sequência na tela inicial do celular, sem abrir o app — recurso do plano Essencial, no aplicativo Android do Faltaê.</p>
           <ol class="muted" style="margin:0 0 10px; padding-left:20px; font-size:13.5px">
@@ -933,7 +938,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec">
-        <summary><span class="ico-menu">💾</span> Backup dos dados</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/><path d="M12 4v10M8 10l4 4 4-4"/></svg></span> Backup dos dados</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 4px">Sem conta, seus dados ficam salvos apenas neste aparelho — exporte um backup de vez em quando. Com conta Essencial, a sincronização já cuida disso, mas o backup continua sendo uma boa garantia extra.</p>
           <p class="sutil num" id="backup-info" style="margin:0 0 4px"></p>
@@ -948,7 +953,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec">
-        <summary><span class="ico-menu">🗓️</span> Encerrar semestre</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M9 5V3M15 5V3M9 14.5l2 2 4-4"/></svg></span> Encerrar semestre</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Fim do semestre? O Faltaê baixa um backup completo (de recordação e garantia) e zera tudo pra você começar o próximo — aí é só importar a grade nova da turma.</p>
           <button class="small ghost-danger" id="btn-encerrar-semestre" type="button">Encerrar semestre…</button>
@@ -956,7 +961,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec" id="menu-instalar" hidden>
-        <summary><span class="ico-menu">📲</span> Instalar no aparelho</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2.5"/><path d="M12 7.5v6M9.5 11l2.5 2.5 2.5-2.5"/></svg></span> Instalar no aparelho</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Leve o Faltaê pra tela inicial: abre em um toque, funciona offline e não ocupa quase nada.</p>
           <button class="primary small" id="btn-instalar" type="button">Instalar o app</button>
@@ -964,7 +969,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec">
-        <summary><span class="ico-menu">💚</span> Indique o Faltaê</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-6.5-4.2-6.5-9A3.5 3.5 0 0 1 12 7.5 3.5 3.5 0 0 1 18.5 11c0 4.8-6.5 9-6.5 9z"/></svg></span> Indique o Faltaê</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Conhece alguém vivendo no limite dos 25%? O Faltaê cresce de indicação em indicação — sem anúncio, sem investidor, na base do boca a boca.</p>
           <button class="small" id="btn-indicar" type="button">Compartilhar o app</button>
@@ -972,7 +977,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec">
-        <summary><span class="ico-menu">💬</span> Sugestões e problemas</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9.5L5.5 19V6a1 1 0 0 1 1-1z"/><path d="M9 9.5h6M9 12h4"/></svg></span> Sugestões e problemas</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 8px">Achou um problema ou tem uma ideia? Manda aqui — cai direto na mesa de quem constrói o app.</p>
           <form id="form-sugestao" class="painel" style="max-width:420px">
@@ -986,7 +991,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </details>
 
       <details class="menu-sec">
-        <summary><span class="ico-menu">ℹ️</span> Sobre o Faltaê</summary>
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11.5v4.5M12 8h.01"/></svg></span> Sobre o Faltaê</summary>
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 4px">Versão 2.8 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
