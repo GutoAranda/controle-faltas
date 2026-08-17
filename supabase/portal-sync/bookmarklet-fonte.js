@@ -7,21 +7,19 @@
   try {
     const hoje = new Date().toISOString();
     const umAno = new Date(Date.now() - 370 * 86400000).toISOString();
-    const [fa, av, fe] = await Promise.all([
+    const [fa, av] = await Promise.all([
       fetch(`${BASE}/Aluno/Falta/Aula?dataAte=${hoje}&dataDe=${umAno}&tipoFrequencia=A`, { credentials: 'include' }).then(j),
       fetch(`${BASE}/AvaliacaoAlunoPeriodoLetivo`, { credentials: 'include' }).then(j),
-      fetch(`${BASE}/FaltaEtapa`, { credentials: 'include' }).then(j),
     ]);
 
-    // faltas: agrupa aula-a-aula por (disciplina, dia)
+    // faltas: 1 dia = 1 falta (não importa quantas aulas o portal contou naquele dia)
     const mF = new Map();
     for (const r of (fa?.data?.SFREQUENCIAALUNO || [])) {
       if (r.PRESENCA !== 'A') continue;
       const data = String(r.DATAFALTA || r.DATA || '').slice(0, 10);
       if (!data) continue;
       const k = r.CODDISC + '|' + data;
-      const a = mF.get(k) || { disciplina: r.DISCIPLINA, data, qtd: 0, abonada: false };
-      a.qtd += 1;
+      const a = mF.get(k) || { disciplina: r.DISCIPLINA, data, qtd: 1, abonada: false };
       if (r.JUSTIFICADAPERSONALIZADO === 'Sim') a.abonada = true;
       mF.set(k, a);
     }
@@ -41,16 +39,7 @@
     }
     const notas = [...mN.values()];
 
-    // resumo oficial de frequência: percentual + faltas -> total de aulas do semestre
-    const freq = [];
-    for (const r of (fe?.data?.FaltasEtapa || [])) {
-      const faltadas = Number(String(r['1 - Frequência Diária'] || '').trim()) || 0;
-      const pct = Number(r.PERCENTUAL) || 0;
-      const total = (faltadas > 0 && pct > 0) ? Math.round(faltadas / (pct / 100)) : null;
-      freq.push({ disciplina: r.Disciplina, faltadas, percentual: pct, totalAulas: total });
-    }
-
-    const payload = JSON.stringify({ faltae: 1, faltas, notas, freq });
+    const payload = JSON.stringify({ faltae: 1, faltas, notas });
     await navigator.clipboard.writeText(payload);
     alert('Pronto! ' + faltas.length + ' dia(s) de falta e ' + notas.length + ' disciplina(s) copiados.\n\nAbra o Faltaê > Menu > Puxar do portal e cole.');
   } catch (e) {
