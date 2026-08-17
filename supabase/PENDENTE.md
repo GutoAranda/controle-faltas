@@ -30,6 +30,9 @@ Painel do Supabase → **Edge Functions** → **Deploy new function** (pelo edit
 | `cancelar-assinatura` | `supabase/functions/cancelar-assinatura/index.ts` | **LIGADO** (padrão) |
 | `excluir-conta` | `supabase/functions/excluir-conta/index.ts` | **LIGADO** (padrão) |
 | `widget` | `supabase/functions/widget/index.ts` | **DESLIGADO** (quem chama é o widget Android) |
+| `enviar-relatorios` | `supabase/functions/enviar-relatorios/index.ts` | **DESLIGADO** (quem chama é o agendador; protegida pelo segredo RELATORIO_CRON_CHAVE) |
+
+📬 Relatório quinzenal (17/08): requer domínio verificado no Resend + segredos `RESEND_API_KEY` e `RELATORIO_CRON_CHAVE` + rodar a seção 2e do pendente.sql (trocando COLE_AQUI_A_CHAVE pela mesma senha do segredo). Teste antes do primeiro disparo real: painel → Edge Functions → enviar-relatorios → Test/Invoke com header `x-relatorio-chave: (a chave)` e corpo `{"teste":"seu@email.com"}` — envia só pra você.
 
 ⚠️ Renovação automática (17/08): além de publicar `criar-assinatura` e `cancelar-assinatura`, é preciso **repastar a `mercadopago-webhook`** (ganhou o tratamento de assinaturas) e **rodar a seção 2d do pendente.sql** (coluna `assinatura_id` + leitura do vencimento).
 
