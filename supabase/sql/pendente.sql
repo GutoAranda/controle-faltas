@@ -59,6 +59,15 @@ create policy "curador atualiza a propria grade" on public.grades_compartilhadas
   for update to authenticated using (criado_por = auth.uid()) with check (criado_por = auth.uid());
 grant update (titulo, dados, atualizado_em) on public.grades_compartilhadas to authenticated;
 
+-- ── 2d. Renovação automática opcional (assinatura Mercado Pago) ─────────────
+-- O webhook guarda aqui o vínculo da assinatura do usuário (pra exibir o estado
+-- no app e permitir o cancelamento em 1 toque). O usuário só LÊ; quem escreve
+-- é o servidor (service role). plano_valido_ate ganha leitura pro app mostrar
+-- "vence em X dias" — continua sem grant de escrita (ninguém se auto-estende).
+alter table public.dados_usuario add column if not exists assinatura_id text;
+grant select (plano_valido_ate) on public.dados_usuario to authenticated;
+grant select (assinatura_id) on public.dados_usuario to authenticated;
+
 -- ── 3. Rebaixamento automático de planos vencidos (roda todo dia às 03:15) ─
 create extension if not exists pg_cron;
 select cron.unschedule('rebaixar-planos-vencidos')

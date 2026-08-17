@@ -681,9 +681,19 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
                   <span class="passe-eq">pra experimentar</span>
                 </button>
               </div>
+              <button class="passe" type="button" data-assinar-rec style="margin-top:8px; max-width:420px">
+                <span class="passe-selo">🔁 Renovação automática</span>
+                <span class="passe-preco num">R$ 15<small style="font-size:12px; font-weight:600; color:var(--ink-3)">/mês</small></span>
+                <span class="passe-eq">no cartão de crédito · cancele quando quiser</span>
+              </button>
               <div class="acoes-dados" style="margin-top:8px">
                 <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
               </div>
+              <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
+            </div>
+            <div id="conta-assinatura" hidden>
+              <p class="muted" style="margin:0 0 8px">🔁 Renovação automática <strong>ativa</strong> — R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</p>
+              <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
               <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
             </div>
             <div class="acoes-dados">
@@ -2203,11 +2213,22 @@ async function puxarNuvem() {
     }
   }
 
-  const { data, error } = await nuvem.from('dados_usuario')
-    .select('dados, plano, atualizado_em')
+  let { data, error } = await nuvem.from('dados_usuario')
+    .select('dados, plano, atualizado_em, plano_valido_ate, assinatura_id')
     .eq('user_id', usuarioNuvem.id)
     .maybeSingle();
-  if (error) return;
+  if (error) {
+    // colunas novas ainda sem grant (SQL 2d não rodado) — segue sem elas
+    ({ data, error } = await nuvem.from('dados_usuario')
+      .select('dados, plano, atualizado_em')
+      .eq('user_id', usuarioNuvem.id)
+      .maybeSingle());
+    if (error) return;
+  }
+  if (data) {
+    if (data.plano_valido_ate !== undefined) localStorage.setItem('controleFaltas.validoAte', data.plano_valido_ate || '');
+    if (data.assinatura_id !== undefined) localStorage.setItem('controleFaltas.assinatura', data.assinatura_id || '');
+  }
 
   if (!data) {
     // primeiro acesso desta conta: cria a linha na nuvem
@@ -2231,6 +2252,7 @@ async function puxarNuvem() {
     await empurrarNuvem();
   }
   renderConta();
+  avisarVencimento();
 }
 
 function traduzErroAuth(error) {
@@ -2258,17 +2280,48 @@ function renderConta() {
   }
   deslogado.hidden = true;
   logado.hidden = false;
-  document.getElementById('conta-upgrade').hidden = planoNuvem !== 'gratis';
+  const assinatura = localStorage.getItem('controleFaltas.assinatura') || '';
+  const validoAteLido = localStorage.getItem('controleFaltas.validoAte');
+  const diasRestantes = validoAteLido ? Math.ceil((new Date(validoAteLido) - Date.now()) / 86400000) : null;
+  // passes aparecem pro grátis e pro Essencial sem renovação automática perto de vencer (renovar soma dias)
+  const mostrarPasses = planoNuvem === 'gratis' || (!assinatura && diasRestantes !== null && diasRestantes <= 7);
+  document.getElementById('conta-upgrade').hidden = !mostrarPasses;
+  document.getElementById('conta-assinatura').hidden = planoNuvem === 'gratis' || !assinatura;
   resumo.textContent = usuarioNuvem.email;
   document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
   document.getElementById('chk-marketing').checked = !!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.aceita_marketing);
   document.getElementById('nuvem-ind').hidden = planoNuvem === 'gratis';
   const nomePlano = planoNuvem === 'pro' ? 'Pro' : (planoNuvem === 'essencial' ? 'Essencial' : 'Grátis');
   const ultima = localStorage.getItem('controleFaltas.ultimaSync');
+  const validoAte = localStorage.getItem('controleFaltas.validoAte');
+  const vence = planoNuvem !== 'gratis' && validoAte
+    ? ' · ' + (assinatura ? 'renova' : 'vence') + ' em ' + new Date(validoAte).toLocaleDateString('pt-BR')
+    : '';
   document.getElementById('conta-status').textContent =
-    'Plano ' + nomePlano + (planoNuvem === 'gratis'
+    'Plano ' + nomePlano + vence + (planoNuvem === 'gratis'
       ? ' · sincronização disponível no plano Essencial'
       : (ultima ? ' · sincronizado em ' + new Date(ultima).toLocaleString('pt-BR') : ' · ainda não sincronizado'));
+}
+
+/* lembrete de vencimento: só pra quem NÃO tem renovação automática, 1 aviso por dia */
+function avisarVencimento() {
+  if (planoNuvem === 'gratis' || localStorage.getItem('controleFaltas.assinatura')) return;
+  const validoAte = localStorage.getItem('controleFaltas.validoAte');
+  if (!validoAte) return;
+  const dias = Math.ceil((new Date(validoAte) - Date.now()) / 86400000);
+  if (dias > 7 || dias < 0) return;
+  const hoje = new Date().toISOString().slice(0, 10);
+  if (localStorage.getItem('controleFaltas.avisoVencimento') === hoje) return;
+  localStorage.setItem('controleFaltas.avisoVencimento', hoje);
+  toast(
+    dias <= 0 ? 'Seu Essencial vence hoje — renovar antes soma os dias, nada se perde.'
+      : `Seu Essencial vence em ${dias} dia${dias === 1 ? '' : 's'} — renovar antes soma os dias, nada se perde.`,
+    'Renovar', () => {
+      irParaAba('menu');
+      const sec = document.getElementById('menu-conta');
+      if (sec) sec.open = true;
+      sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
 }
 
 async function aposLogin(user) {
@@ -3302,6 +3355,8 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
   localStorage.removeItem('controleFaltas.plano');
   localStorage.removeItem('controleFaltas.ultimaSync');
   localStorage.removeItem('controleFaltas.contaOk');
+  localStorage.removeItem('controleFaltas.validoAte');
+  localStorage.removeItem('controleFaltas.assinatura');
   renderConta();
   toast('Você saiu da conta.');
   mostrarAuth('entrar');
@@ -3343,6 +3398,39 @@ document.querySelectorAll('[data-assinar]').forEach(btn => btn.addEventListener(
   }
 }));
 
+document.querySelectorAll('[data-assinar-rec]').forEach(btn => btn.addEventListener('click', async () => {
+  if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
+  btn.disabled = true;
+  try {
+    const { data, error } = await nuvem.functions.invoke('criar-assinatura');
+    if (error || !data || !data.url) {
+      toast('A renovação automática está chegando — por enquanto, use os passes avulsos.');
+      return;
+    }
+    document.getElementById('btn-ja-paguei').hidden = false;
+    window.open(data.url, '_blank', 'noopener');
+    toast('Aprove a assinatura no Mercado Pago (cartão) e volte aqui — ativa sozinha.');
+  } finally {
+    btn.disabled = false;
+  }
+}));
+
+document.getElementById('btn-cancelar-assinatura').addEventListener('click', async () => {
+  if (!usuarioNuvem || !nuvemDisponivel()) { toast('Sem conexão — tente de novo quando estiver online.'); return; }
+  if (!confirm('Cancelar a renovação automática?\n\nOs dias que você já pagou continuam valendo até o fim — só param as cobranças futuras.')) return;
+  const btn = document.getElementById('btn-cancelar-assinatura');
+  btn.disabled = true; btn.textContent = 'Cancelando…';
+  try {
+    const { error } = await nuvem.functions.invoke('cancelar-assinatura', { method: 'POST' });
+    if (error) { toast('Não deu pra cancelar agora — tente de novo em instantes.'); return; }
+    localStorage.setItem('controleFaltas.assinatura', '');
+    renderConta();
+    toast('Renovação automática cancelada. Seus dias pagos continuam valendo.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Cancelar renovação automática';
+  }
+});
+
 document.getElementById('btn-ja-paguei').addEventListener('click', async () => {
   await puxarNuvem();
   toast(planoNuvem === 'gratis'
@@ -3366,10 +3454,24 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   localStorage.removeItem('controleFaltas.plano');
   localStorage.removeItem('controleFaltas.ultimaSync');
   localStorage.removeItem('controleFaltas.contaOk');
+  localStorage.removeItem('controleFaltas.validoAte');
+  localStorage.removeItem('controleFaltas.assinatura');
   renderConta();
   toast('Conta excluída. Seus dados continuam salvos neste aparelho.');
   mostrarAuth('entrar');
 });
+
+/* retorno da aprovação de assinatura (?assinatura=ok) */
+const retornoAssinatura = new URLSearchParams(location.search).get('assinatura');
+if (retornoAssinatura) {
+  history.replaceState(null, '', location.pathname);
+  if (retornoAssinatura === 'ok') {
+    setTimeout(async () => {
+      await puxarNuvem();
+      toast('Renovação automática ativada! Todo mês, +30 dias sozinhos. 💚');
+    }, 1500);
+  }
+}
 
 /* retorno do pagamento (?pagamento=ok) */
 const retornoPagamento = new URLSearchParams(location.search).get('pagamento');

@@ -20,11 +20,35 @@ Deno.serve(async (req) => {
       pagamentoId = corpo?.data?.id ? String(corpo.data.id) : null
     } catch { /* corpo vazio ou não-JSON — segue */ }
   }
-  // respondemos 200 pra tudo que não interessa, senão o MP fica reenviando
-  if (!pagamentoId || (topico && topico !== 'payment')) return new Response('ok')
+  if (!pagamentoId) return new Response('ok')
 
   const mpToken = Deno.env.get('MP_ACCESS_TOKEN')
   if (!mpToken) return new Response('sem configuração', { status: 503 })
+
+  // aviso de ASSINATURA (renovação automática): guarda ou limpa o vínculo do usuário
+  if (topico === 'preapproval' || topico === 'subscription_preapproval') {
+    const r = await fetch(`https://api.mercadopago.com/preapproval/${pagamentoId}`, {
+      headers: { Authorization: `Bearer ${mpToken}` },
+    })
+    if (!r.ok) return new Response('ok')
+    const pre = await r.json()
+    const uid = pre?.external_reference
+    if (!uid) return new Response('ok')
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+    if (pre.status === 'authorized') {
+      await admin.from('dados_usuario').update({ assinatura_id: pre.id }).eq('user_id', uid)
+    } else if (pre.status === 'cancelled' || pre.status === 'paused') {
+      await admin.from('dados_usuario').update({ assinatura_id: null }).eq('user_id', uid)
+    }
+    console.log(`Assinatura ${pre.id} → ${pre.status} (usuário ${uid})`)
+    return new Response('ok')
+  }
+
+  // daqui pra baixo, só interessam PAGAMENTOS (avulsos ou parcelas da assinatura)
+  if (topico && topico !== 'payment') return new Response('ok')
 
   const resposta = await fetch(`https://api.mercadopago.com/v1/payments/${pagamentoId}`, {
     headers: { Authorization: `Bearer ${mpToken}` },
