@@ -68,6 +68,23 @@ alter table public.dados_usuario add column if not exists assinatura_id text;
 grant select (plano_valido_ate) on public.dados_usuario to authenticated;
 grant select (assinatura_id) on public.dados_usuario to authenticated;
 
+-- ── 2e. Relatório quinzenal por email (dias 1 e 15, 10h de Brasília) ────────
+-- Chama a função enviar-relatorios, que monta e envia o resumo de frequência
+-- e notas de cada assinante Essencial via Resend. TROQUE o texto
+-- COLE_AQUI_A_CHAVE pela mesma senha salva no segredo RELATORIO_CRON_CHAVE.
+create extension if not exists pg_net;
+select cron.unschedule('relatorios-quinzenais')
+  where exists (select 1 from cron.job where jobname = 'relatorios-quinzenais');
+select cron.schedule(
+  'relatorios-quinzenais',
+  '0 13 1,15 * *',
+  $$ select net.http_post(
+       url := 'https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/enviar-relatorios',
+       headers := jsonb_build_object('Content-Type', 'application/json', 'x-relatorio-chave', 'COLE_AQUI_A_CHAVE'),
+       body := '{}'::jsonb
+     ) $$
+);
+
 -- ── 3. Rebaixamento automático de planos vencidos (roda todo dia às 03:15) ─
 create extension if not exists pg_cron;
 select cron.unschedule('rebaixar-planos-vencidos')

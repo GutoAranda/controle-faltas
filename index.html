@@ -725,6 +725,10 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
               <input type="checkbox" id="chk-marketing">
               Receber novidades do Faltaê por email
             </label>
+            <label class="check">
+              <input type="checkbox" id="chk-relatorio">
+              Receber o relatório quinzenal por email <span class="sutil">(Essencial)</span>
+            </label>
             <details style="margin-top:12px">
               <summary class="sutil">Meu perfil (nome, nascimento, instituição…)</summary>
               <form class="painel" id="form-perfil" style="margin-top:10px; max-width:420px">
@@ -2518,6 +2522,7 @@ function renderConta() {
   resumo.textContent = usuarioNuvem.email;
   document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
   document.getElementById('chk-marketing').checked = !!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.aceita_marketing);
+  document.getElementById('chk-relatorio').checked = !(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.receber_relatorio === false);
   const perfil = usuarioNuvem.user_metadata || {};
   document.getElementById('perfil-nome').value = perfil.nome || '';
   document.getElementById('perfil-nascimento').value = perfil.nascimento || '';
@@ -2565,6 +2570,7 @@ async function aposLogin(user) {
   renderConta();
   await puxarNuvem();
   tentarConectarWidget();
+  aplicarSairRelatorio();
 }
 
 /* ─────────── tela de entrada (conta obrigatória) ─────────── */
@@ -3627,6 +3633,15 @@ document.getElementById('form-perfil').addEventListener('submit', async ev => {
   toast('Perfil salvo ✓');
 });
 
+document.getElementById('chk-relatorio').addEventListener('change', async ev => {
+  const quer = ev.target.checked;
+  if (!usuarioNuvem || !nuvemDisponivel()) { ev.target.checked = !quer; toast('Sem conexão — tente de novo quando estiver online.'); return; }
+  const { data, error } = await nuvem.auth.updateUser({ data: { receber_relatorio: quer } });
+  if (error) { ev.target.checked = !quer; toast('Não deu pra salvar agora — tente de novo.'); return; }
+  usuarioNuvem = data.user;
+  toast(quer ? 'Relatório quinzenal ligado — chega nos dias 1 e 15. 📬' : 'Relatório quinzenal desligado.');
+});
+
 document.getElementById('chk-marketing').addEventListener('change', async ev => {
   const aceita = ev.target.checked;
   if (!usuarioNuvem || !nuvemDisponivel()) { ev.target.checked = !aceita; toast('Sem conexão — tente de novo quando estiver online.'); return; }
@@ -3726,6 +3741,20 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   mostrarAuth('entrar');
 });
 
+/* descadastro do relatório quinzenal via link do email (?relatorio=sair) */
+let pedidoSairRelatorio = new URLSearchParams(location.search).get('relatorio') === 'sair';
+async function aplicarSairRelatorio() {
+  if (!pedidoSairRelatorio || !usuarioNuvem || !nuvemDisponivel()) return;
+  pedidoSairRelatorio = false;
+  history.replaceState(null, '', location.pathname);
+  const { data, error } = await nuvem.auth.updateUser({ data: { receber_relatorio: false } });
+  if (!error) {
+    usuarioNuvem = data.user;
+    renderConta();
+    toast('Pronto — você não recebe mais o relatório quinzenal por email. Religa quando quiser em Menu → Conta.');
+  }
+}
+
 /* retorno da aprovação de assinatura (?assinatura=ok) */
 const retornoAssinatura = new URLSearchParams(location.search).get('assinatura');
 if (retornoAssinatura) {
@@ -3770,6 +3799,7 @@ if (retornoPagamento) {
       renderConta();
       puxarNuvem();
       tentarConectarWidget();
+      aplicarSairRelatorio();
       if (veioRecovery) mostrarAuth('novaSenha');
     } else {
       avisarLoginWidget();
