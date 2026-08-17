@@ -85,9 +85,14 @@ function montarEmail(nome: string, dados: any) {
     html: `<div style="background:#EDEFF4; padding:18px 8px; font-family:'Segoe UI',system-ui,Arial,sans-serif">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:640px; margin:0 auto; background:#FFF; border-radius:16px; overflow:hidden">
       <tr><td style="background:#4056C7; padding:24px 28px">
-        <div style="color:#FFF; font-size:14px; font-weight:800">falta<span style="color:#A3E635">ê</span></div>
-        <div style="color:#FFF; font-size:24px; font-weight:800; margin-top:6px">Relatório do semestre</div>
-        <div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:2px">${nome} · ${quinzena}</div>
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="padding-right:14px"><img src="https://faltae.com.br/icon-192.png" width="46" height="46" alt="Faltaê" style="display:block; border-radius:12px"></td>
+          <td>
+            <div style="color:#FFF; font-size:14px; font-weight:800">falta<span style="color:#A3E635">ê</span></div>
+            <div style="color:#FFF; font-size:24px; font-weight:800; margin-top:2px">Relatório do semestre</div>
+            <div style="color:rgba(255,255,255,.85); font-size:13px; margin-top:2px">${nome} · ${quinzena}</div>
+          </td>
+        </tr></table>
       </td></tr>
       <tr><td style="padding:18px 22px 4px">
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
