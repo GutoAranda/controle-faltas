@@ -1109,6 +1109,8 @@ function normalizarDataDigitada(texto) {
 
 /* ─────────── cálculos: faltas ─────────── */
 function materiaPorId(id) { return db.materias.find(m => m.id === id); }
+// quantas aulas conta uma falta de 1 dia nesta matéria (matérias sincronizadas do portal contam por aula)
+function aulasPorFalta(id) { const m = materiaPorId(id); return (m && m.aulasPorDia) || 1; }
 
 function resumoMateria(mat) {
   const maxFaltas = Math.max(1, Math.floor(mat.totalAulas * mat.limitePct / 100));
@@ -1325,7 +1327,7 @@ function abrirSheetMateria(matId) {
     acoes.push({ ico: '✗', rotulo: faltouHoje ? 'Desfazer a falta de hoje' : 'Faltei hoje', perigo: !faltouHoje, fn: () => {
       const existente = db.faltas.find(f => f.materiaId === matId && f.data === hoje);
       if (existente) { db.faltas = db.faltas.filter(f => f.id !== existente.id); toast('Falta desfeita — ' + mat.nome); }
-      else { db.faltas.push({ id: uid(), materiaId: matId, data: hoje, qtd: 1, recuperada: false, abonada: false }); toast('Falta registrada — ' + mat.nome); }
+      else { db.faltas.push({ id: uid(), materiaId: matId, data: hoje, qtd: aulasPorFalta(matId), recuperada: false, abonada: false }); toast('Falta registrada — ' + mat.nome); }
       salvar(); renderTudo();
     }});
   }
@@ -1456,7 +1458,7 @@ function renderInicio() {
       db.faltas = db.faltas.filter(f => f.id !== existente.id);
       toast(`Falta desfeita — ${mat ? mat.nome : ''}`);
     } else {
-      db.faltas.push({ id: uid(), materiaId: mid, data: hoje, qtd: 1, recuperada: false, abonada: false });
+      db.faltas.push({ id: uid(), materiaId: mid, data: hoje, qtd: aulasPorFalta(mid), recuperada: false, abonada: false });
       toast(`Falta registrada — ${mat ? mat.nome : ''}`);
     }
     salvar(); renderTudo();
@@ -2981,7 +2983,20 @@ function planejarPortal(faltasPortal, notasPortal, freqPortal) {
 function aplicarPortal(plano) {
   for (const t of (plano.totais || [])) {
     const mat = materiaPorId(t.materiaId);
-    if (mat) mat.totalAulas = t.para;
+    if (!mat) continue;
+    // a matéria passa a contar por AULA; aprende quantas aulas tem por dia (total ÷ dias)
+    const dias = t.de;
+    mat.totalAulas = t.para;
+    if (dias > 0 && t.para > dias) {
+      const apd = Math.round(t.para / dias);
+      if (apd >= 1 && apd <= 8) {
+        mat.aulasPorDia = apd;
+        // conserta as marcas manuais recentes (o "faltei" de 1 dia) pra unidade aula
+        for (const f of db.faltas) {
+          if (f.materiaId === mat.id && f.origem !== 'portal' && f.qtd === 1) f.qtd = apd;
+        }
+      }
+    }
   }
   for (const f of plano.faltas) {
     db.faltas = db.faltas.filter(x => !(x.materiaId === f.materiaId && x.data === f.data));
