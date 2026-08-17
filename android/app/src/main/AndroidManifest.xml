@@ -19,7 +19,7 @@
             android:theme="@style/Theme.Faltae.Splash">
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
-                android:value="https://gutoaranda.github.io/controle-faltas/" />
+                android:value="https://faltae.com.br/" />
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
                 android:resource="@color/indigo" />
@@ -42,7 +42,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="gutoaranda.github.io"
+                    android:host="faltae.com.br"
                     android:pathPrefix="/controle-faltas/" />
             </intent-filter>
         </activity>

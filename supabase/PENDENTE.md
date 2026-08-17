@@ -36,8 +36,8 @@ A função `widget` alimenta o widget de sequência do celular (Android) e não 
 O app agora tem redefinição de senha — o email de redefinição precisa voltar pra URL do app, e o Supabase só redireciona pra URLs autorizadas:
 
 Painel do Supabase → **Authentication** → **URL Configuration**:
-- **Site URL**: `https://gutoaranda.github.io/controle-faltas/`
-- **Redirect URLs** → adicione: `https://gutoaranda.github.io/controle-faltas/`
+- **Site URL**: `https://faltae.com.br/`
+- **Redirect URLs** → adicione: `https://faltae.com.br/` (pode manter a antiga `https://gutoaranda.github.io/controle-faltas/` na lista durante a transição)
 
 Sem isso, o link do email cai numa página errada e o aluno não consegue trocar a senha.
 

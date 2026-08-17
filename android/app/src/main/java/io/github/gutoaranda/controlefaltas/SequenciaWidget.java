@@ -33,7 +33,7 @@ public class SequenciaWidget extends AppWidgetProvider {
     static final String CHAVE_DEVICE = "device_id";
     static final String CHAVE_CACHE = "cache";
     static final String URL_DADOS = "https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/widget?device=";
-    static final String URL_APP = "https://gutoaranda.github.io/controle-faltas/";
+    static final String URL_APP = "https://faltae.com.br/";
 
     static final int[] CHIPS = { R.id.chip1, R.id.chip2, R.id.chip3, R.id.chip4, R.id.chip5 };
     static final String[] DIAS = { "seg", "ter", "qua", "qui", "sex" };
