@@ -100,16 +100,17 @@ function montarEmail(nome: string, dados: any) {
   return {
     assunto: `Seu relatório do semestre — ${quinzena}`,
     html: `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
-<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">
+<style>@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');</style></head>
 <body style="margin:0; padding:0; background:#E9EBF2">
-<div style="background:#E9EBF2; padding:20px 8px; font-family:'Segoe UI',system-ui,Arial,sans-serif">
+<div style="background:#E9EBF2; padding:20px 8px; font-family:'DM Sans','Segoe UI',system-ui,Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="max-width:600px; margin:0 auto; background:#FFFFFF; border-radius:16px; overflow:hidden">
     <tr><td bgcolor="#4056C7" style="background:#4056C7; padding:26px 28px">
       <table cellpadding="0" cellspacing="0"><tr>
         <td width="48" valign="middle"><img src="${LOGO}" width="48" height="48" alt="Faltaê" style="display:block; border-radius:13px"></td>
         <td style="padding-left:14px">
-          <div style="color:#FFFFFF; font-size:13px; font-weight:800; letter-spacing:.3px">FALTAÊ</div>
-          <div style="color:#FFFFFF; font-size:23px; font-weight:800; margin-top:2px">Relatório do semestre</div>
+          <div style="font-family:'Bricolage Grotesque','DM Sans','Segoe UI',Arial,sans-serif; color:#FFFFFF; font-size:15px; font-weight:800">falta<span style="color:#A3E635">ê</span></div>
+          <div style="font-family:'Bricolage Grotesque','DM Sans','Segoe UI',Arial,sans-serif; color:#FFFFFF; font-size:23px; font-weight:800; margin-top:2px">Relatório do semestre</div>
           <div style="color:#C9D2F5; font-size:13px; margin-top:2px">${nome} · ${quinzena} · ${semestre}</div>
         </td>
       </tr></table>
