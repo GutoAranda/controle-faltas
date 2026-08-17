@@ -902,9 +902,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         <div class="corpo-menu">
           <p class="muted" style="margin:12px 0 4px">Versão 2.8 · feito por estudante, pra estudante.<br>Seus dados são só seus: ficam no aparelho e, se você criar conta, sincronizam com segurança na nuvem.</p>
           <p class="sutil" style="margin:6px 0 0">
-            <a href="https://gutoaranda.github.io/controle-faltas/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
-            <a href="https://gutoaranda.github.io/controle-faltas/termos.html" style="color:var(--accent)">Termos de uso</a> ·
-            <a href="https://gutoaranda.github.io/controle-faltas/landing.html" style="color:var(--accent)">Site</a>
+            <a href="https://faltae.com.br/privacidade.html" style="color:var(--accent)">Privacidade</a> ·
+            <a href="https://faltae.com.br/termos.html" style="color:var(--accent)">Termos de uso</a> ·
+            <a href="https://faltae.com.br/landing.html" style="color:var(--accent)">Site</a>
           </p>
         </div>
       </details>
@@ -1399,7 +1399,7 @@ function renderInicio() {
       <div class="muted" style="margin-top:8px">${msg}</div>`;
     const btnBrag = document.getElementById('btn-brag');
     if (btnBrag) btnBrag.addEventListener('click', () => {
-      const texto = `🔥 ${of.sequencia} semana${of.sequencia === 1 ? '' : 's'} seguida${of.sequencia === 1 ? '' : 's'} sem faltar e 🏆 ${of.total} semana${of.total === 1 ? '' : 's'} perfeita${of.total === 1 ? '' : 's'} no semestre — controlando tudo no Faltaê.\nhttps://gutoaranda.github.io/controle-faltas/`;
+      const texto = `🔥 ${of.sequencia} semana${of.sequencia === 1 ? '' : 's'} seguida${of.sequencia === 1 ? '' : 's'} sem faltar e 🏆 ${of.total} semana${of.total === 1 ? '' : 's'} perfeita${of.total === 1 ? '' : 's'} no semestre — controlando tudo no Faltaê.\nhttps://faltae.com.br/`;
       if (navigator.share) navigator.share({ text: texto }).catch(() => {});
       else navigator.clipboard.writeText(texto).then(() => toast('Copiado — cola no grupo! 📤')).catch(() => {});
     });
@@ -3277,7 +3277,7 @@ document.getElementById('btn-zerar').addEventListener('click', () => {
 
 /* ─────────── indicação ─────────── */
 document.getElementById('btn-indicar').addEventListener('click', () => {
-  const texto = 'Uso o Faltaê pra não reprovar por falta: ele avisa quantas faltas ainda posso usar, mostra o que caiu nas aulas que perdi e calcula quanto preciso tirar nas provas. Grátis: https://gutoaranda.github.io/controle-faltas/';
+  const texto = 'Uso o Faltaê pra não reprovar por falta: ele avisa quantas faltas ainda posso usar, mostra o que caiu nas aulas que perdi e calcula quanto preciso tirar nas provas. Grátis: https://faltae.com.br/';
   if (navigator.share) navigator.share({ text: texto }).catch(() => {});
   else navigator.clipboard.writeText(texto).then(() => toast('Convite copiado — manda pra quem precisa 💚')).catch(() => {});
 });

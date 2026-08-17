@@ -59,9 +59,9 @@ Deno.serve(async (req) => {
       payer: { email: user.email },
       statement_descriptor: 'FALTAE',
       back_urls: {
-        success: 'https://gutoaranda.github.io/controle-faltas/?pagamento=ok',
-        pending: 'https://gutoaranda.github.io/controle-faltas/?pagamento=pendente',
-        failure: 'https://gutoaranda.github.io/controle-faltas/?pagamento=erro',
+        success: 'https://faltae.com.br/?pagamento=ok',
+        pending: 'https://faltae.com.br/?pagamento=pendente',
+        failure: 'https://faltae.com.br/?pagamento=erro',
       },
       auto_return: 'approved',
       notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercadopago-webhook`,
