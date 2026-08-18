@@ -139,3 +139,37 @@ select cron.schedule(
        body := '{}'::jsonb
      ) $$
 );
+
+-- == 2g . RESGATAR CODIGO + ORIGEM DO PLANO ==================================
+-- Rode o bloco inteiro. Idempotente.
+
+-- origem do plano: 'pagamento', 'codigo:XXXX' ou 'promo-manual'
+alter table public.dados_usuario add column if not exists plano_origem text;
+
+-- marca as promocoes ja feitas a mao (ajuste a lista se promover mais alguem antes de rodar)
+update public.dados_usuario set plano_origem = 'promo-manual'
+ where plano <> 'gratis' and plano_origem is null
+   and user_id in (select id from auth.users where email in (
+     'vandalima23@hotmail.com','lethferreira.s@gmail.com','stehcampox@icloud.com',
+     'brunalaisdematos@gmail.com','contato.palhuca@gmail.com'));
+
+-- tabela de codigos promocionais (so o painel cria/edita; nenhum grant a usuarios)
+create table if not exists public.codigos_resgate (
+  codigo        text primary key,
+  descricao     text,
+  dias          int,             -- ou...
+  valido_ate_fixo date,          -- ...data fixa (um dos dois)
+  expira_em     timestamptz,     -- ate quando o codigo pode ser resgatado
+  max_usos      int,
+  usos          int not null default 0,
+  ativo         boolean not null default true,
+  criado_em     timestamptz not null default now()
+);
+alter table public.codigos_resgate enable row level security;
+-- sem policies e sem grants: usuarios nao leem nem escrevem; so a funcao (service role) acessa
+
+-- codigos do lancamento
+insert into public.codigos_resgate (codigo, descricao, dias, valido_ate_fixo, expira_em, max_usos) values
+  ('NA9MES',     'NA9: 1 mes de Essencial gratis',            30,  null,        '2026-09-30', 80),
+  ('BOLSISTA26', 'Passe Bolsista 2026.2: semestre gratis',    null, '2026-12-31', '2026-10-31', 500)
+on conflict (codigo) do nothing;

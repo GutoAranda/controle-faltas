@@ -32,3 +32,10 @@ from auth.users group by 1 order by 1 desc limit 14;
 -- update public.dados_usuario set plano = 'essencial',
 --   plano_valido_ate = '2026-12-31'
 -- where user_id = (select id from auth.users where email = 'EMAIL_AQUI');
+-- 6. De onde vem cada Essencial (pagamento x codigo x promo manual)
+select coalesce(plano_origem, 'sem registro') as origem, count(*) as contas
+from public.dados_usuario where plano <> 'gratis' group by 1 order by 2 desc;
+
+-- 7. Uso dos codigos promocionais
+select codigo, descricao, usos, max_usos, ativo, expira_em::date
+from public.codigos_resgate order by usos desc;

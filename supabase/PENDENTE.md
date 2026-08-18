@@ -73,3 +73,9 @@ Enquanto o passo 2 e 3 não acontecem, o app se comporta bem: o botão de assina
 3. **Publicar a funcao** `enviar-push` (copie de `supabase/functions/enviar-push/index.ts`) com **Verify JWT DESLIGADO**.
 4. **Testar**: no painel, Invoke da funcao com header `x-push-chave: SUA_CHAVE` e corpo `{"teste":"seu@email.com"}` — antes disso, toque em "Ativar lembretes" (aba Agenda) no seu celular com o app instalado e logado. A notificacao de teste deve chegar.
 5. iPhone: so recebe com o app **instalado na tela de inicio** (iOS 16.4+). Android: navegador ou app, ambos funcionam.
+## Resgatar codigo + origem do plano — NOVO
+1. **SQL**: rode a secao 2g do `pendente.sql` (coluna plano_origem + tabela codigos_resgate + codigos NA9MES e BOLSISTA26).
+2. **Publicar a funcao** `resgatar-codigo` (copie de `supabase/functions/resgatar-codigo/index.ts`) com **Verify JWT LIGADO**.
+3. **Repastar** `mercadopago-webhook` (agora grava plano_origem='pagamento').
+4. Testar: no app logado com conta gratis, Menu > Conta > "Tenho um codigo promocional" > NA9MES.
+5. Dai em diante: nada de SQL manual — manda o codigo pro aluno. Criar codigos novos = insert em codigos_resgate.
