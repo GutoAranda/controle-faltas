@@ -28,8 +28,15 @@
   h1, h2, h3 { font-family: "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -.03em; text-wrap: balance; }
   .container { max-width: 1020px; margin: 0 auto; padding: 0 24px; }
 
-  header { padding: 22px 0; }
-  header .container { display: flex; align-items: center; justify-content: space-between; }
+  header { padding: 14px 0; position: sticky; top: 0; z-index: 50; background: rgba(250,250,252,.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--linha); }
+  header .container { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+  nav.menu { display: flex; gap: 22px; font-size: 15px; font-weight: 500; }
+  nav.menu a { color: var(--tinta-2); text-decoration: none; }
+  nav.menu a:hover { color: var(--tinta); }
+  .acoes-topo { display: flex; align-items: center; gap: 14px; }
+  .link-entrar { color: var(--tinta); font-weight: 700; font-size: 15px; text-decoration: none; }
+  .link-entrar:hover { color: var(--indigo); }
+  @media (max-width: 720px) { nav.menu { display: none; } }
   .marca { display: flex; align-items: center; gap: 10px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -.04em; text-decoration: none; color: var(--tinta); }
   .marca .e { color: var(--indigo); }
   .marca svg { width: 34px; height: 34px; }
@@ -46,6 +53,19 @@
   .hero h1 em { font-style: normal; background: linear-gradient(transparent 66%, var(--lima) 66%); }
   .hero p { font-size: clamp(17px, 2.6vw, 21px); color: var(--tinta-2); max-width: 44ch; margin: 0 auto 30px; }
   .hero .aviso { display: block; margin-top: 14px; font-size: 13.5px; color: var(--tinta-3); }
+  .btn.claro-hero { background: var(--superficie); color: var(--indigo); border: 1px solid var(--linha); margin-left: 10px; }
+  .btn.claro-hero:hover { background: var(--papel); }
+  .passos { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; counter-reset: passo; }
+  .passo { background: var(--superficie); border: 1px solid var(--linha); border-radius: 18px; padding: 22px; box-shadow: var(--sombra); }
+  .passo::before { counter-increment: passo; content: counter(passo); display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--indigo); color: #FFF; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; margin-bottom: 12px; }
+  .passo h3 { font-size: 18px; margin: 0 0 6px; }
+  .passo p { font-size: 15px; color: var(--tinta-2); margin: 0; }
+  .instalar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .instalar-card { background: var(--superficie); border: 1px solid var(--linha); border-radius: 18px; padding: 24px 22px; box-shadow: var(--sombra); }
+  .instalar-card h3 { font-size: 19px; margin: 0 0 10px; }
+  .instalar-card ol { margin: 0; padding-left: 20px; font-size: 15px; color: var(--tinta-2); }
+  .instalar-card ol li { padding: 3px 0; }
+  .instalar-card .nota-inst { font-size: 13px; color: var(--tinta-3); margin: 12px 0 0; }
 
   .mock { margin: 56px auto 0; max-width: 380px; }
   .telefone {
@@ -114,18 +134,28 @@
 <header>
   <div class="container">
     <a class="marca" href="#">
-      <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#4056C7"/><circle cx="60" cy="60" r="39" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="8"/><path d="M 60 21 A 39 39 0 1 1 21 60" fill="none" stroke="#FFF" stroke-width="8" stroke-linecap="round"/><path d="M46 46 74 74 M74 46 46 74" stroke="#A3E635" stroke-width="11" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#4056C7"/><path d="M45 42V80M55 42V80M65 42V80M75 42V80" fill="none" stroke="#FFF" stroke-width="8" stroke-linecap="round"/><path d="M38 84 L84 36" fill="none" stroke="#A3E635" stroke-width="10" stroke-linecap="round"/></svg>
       falta<span class="e">ê</span>
     </a>
-    <a class="btn mini" href="./">Abrir o app</a>
+    <nav class="menu">
+      <a href="#recursos">Recursos</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#planos">Planos</a>
+      <a href="#instalar">Instalar</a>
+    </nav>
+    <div class="acoes-topo">
+      <a class="link-entrar" href="index.html?entrar=1">Entrar</a>
+      <a class="btn mini" href="index.html?criar=1">Criar conta grátis</a>
+    </div>
   </div>
 </header>
 
 <div class="hero container">
   <h1>Sua vida acadêmica <em>sem sustos</em>.</h1>
   <p>Faltas, provas e notas na palma da mão — com a resposta pronta antes do problema: quanto ainda pode faltar, o que caiu na aula que você perdeu e quanto precisa tirar pra passar.</p>
-  <a class="btn" href="./">Usar grátis agora</a>
-  <span class="aviso">Funciona no navegador e como app · sem cadastro · seus dados ficam no seu aparelho</span>
+  <a class="btn" href="index.html?criar=1">Criar conta grátis</a>
+  <a class="btn claro-hero" href="index.html?entrar=1">Já tenho conta</a>
+  <span class="aviso">Grátis pra começar · funciona offline · vira app na tela inicial do celular</span>
 
   <div class="mock">
     <div class="telefone">
@@ -149,7 +179,17 @@
   </div>
 </div>
 
-<section class="bloco container">
+<section class="bloco container" id="como-funciona">
+  <h2>No ar em dois minutos.</h2>
+  <p class="lede">Sem manual, sem planilha: você cria a conta, pega a grade pronta da turma e o app já sabe quanto você ainda pode faltar em cada matéria.</p>
+  <div class="passos">
+    <div class="passo"><h3>Crie sua conta grátis</h3><p>Email e senha ou sua conta Google. Leva menos de um minuto.</p></div>
+    <div class="passo"><h3>Importe a grade da turma</h3><p>Um colega publica, você digita o código de 6 letras — matérias, horários e provas entram sozinhos.</p></div>
+    <div class="passo"><h3>Marque a falta em um toque</h3><p>O app faz a conta do limite de 25% e te avisa antes de qualquer matéria virar risco.</p></div>
+  </div>
+</section>
+
+<section class="bloco container" id="recursos">
   <h2>Tudo que o portal da faculdade deveria te contar. Antes.</h2>
   <p class="lede">O Faltaê não é mais um contador: ele conecta cada falta ao conteúdo que você perdeu, cada prova a uma contagem regressiva e cada nota ao número que realmente importa.</p>
   <div class="recursos">
@@ -159,13 +199,13 @@
     <div class="recurso"><div class="icone">🎯</div><h3>Quanto preciso tirar?</h3><p>Lance suas notas com peso e o app responde na hora quanto falta nas próximas avaliações pra fechar a média.</p></div>
     <div class="recurso"><div class="icone">📅</div><h3>Provas sem surpresa</h3><p>Agenda com contagem regressiva, destaque na véspera, lembretes e exportação para o calendário do celular.</p></div>
     <div class="recurso"><div class="icone">🕐</div><h3>Professor atrasou?</h3><p>Um toque desliza o cronograma inteiro para as próximas datas. A vida real não segue o plano — o app acompanha.</p></div>
-    <div class="recurso"><div class="icone">🔒</div><h3>Seu, de verdade</h3><p>Sem cadastro, sem anúncio, sem rastreamento. Os dados moram no seu aparelho e saem só no backup que você exportar.</p></div>
+    <div class="recurso"><div class="icone">🔒</div><h3>Seu, de verdade</h3><p>Sem anúncio e sem venda de dados. Suas faltas e notas são suas: protegidas por senha, com backup e exclusão de conta a um toque, como manda a LGPD.</p></div>
   </div>
 
   <div class="cta-final">
     <h2>Reprovar por falta? <span class="e">Faltaê.</span></h2>
     <p>Grátis, leve e feito por estudante que também vive no limite dos 25%.</p>
-    <a class="btn" href="./">Começar agora</a>
+    <a class="btn" href="index.html?criar=1">Criar conta grátis</a>
   </div>
 </section>
 
@@ -183,7 +223,7 @@
         <li>Funciona offline</li>
         <li>Até 6 matérias manuais</li>
       </ul>
-      <a class="btn claro" href="./">Começar agora</a>
+      <a class="btn claro" href="index.html?criar=1">Começar agora</a>
     </div>
     <div class="plano destaque">
       <span class="selo-plano">SEMESTRE INTEIRO</span>
@@ -196,7 +236,7 @@
         <li>Provas direto no calendário do celular</li>
         <li>Widget de sequência no Android</li>
       </ul>
-      <a class="btn" href="./">Ativar no app</a>
+      <a class="btn" href="index.html?criar=1">Ativar no app</a>
     </div>
     <div class="plano">
       <h3>Essencial · 30 dias</h3>
@@ -207,7 +247,32 @@
         <li>Renove só se quiser</li>
         <li>Sem compromisso</li>
       </ul>
-      <a class="btn claro" href="./">Ativar no app</a>
+      <a class="btn claro" href="index.html?criar=1">Ativar no app</a>
+    </div>
+  </div>
+</section>
+
+<section class="bloco container" id="instalar">
+  <h2>Leve pro celular — vira app de verdade.</h2>
+  <p class="lede">O Faltaê funciona direto no navegador, mas na tela inicial ele abre em tela cheia, carrega na hora e funciona até sem internet.</p>
+  <div class="instalar-grid">
+    <div class="instalar-card">
+      <h3>🤖 Android</h3>
+      <ol>
+        <li>Abra <strong>faltae.com.br</strong> no Chrome</li>
+        <li>Toque no menu <strong>⋮</strong> (canto superior direito)</li>
+        <li>Toque em <strong>"Adicionar à tela inicial"</strong> e confirme</li>
+      </ol>
+      <p class="nota-inst">Em breve também na Play Store.</p>
+    </div>
+    <div class="instalar-card">
+      <h3>🍎 iPhone</h3>
+      <ol>
+        <li>Abra <strong>faltae.com.br</strong> no Safari</li>
+        <li>Toque no botão <strong>Compartilhar</strong> (quadrado com seta)</li>
+        <li>Toque em <strong>"Adicionar à Tela de Início"</strong> e confirme</li>
+      </ol>
+      <p class="nota-inst">Precisa ser no Safari — outros navegadores no iPhone não instalam apps.</p>
     </div>
   </div>
 </section>
@@ -215,7 +280,7 @@
 <section class="bloco container" style="padding-bottom:40px">
   <h2>Perguntas rápidas</h2>
   <details class="faq"><summary>É grátis mesmo?</summary><p>Sim. O plano Grátis (faltas, agenda, notas e a grade da turma) é grátis para sempre. O Essencial libera matérias ilimitadas, sincronização entre aparelhos, calendário automático e o widget: R$ 59,90 pelo semestre inteiro (sai a R$ 9,98/mês) ou R$ 15 avulsos por 30 dias — sempre via Pix, sem assinatura.</p></details>
-  <details class="faq"><summary>Preciso criar conta?</summary><p>Sim, uma conta grátis com email e senha — leva menos de um minuto. É ela que liga você à sua turma e protege seu acesso. Suas faltas e notas continuam salvas no seu aparelho; a cópia na nuvem (sincronização) é recurso do plano Essencial.</p></details>
+  <details class="faq"><summary>Preciso criar conta?</summary><p>Sim, uma conta grátis — com email e senha ou entrando direto com sua conta Google. Leva menos de um minuto. É ela que liga você à sua turma e protege seu acesso. Suas faltas e notas continuam salvas no seu aparelho; a cópia na nuvem (sincronização) é recurso do plano Essencial.</p></details>
   <details class="faq"><summary>Como funciona a sincronização?</summary><p>Criou a conta, pronto: cada falta, prova ou nota que você registrar sobe automaticamente pra nuvem e aparece nos seus outros aparelhos. Só você acessa seus dados — protegidos por senha e criptografia.</p></details>
   <details class="faq"><summary>Preciso digitar minha grade toda?</summary><p>Não, se alguém da sua turma já usa o Faltaê: peça o código da turma e importe matérias, horários, aulas e provas em um toque. Só suas faltas e notas são pessoais — a grade é da turma. Seja quem monta primeiro e vire a pessoa mais querida da sala.</p></details>
   <details class="faq"><summary>Funciona como aplicativo? E no iPhone?</summary><p>Sim, nos dois. <strong>Android:</strong> "Adicionar à tela inicial" no navegador (ou o APK, quando disponível na Play Store). <strong>iPhone:</strong> abra no Safari → botão Compartilhar → "Adicionar à Tela de Início" — vira um app de verdade, em tela cheia. Nos dois casos funciona offline depois da primeira abertura.</p></details>
