@@ -2187,12 +2187,14 @@ document.getElementById('form-materia').addEventListener('submit', ev => {
 });
 
 /* ─────────── lembretes de prova ─────────── */
-function dispararLembretes() {
+async function dispararLembretes() {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const hoje = hojeISO();
   const limite = somarDias(hoje, 1);
   let vistos;
   try { vistos = JSON.parse(localStorage.getItem('controleFaltas.lembretes') || '{}'); } catch { vistos = {}; }
+  /* Chrome no Android só aceita notificação via service worker — new Notification() lança erro lá */
+  const reg = ('serviceWorker' in navigator) ? await navigator.serviceWorker.getRegistration().catch(() => null) : null;
   db.eventos
     .filter(e => !e.feita && e.data >= hoje && e.data <= limite)
     .forEach(e => {
@@ -2200,12 +2202,12 @@ function dispararLembretes() {
       if (vistos[chaveLem]) return;
       vistos[chaveLem] = 1;
       const mat = materiaPorId(e.materiaId);
+      const titulo = (e.tipo === 'prova' ? 'Prova' : 'Atividade') + (e.data === hoje ? ' HOJE' : ' amanhã') + ': ' + e.titulo;
+      const opcoes = { body: mat ? mat.nome : '', icon: 'icon-192.png', badge: 'icon-192.png' };
       try {
-        new Notification(
-          (e.tipo === 'prova' ? 'Prova' : 'Atividade') + (e.data === hoje ? ' HOJE' : ' amanhã') + ': ' + e.titulo,
-          { body: mat ? mat.nome : '' }
-        );
-      } catch { /* alguns navegadores móveis exigem service worker para notificar */ }
+        if (reg && reg.showNotification) reg.showNotification(titulo, opcoes);
+        else new Notification(titulo, opcoes);
+      } catch { /* navegador sem suporte: o destaque no Início cobre */ }
     });
   localStorage.setItem('controleFaltas.lembretes', JSON.stringify(vistos));
 }
@@ -2399,13 +2401,8 @@ function gerarRelatorio() {
   win.document.close();
 }
 
-document.getElementById('btn-exportar').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'faltae-backup-' + hojeISO() + '.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
+document.getElementById('btn-exportar').addEventListener('click', async () => {
+  if (!(await baixarBackup('faltae-backup'))) { toast('Backup cancelado.'); return; }
   localStorage.setItem('controleFaltas.ultimoBackup', hojeISO());
   infoBackup();
   toast('Backup exportado');
@@ -3653,19 +3650,38 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => apli
 aplicarTema(localStorage.getItem('controleFaltas.tema') || 'sistema');
 
 /* ─────────── encerrar semestre e apagar dados ─────────── */
-function baixarBackup(prefixo) {
-  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+function ehIphoneInstalado() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+    (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches);
+}
+async function baixarBackup(prefixo) {
+  const json = JSON.stringify(db, null, 2);
+  const nome = prefixo + '-' + hojeISO() + '.json';
+  /* iPhone instalado na tela de início: download falha em silêncio — compartilhar é o caminho confiável */
+  if (ehIphoneInstalado() && navigator.share) {
+    try {
+      const arquivo = new File([json], nome, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [arquivo] })) {
+        await navigator.share({ files: [arquivo], title: nome });
+        return true;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return false; /* usuário desistiu — quem chama decide não seguir */
+    }
+  }
+  const blob = new Blob([json], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = prefixo + '-' + hojeISO() + '.json';
+  a.download = nome;
   a.click();
   URL.revokeObjectURL(a.href);
+  return true;
 }
 
-document.getElementById('btn-encerrar-semestre').addEventListener('click', () => {
+document.getElementById('btn-encerrar-semestre').addEventListener('click', async () => {
   if (!db.materias.length && !db.faltas.length) { toast('Nada pra encerrar — o app já está zerado.'); return; }
   if (!confirm('Encerrar o semestre?\n\n1) Um backup completo será baixado agora (guarde-o!)\n2) Matérias, aulas, faltas, provas e notas serão zeradas')) return;
-  baixarBackup('faltae-semestre-encerrado');
+  if (!(await baixarBackup('faltae-semestre-encerrado'))) { toast('Backup cancelado — nada foi apagado.'); return; }
   db = novoBanco();
   salvar(); renderTudo();
   toast('Semestre encerrado. Bora pro próximo! 🎓');
