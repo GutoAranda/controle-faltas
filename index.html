@@ -781,6 +781,17 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
               <div class="acoes-dados" style="margin-top:8px">
                 <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
               </div>
+              <details style="margin-top:10px">
+                <summary class="sutil" style="cursor:pointer">🎟️ Tenho um código promocional</summary>
+                <div class="campos-2" style="margin-top:8px; max-width:420px">
+                  <label class="campo">Código
+                    <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: NA9MES" maxlength="24" style="text-transform:uppercase">
+                  </label>
+                  <label class="campo">&nbsp;
+                    <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
+                  </label>
+                </div>
+              </details>
               <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
             </div>
             <div id="conta-assinatura" hidden>
@@ -3881,6 +3892,29 @@ document.getElementById('btn-ja-paguei').addEventListener('click', async () => {
   toast(planoNuvem === 'gratis'
     ? 'Pagamento ainda não confirmado — o Pix leva alguns segundos. Tente de novo já já.'
     : 'Plano Essencial ativo. Bem-vindo! 💚');
+});
+
+document.getElementById('btn-resgatar').addEventListener('click', async () => {
+  if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
+  const campo = document.getElementById('codigo-resgate');
+  const codigo = campo.value.trim().toUpperCase();
+  if (!codigo) { toast('Digite o código.'); campo.focus(); return; }
+  const btn = document.getElementById('btn-resgatar');
+  btn.disabled = true; btn.textContent = 'Ativando…';
+  try {
+    const { data, error } = await nuvem.functions.invoke('resgatar-codigo', { body: { codigo } });
+    if (error || !data || !data.ok) {
+      let msg = 'Não deu pra resgatar agora — tente de novo.';
+      try { const corpo = error && error.context ? await error.context.json() : data; if (corpo && corpo.erro) msg = corpo.erro; } catch { }
+      toast(msg);
+      return;
+    }
+    campo.value = '';
+    await puxarNuvem();
+    toast('Essencial ativado até ' + new Date(data.valido_ate).toLocaleDateString('pt-BR') + ' 🎉');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Resgatar';
+  }
 });
 
 /* ─────────── excluir conta (LGPD) ─────────── */

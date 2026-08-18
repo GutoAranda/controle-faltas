@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
   const { error } = await supabase
     .from('dados_usuario')
-    .update({ plano: 'essencial', plano_valido_ate: base.toISOString() })
+    .update({ plano: 'essencial', plano_valido_ate: base.toISOString(), plano_origem: 'pagamento' })
     .eq('user_id', userId)
 
   if (error) {
@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
       dados: { materias: [], aulas: [], faltas: [], eventos: [] },
       plano: 'essencial',
       plano_valido_ate: base.toISOString(),
+      plano_origem: 'pagamento',
     })
   }
 
