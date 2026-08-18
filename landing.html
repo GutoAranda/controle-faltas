@@ -17,6 +17,8 @@
     --papel: #FAFAFC; --tinta: #14172B; --tinta-2: #565C74; --tinta-3: #8A8FA6;
     --linha: #E5E7F0; --superficie: #FFFFFF;
     --indigo: #4056C7; --indigo-escuro: #34479F; --lima: #A3E635;
+    --ok: #47720E; --ok-soft: #E9F4D8; --warn: #965009; --warn-soft: #FBEEDB;
+    --danger: #B31138; --danger-soft: #FBE4EA; --accent-soft: #E6EAFB;
     --sombra: 0 1px 2px rgba(20,23,43,.05), 0 10px 34px rgba(20,23,43,.08);
   }
   * { box-sizing: border-box; }
@@ -88,11 +90,69 @@
   section.bloco { padding: 76px 0 10px; }
   .bloco h2 { font-size: clamp(28px, 4.6vw, 40px); margin: 0 0 10px; }
   .bloco .lede { color: var(--tinta-2); max-width: 56ch; margin: 0 0 34px; }
-  .recursos { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
-  .recurso { background: var(--superficie); border: 1px solid var(--linha); border-radius: 18px; padding: 22px; box-shadow: var(--sombra); }
-  .recurso .icone { width: 42px; height: 42px; border-radius: 12px; background: #E6EAFB; color: var(--indigo); display: grid; place-items: center; font-size: 20px; margin-bottom: 12px; }
-  .recurso h3 { font-size: 18.5px; margin: 0 0 6px; }
-  .recurso p { font-size: 15px; color: var(--tinta-2); margin: 0; }
+  /* ── recursos demonstrados com o app de verdade ── */
+  .recurso-vivo { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; padding: 44px 0; }
+  .recurso-vivo + .recurso-vivo { border-top: 1px solid var(--linha); }
+  .recurso-vivo:nth-child(even) .rv-texto { order: 2; }
+  @media (max-width: 760px) { .recurso-vivo { grid-template-columns: 1fr; gap: 22px; } .recurso-vivo:nth-child(even) .rv-texto { order: 0; } }
+  .rv-texto .olho { font-size: 11.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--indigo); display: flex; align-items: center; gap: 8px; }
+  .rv-texto .olho::before { content: ''; width: 16px; height: 3px; border-radius: 2px; background: var(--lima); }
+  .rv-texto h3 { font-size: clamp(22px, 3.2vw, 28px); margin: 10px 0 10px; }
+  .rv-texto p { color: var(--tinta-2); font-size: 16px; margin: 0; }
+  .tela { background: var(--superficie); border: 1px solid var(--linha); border-radius: 26px; box-shadow: var(--sombra); padding: 16px 14px 18px; max-width: 390px; margin: 0 auto; width: 100%; }
+  .tela .puxador { width: 86px; height: 5px; background: var(--linha); border-radius: 99px; margin: 0 auto 14px; }
+  .tela h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--tinta-3); margin: 0 0 10px; display: flex; align-items: center; gap: 7px; font-family: "DM Sans", sans-serif; }
+  .tela h4::before { content: ''; width: 14px; height: 3px; border-radius: 2px; background: var(--lima); }
+  .tela h4 .dir { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; }
+  .cardapp { border: 1px solid var(--linha); border-radius: 14px; padding: 12px 13px; background: var(--papel); }
+  .cardapp + .cardapp { margin-top: 8px; }
+  .cardapp .l1 { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+  .cardapp .sub { font-size: 12.5px; color: var(--tinta-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .pillapp { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+  .pillapp::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pillapp.ok { background: var(--ok-soft); color: var(--ok); }
+  .pillapp.warn { background: var(--warn-soft); color: var(--warn); }
+  .pillapp.danger { background: var(--danger-soft); color: var(--danger); }
+  .barrapp { height: 6px; border-radius: 99px; background: #ECEEF5; overflow: hidden; margin-top: 9px; }
+  .barrapp span { display: block; height: 100%; border-radius: 99px; }
+  .aula { display: flex; align-items: center; gap: 10px; padding: 10px 2px; }
+  .aula + .aula { border-top: 1px solid var(--linha); }
+  .aula .info { flex: 1; min-width: 0; }
+  .aula .nome { font-size: 13.5px; font-weight: 700; }
+  .aula .det { font-size: 11.5px; color: var(--tinta-3); }
+  .btn-faltei { border: 1.5px solid var(--linha); background: var(--superficie); border-radius: 99px; padding: 7px 14px; font: 700 12px "DM Sans", sans-serif; color: var(--danger); flex: none; }
+  .btn-faltei.marcado { background: var(--danger); border-color: var(--danger); color: #FFF; }
+  .bims { display: flex; gap: 8px; margin-top: 10px; }
+  .bim { flex: 1; border: 1px solid var(--linha); border-radius: 11px; padding: 9px 10px; background: var(--superficie); }
+  .bim .rot { font-size: 10px; font-weight: 800; letter-spacing: .07em; color: var(--tinta-3); }
+  .bim .notas { display: flex; gap: 10px; margin-top: 5px; font-size: 12px; color: var(--tinta-2); }
+  .bim .notas b { color: var(--tinta); font-variant-numeric: tabular-nums; }
+  .bim .notas .falta-nota { color: var(--indigo); font-weight: 800; }
+  .resposta { margin-top: 10px; background: #F3FADF; border: 1px solid #D8ECAF; border-radius: 11px; padding: 9px 12px; font-size: 12.5px; color: #3B6D11; }
+  .resposta b { font-size: 15px; }
+  .prova { display: flex; align-items: center; gap: 10px; padding: 10px 2px; }
+  .prova + .prova { border-top: 1px solid var(--linha); }
+  .prova .quando { flex: none; width: 44px; text-align: center; background: var(--accent-soft); color: var(--indigo); border-radius: 10px; padding: 5px 0; font-weight: 800; font-size: 14px; line-height: 1.1; }
+  .prova .quando small { display: block; font-size: 9px; font-weight: 700; letter-spacing: .05em; }
+  .prova .grow { flex: 1; min-width: 0; }
+  .prova .nome { font-size: 13.5px; font-weight: 700; }
+  .prova .det { font-size: 11.5px; color: var(--tinta-3); }
+  .semana { display: flex; gap: 6px; justify-content: space-between; margin-top: 4px; }
+  .dia-chip { flex: 1; text-align: center; }
+  .dia-chip .q { height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 16px; }
+  .dia-chip .q.ok { background: var(--lima); color: #2C3A0E; }
+  .dia-chip .q.hoje { background: transparent; border: 2px solid var(--indigo); color: var(--indigo); font-size: 10.5px; }
+  .dia-chip .q.fut { border: 1.5px dashed var(--linha); color: var(--tinta-3); }
+  .dia-chip .r { font-size: 9.5px; font-weight: 700; color: var(--tinta-3); margin-top: 4px; letter-spacing: .04em; }
+  .selos { display: flex; gap: 8px; margin-top: 12px; }
+  .selo-seq { background: var(--papel); border: 1px solid var(--linha); border-radius: 99px; padding: 5px 12px; font-size: 11.5px; font-weight: 700; }
+  .escolha-turno { display: flex; gap: 8px; }
+  .turno { flex: 1; border: 1.5px solid var(--linha); border-radius: 12px; padding: 10px; text-align: center; font-weight: 700; font-size: 13px; color: var(--tinta-2); }
+  .turno.sel { border-color: var(--indigo); color: var(--indigo); background: var(--accent-soft); }
+  .turmas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 9px; }
+  .turma { border: 1.5px solid var(--linha); border-radius: 10px; padding: 8px 0; text-align: center; font-weight: 800; font-size: 12.5px; color: var(--tinta-2); }
+  .turma.sel { border-color: var(--indigo); background: var(--indigo); color: #FFF; }
+  .importado { margin-top: 11px; background: #F3FADF; border: 1px solid #D8ECAF; border-radius: 11px; padding: 9px 12px; font-size: 12.5px; color: #3B6D11; font-weight: 600; }
 
   .cta-final { margin: 90px 0 0; background: var(--tinta); border-radius: 28px; padding: 60px 28px; text-align: center; color: #FFF; }
   .cta-final h2 { font-size: clamp(28px, 5vw, 44px); margin: 0 0 10px; color: #FFF; }
@@ -192,14 +252,149 @@
 <section class="bloco container" id="recursos">
   <h2>Tudo que o portal da faculdade deveria te contar. Antes.</h2>
   <p class="lede">O Faltaê não é mais um contador: ele conecta cada falta ao conteúdo que você perdeu, cada prova a uma contagem regressiva e cada nota ao número que realmente importa.</p>
-  <div class="recursos">
-    <div class="recurso"><div class="icone">🎓</div><h3>Sua grade já está pronta</h3><p>Direito PUC-SP tem todas as turmas oficiais de 2026.2 dentro do app — matérias, horários, professores, salas e o calendário com feriados. Qualquer turma também se compartilha por um código de 6 letras.</p></div>
-    <div class="recurso"><div class="icone">✗</div><h3>Faltas sob controle</h3><p>Limite de 25% calculado por matéria, semáforo de risco e falta registrada em um toque na tela do dia. Atestado? Falta abonada não conta.</p></div>
-    <div class="recurso"><div class="icone">📖</div><h3>O que caiu na aula que você perdeu</h3><p>Importe o plano de ensino e cada falta mostra o conteúdo exato para recuperar — com checklist de "recuperei".</p></div>
-    <div class="recurso"><div class="icone">🎯</div><h3>Quanto preciso tirar?</h3><p>Lance suas notas com peso e o app responde na hora quanto falta nas próximas avaliações pra fechar a média.</p></div>
-    <div class="recurso"><div class="icone">📅</div><h3>Provas sem surpresa</h3><p>Agenda com contagem regressiva, destaque na véspera, lembretes e exportação para o calendário do celular.</p></div>
-    <div class="recurso"><div class="icone">🕐</div><h3>Professor atrasou?</h3><p>Um toque desliza o cronograma inteiro para as próximas datas. A vida real não segue o plano — o app acompanha.</p></div>
-    <div class="recurso"><div class="icone">🔒</div><h3>Seu, de verdade</h3><p>Sem anúncio e sem venda de dados. Suas faltas e notas são suas: protegidas por senha, com backup e exclusão de conta a um toque, como manda a LGPD.</p></div>
+  <div class="recurso-vivo">
+    <div class="rv-texto">
+      <span class="olho">O dia a dia</span>
+      <h3>Faltou? Um toque e acabou.</h3>
+      <p>O Início mostra as aulas de hoje pela sua grade. Faltou numa? Toca em "Faltei" e pronto — sem formulário, sem data pra digitar. Errou? Toca de novo e desfaz. Atestado? Falta abonada não conta no limite.</p>
+    </div>
+    <div class="tela">
+      <div class="puxador"></div>
+      <h4>Hoje <span class="dir">ter, 18/08 · 3 aulas</span></h4>
+      <div class="cardapp" style="background:var(--superficie)">
+        <div class="aula">
+          <div class="info"><div class="nome">Direito Internacional Público II</div><div class="det">19:00 · sala 239</div></div>
+          <span class="btn-faltei">Faltei</span>
+        </div>
+        <div class="aula">
+          <div class="info"><div class="nome">Direito Civil IX</div><div class="det">20:45 · sala 239 · Alienação fiduciária</div></div>
+          <span class="btn-faltei marcado">Faltei ✓</span>
+        </div>
+        <div class="aula">
+          <div class="info"><div class="nome">Direito do Trabalho II</div><div class="det">21:35 · FGTS</div></div>
+          <span class="btn-faltei">Faltei</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recurso-vivo">
+    <div class="rv-texto">
+      <span class="olho">A conta dos 25%</span>
+      <h3>Você sempre sabe quantas ainda pode.</h3>
+      <p>Cada matéria tem um semáforo com a conta pronta: quantas faltas você usou, quantas restam e quando a coisa fica séria — antes de virar susto no fim do semestre.</p>
+    </div>
+    <div class="tela">
+      <div class="puxador"></div>
+      <h4>Situação por matéria</h4>
+      <div class="cardapp">
+        <div class="l1">Direito Civil IX <span class="pillapp ok">TRANQUILO</span></div>
+        <div class="sub">2 de 4 faltas usadas · pode faltar mais 2</div>
+        <div class="barrapp"><span style="width:50%;background:#5A8F1D"></span></div>
+      </div>
+      <div class="cardapp">
+        <div class="l1">Direito Administrativo V <span class="pillapp warn">ATENÇÃO</span></div>
+        <div class="sub">2 de 3 faltas usadas · só mais 1</div>
+        <div class="barrapp"><span style="width:66%;background:#C97B12"></span></div>
+      </div>
+      <div class="cardapp">
+        <div class="l1">Direito Previdenciário <span class="pillapp danger">RISCO</span></div>
+        <div class="sub">3 de 3 faltas usadas · não dá mais pra faltar</div>
+        <div class="barrapp"><span style="width:100%;background:var(--danger)"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recurso-vivo">
+    <div class="rv-texto">
+      <span class="olho">Notas na regra da PUC</span>
+      <h3>"Quanto preciso tirar?" — respondido.</h3>
+      <p>Você lança as notas que já saíram e o app calcula na hora o que falta nas próximas — com os pesos, a substitutiva e a média final exatamente como a faculdade calcula.</p>
+    </div>
+    <div class="tela">
+      <div class="puxador"></div>
+      <h4>Direito Tributário V</h4>
+      <div class="bims">
+        <div class="bim">
+          <div class="rot">1º BIMESTRE · MB1 6,7</div>
+          <div class="notas"><span>Prática <b>7,5</b></span><span>Teórica <b>6,4</b></span></div>
+        </div>
+        <div class="bim">
+          <div class="rot">2º BIMESTRE · MB2 ?</div>
+          <div class="notas"><span>Prática <b>7,0</b></span><span>Teórica <span class="falta-nota">?</span></span></div>
+        </div>
+      </div>
+      <div class="resposta">🎯 Pra fechar média 6,0: precisa de <b>4,9</b> na teórica do 2º bimestre. Dá bom.</div>
+    </div>
+  </div>
+
+  <div class="recurso-vivo">
+    <div class="rv-texto">
+      <span class="olho">Agenda</span>
+      <h3>Prova nunca mais te pega de surpresa.</h3>
+      <p>Contagem regressiva pra cada prova e atividade, lembrete no celular na véspera e no dia — e dá pra jogar tudo direto no calendário do seu celular.</p>
+    </div>
+    <div class="tela">
+      <div class="puxador"></div>
+      <h4>Próximas avaliações</h4>
+      <div class="cardapp" style="background:var(--superficie)">
+        <div class="prova">
+          <div class="quando">2<small>DIAS</small></div>
+          <div class="grow"><div class="nome">P2 — Tributário V</div><div class="det">qui, 20/08 · vale 7,0</div></div>
+        </div>
+        <div class="prova">
+          <div class="quando">6<small>DIAS</small></div>
+          <div class="grow"><div class="nome">Seminário — Infância e Juventude</div><div class="det">seg, 24/08 · em grupo</div></div>
+        </div>
+        <div class="prova">
+          <div class="quando">9<small>DIAS</small></div>
+          <div class="grow"><div class="nome">P2 — Direito Civil IX</div><div class="det">qui, 27/08</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="recurso-vivo">
+    <div class="rv-texto">
+      <span class="olho">Motivação</span>
+      <h3>Semana sem falta vira conquista.</h3>
+      <p>Feche a semana presente em tudo e ela conta pra sempre no seu placar. A sequência cria o hábito — e o hábito é o que te deixa longe do limite.</p>
+    </div>
+    <div class="tela">
+      <div class="puxador"></div>
+      <h4>Sua sequência</h4>
+      <div class="semana">
+        <div class="dia-chip"><div class="q ok">✓</div><div class="r">SEG</div></div>
+        <div class="dia-chip"><div class="q ok">✓</div><div class="r">TER</div></div>
+        <div class="dia-chip"><div class="q hoje">hoje</div><div class="r">QUA</div></div>
+        <div class="dia-chip"><div class="q fut"></div><div class="r">QUI</div></div>
+        <div class="dia-chip"><div class="q fut"></div><div class="r">SEX</div></div>
+      </div>
+      <div class="selos">
+        <span class="selo-seq">🔥 3 semanas seguidas</span>
+        <span class="selo-seq">🏆 5 perfeitas no total</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="recurso-vivo">
+    <div class="rv-texto">
+      <span class="olho">Comece em 2 minutos</span>
+      <h3>Sua grade já está montada.</h3>
+      <p>Direito PUC-SP: escolha turno e turma — matérias, horários, professores, salas e todas as datas de aula entram sozinhas, já descontando feriados. Outro curso? Importe pelo código de 6 letras de um colega.</p>
+    </div>
+    <div class="tela">
+      <div class="puxador"></div>
+      <h4>Minha grade · PUC Direito</h4>
+      <div class="escolha-turno">
+        <div class="turno">☀️ Manhã</div>
+        <div class="turno sel">🌙 Noite</div>
+      </div>
+      <div class="turmas">
+        <div class="turma">NA7</div><div class="turma">NB8</div><div class="turma sel">NA9</div><div class="turma">NB9</div>
+      </div>
+      <div class="importado">✓ 8 matérias, 144 aulas e o calendário oficial importados</div>
+    </div>
   </div>
 
   <div class="cta-final">
