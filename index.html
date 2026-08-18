@@ -2594,8 +2594,12 @@ function renderConta() {
   const mostrarPasses = planoNuvem === 'gratis' || (!assinatura && diasRestantes !== null && diasRestantes <= 7);
   document.getElementById('conta-upgrade').hidden = !mostrarPasses;
   document.getElementById('conta-assinatura').hidden = planoNuvem === 'gratis' || !assinatura;
-  resumo.textContent = usuarioNuvem.email;
-  document.getElementById('conta-usuario').textContent = usuarioNuvem.email;
+  const nomeExibicao = (usuarioNuvem.user_metadata && (usuarioNuvem.user_metadata.nome || usuarioNuvem.user_metadata.full_name)) || usuarioNuvem.email;
+  const primeiroNome = String(nomeExibicao).split(' ')[0];
+  resumo.textContent = primeiroNome;
+  const elUsuario = document.getElementById('conta-usuario');
+  elUsuario.textContent = nomeExibicao;
+  elUsuario.title = usuarioNuvem.email || '';
   document.getElementById('chk-marketing').checked = !!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.aceita_marketing);
   document.getElementById('chk-relatorio').checked = !(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.receber_relatorio === false);
   const perfil = usuarioNuvem.user_metadata || {};
@@ -2654,6 +2658,7 @@ const TEXTOS_AUTH = {
   criar:     { titulo: 'Crie sua conta grátis', sub: 'Leva menos de um minuto — só email e senha.', btn: 'Criar conta grátis', autoSenha: 'new-password' },
   reset:     { titulo: 'Redefinir senha', sub: 'A gente manda um link pro seu email pra você criar uma senha nova.', btn: 'Enviar link por email', autoSenha: null },
   novaSenha: { titulo: 'Crie uma senha nova', sub: 'Escolha a nova senha da sua conta.', btn: 'Salvar nova senha', autoSenha: 'new-password' },
+  perfil:    { titulo: 'Quase lá! 👋', sub: 'Sua conta Google entrou — complete seu perfil pra terminar.', btn: 'Salvar e começar', autoSenha: null },
 };
 let modoAuth = 'entrar';
 
@@ -2670,16 +2675,18 @@ function renderAuthModo(modo) {
   document.getElementById('auth-titulo').textContent = t.titulo;
   document.getElementById('auth-sub').textContent = t.sub;
   document.getElementById('auth-btn').textContent = t.btn;
-  document.getElementById('auth-l-email').hidden = modo === 'novaSenha';
-  document.getElementById('auth-l-senha').hidden = modo === 'reset';
-  document.getElementById('auth-perfil').hidden = modo !== 'criar';
-  document.getElementById('auth-l-marketing').hidden = modo !== 'criar';
+  document.getElementById('auth-l-email').hidden = modo === 'novaSenha' || modo === 'perfil';
+  document.getElementById('auth-l-senha').hidden = modo === 'reset' || modo === 'perfil';
+  document.getElementById('auth-perfil').hidden = modo !== 'criar' && modo !== 'perfil';
+  document.getElementById('auth-l-marketing').hidden = modo !== 'criar' && modo !== 'perfil';
+  document.querySelector('.auth-ou').hidden = modo === 'perfil';
+  document.getElementById('auth-google').hidden = modo === 'perfil';
   const senha = document.getElementById('auth-senha');
   senha.setAttribute('autocomplete', t.autoSenha || 'off');
   document.getElementById('auth-esqueci').hidden = modo !== 'entrar';
   const trocaTxt = document.getElementById('auth-troca-txt');
   const trocar = document.getElementById('auth-trocar');
-  trocaTxt.parentElement.hidden = modo === 'novaSenha';
+  trocaTxt.parentElement.hidden = modo === 'novaSenha' || modo === 'perfil';
   if (modo === 'criar') { trocaTxt.textContent = 'Já tem conta?'; trocar.textContent = 'Entrar'; }
   else if (modo === 'reset') { trocaTxt.textContent = 'Lembrou a senha?'; trocar.textContent = 'Voltar e entrar'; }
   else { trocaTxt.textContent = 'Primeira vez aqui?'; trocar.textContent = 'Criar conta grátis'; }
@@ -2690,7 +2697,7 @@ function mostrarAuth(modo) {
   renderAuthModo(modo || 'entrar');
   document.getElementById('tela-auth').hidden = false;
   document.body.classList.add('auth-aberta');
-  const foco = modoAuth === 'novaSenha' ? 'auth-senha' : 'auth-email';
+  const foco = modoAuth === 'novaSenha' ? 'auth-senha' : (modoAuth === 'perfil' ? 'auth-nome' : 'auth-email');
   setTimeout(() => document.getElementById(foco).focus(), 50);
 }
 
@@ -2729,8 +2736,8 @@ document.getElementById('auth-form').addEventListener('submit', async ev => {
   if (!nuvemDisponivel()) { msgAuth('Sem conexão — conecte-se à internet e tente de novo.', 'erro'); return; }
   const email = document.getElementById('auth-email').value.trim();
   const senha = document.getElementById('auth-senha').value;
-  if (modoAuth !== 'novaSenha' && !email) { msgAuth('Preencha seu email.', 'erro'); return; }
-  if (modoAuth !== 'reset' && senha.length < 6) { msgAuth('A senha precisa ter pelo menos 6 caracteres.', 'erro'); return; }
+  if (modoAuth !== 'novaSenha' && modoAuth !== 'perfil' && !email) { msgAuth('Preencha seu email.', 'erro'); return; }
+  if (modoAuth !== 'reset' && modoAuth !== 'perfil' && senha.length < 6) { msgAuth('A senha precisa ter pelo menos 6 caracteres.', 'erro'); return; }
   const btn = document.getElementById('auth-btn');
   btn.disabled = true;
   btn.textContent = 'Um instante…';
@@ -2740,7 +2747,7 @@ document.getElementById('auth-form').addEventListener('submit', async ev => {
       if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
       toast('Bem-vindo de volta!');
       await aposLogin(data.user);
-    } else if (modoAuth === 'criar') {
+    } else if (modoAuth === 'criar' || modoAuth === 'perfil') {
       const nome = document.getElementById('auth-nome').value.trim();
       const nascimento = document.getElementById('auth-nascimento').value;
       const celular = document.getElementById('auth-celular').value.trim();
@@ -2752,12 +2759,20 @@ document.getElementById('auth-form').addEventListener('submit', async ev => {
       if (idade < 14 || idade > 100) { msgAuth('Confira a data de nascimento — ela não parece certa.', 'erro'); return; }
       if (!instituicao || !curso) { msgAuth('Preencha instituição e curso.', 'erro'); return; }
       const aceitaMkt = document.getElementById('auth-marketing').checked;
+      const dadosPerfil = {
+        nome, nascimento, celular: celular || null, instituicao, curso,
+        aceita_marketing: aceitaMkt, consentimento_marketing_em: aceitaMkt ? new Date().toISOString() : null
+      };
+      if (modoAuth === 'perfil') {
+        const { data, error } = await nuvem.auth.updateUser({ data: dadosPerfil });
+        if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
+        toast('Perfil completo! Bem-vindo ao Faltaê 💚');
+        await aposLogin(data.user);
+        return;
+      }
       const { data, error } = await nuvem.auth.signUp({
         email, password: senha,
-        options: { data: {
-          nome, nascimento, celular: celular || null, instituicao, curso,
-          aceita_marketing: aceitaMkt, consentimento_marketing_em: aceitaMkt ? new Date().toISOString() : null
-        } }
+        options: { data: dadosPerfil }
       });
       if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
       if (!data.session) {
@@ -3885,6 +3900,12 @@ if (retornoPagamento) {
       tentarConectarWidget();
       aplicarSairRelatorio();
       if (veioRecovery) mostrarAuth('novaSenha');
+      else if (!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.nome)) {
+        /* conta veio do Google (ou perfil incompleto): completa o perfil antes de seguir */
+        mostrarAuth('perfil');
+        const meta = usuarioNuvem.user_metadata || {};
+        document.getElementById('auth-nome').value = meta.full_name || meta.name || '';
+      }
     } else {
       avisarLoginWidget();
       mostrarAuth(new URLSearchParams(location.search).has('criar') ? 'criar' : 'entrar');
