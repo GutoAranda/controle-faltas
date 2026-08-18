@@ -417,13 +417,37 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     #sheet { border-radius: 18px; bottom: 20px; transform: translateY(calc(105% + 40px)); border: 1px solid var(--line); }
     #toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 
-    .menu-lista { gap: 10px; }
+    .menu-lista { gap: 10px; grid-template-columns: 1fr 1fr; align-items: start; }
+    .menu-lista > details.menu-sec { min-width: 0; }
     details.menu-sec > summary { padding: 17px 18px; }
     details.menu-sec .corpo-menu { padding: 4px 18px 18px; }
   }
 
   @media (min-width: 1100px) {
-    main, header.app .inner, nav.abas .inner { max-width: 880px; }
+    /* computador: a navegação sai do rodapé e vira trilho lateral */
+    body { padding-left: 216px; padding-bottom: 32px; }
+    nav.abas {
+      top: 0; bottom: 0; right: auto; width: 216px;
+      border-top: 0; border-right: 1px solid var(--line);
+      padding: 16px 12px; overflow-y: auto;
+    }
+    nav.abas .inner { max-width: none; display: flex; flex-direction: column; gap: 4px; padding-top: 54px; }
+    nav.abas button {
+      display: flex; align-items: center; justify-content: flex-start; gap: 12px;
+      font-size: 14.5px; font-weight: 600; letter-spacing: 0;
+      padding: 11px 14px; border-radius: 12px;
+    }
+    nav.abas button[aria-current="page"] { background: var(--accent-soft); }
+    nav.abas button svg { width: 21px; height: 21px; }
+    main, header.app .inner { max-width: 880px; }
+    #toast { bottom: 28px; }
+
+    /* notas em duas colunas (bimestres empilham dentro do card mais estreito) */
+    #lista-notas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+    #lista-notas > * { min-width: 0; }
+    #lista-notas .vazio { grid-column: 1 / -1; }
+    #lista-notas .card { margin-bottom: 0; grid-template-columns: 1fr; }
+    #lista-notas .card > .bloco-bim { grid-column: 1 / -1; }
   }
 
   /* passes do Essencial */
