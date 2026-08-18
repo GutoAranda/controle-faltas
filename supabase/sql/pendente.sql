@@ -98,3 +98,44 @@ select cron.schedule(
        and plano_valido_ate is not null
        and plano_valido_ate < now() $$
 );
+
+
+-- == 2f . NOTIFICACOES PUSH (lembrete de prova com o app fechado) ==========
+-- Rode este bloco inteiro no SQL Editor. Idempotente.
+create table if not exists public.push_inscricoes (
+  endpoint  text primary key,
+  user_id   uuid not null references auth.users(id) on delete cascade,
+  dados     jsonb not null,
+  criado_em timestamptz not null default now()
+);
+alter table public.push_inscricoes enable row level security;
+
+drop policy if exists push_sel on public.push_inscricoes;
+create policy push_sel on public.push_inscricoes for select to authenticated using (auth.uid() = user_id);
+drop policy if exists push_ins on public.push_inscricoes;
+create policy push_ins on public.push_inscricoes for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists push_upd on public.push_inscricoes;
+create policy push_upd on public.push_inscricoes for update to authenticated using (true) with check (auth.uid() = user_id);
+drop policy if exists push_del on public.push_inscricoes;
+create policy push_del on public.push_inscricoes for delete to authenticated using (auth.uid() = user_id);
+
+-- GRANTs SEPARADOS (grant de coluna e de tabela nao podem ir juntos!)
+grant select on public.push_inscricoes to authenticated;
+grant insert (endpoint, user_id, dados) on public.push_inscricoes to authenticated;
+grant update (user_id, dados) on public.push_inscricoes to authenticated;
+grant delete on public.push_inscricoes to authenticated;
+
+-- despertador: todo dia 07:30 BRT (10:30 UTC). TROQUE COLE_AQUI_A_CHAVE_PUSH
+-- pelo mesmo valor que voce salvar no segredo PUSH_CRON_CHAVE.
+create extension if not exists pg_net;
+select cron.unschedule('faltae-push-provas')
+  where exists (select 1 from cron.job where jobname = 'faltae-push-provas');
+select cron.schedule(
+  'faltae-push-provas',
+  '30 10 * * *',
+  $$ select net.http_post(
+       url := 'https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/enviar-push',
+       headers := jsonb_build_object('Content-Type', 'application/json', 'x-push-chave', 'COLE_AQUI_A_CHAVE_PUSH'),
+       body := '{}'::jsonb
+     ) $$
+);

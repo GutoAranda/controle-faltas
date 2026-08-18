@@ -65,3 +65,11 @@ Enquanto o passo 2 e 3 não acontecem, o app se comporta bem: o botão de assina
 ## Lembrete pré-lançamento (não é pra agora)
 
 - Religar a confirmação de email: Authentication → Providers → Email → "Confirm email" ON.
+
+
+## Notificacoes push (lembrete de prova com o app fechado) — NOVO
+1. **SQL**: rode a secao 2f do `supabase/sql/pendente.sql` (troque `COLE_AQUI_A_CHAVE_PUSH` pela chave que voce inventar no passo 2).
+2. **Segredos** (Edge Functions > Secrets): `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` (estao em `supabase/SEGREDOS-PUSH.txt` — NAO commitar nem colar em chat) e `PUSH_CRON_CHAVE` (invente uma senha longa, a mesma do SQL).
+3. **Publicar a funcao** `enviar-push` (copie de `supabase/functions/enviar-push/index.ts`) com **Verify JWT DESLIGADO**.
+4. **Testar**: no painel, Invoke da funcao com header `x-push-chave: SUA_CHAVE` e corpo `{"teste":"seu@email.com"}` — antes disso, toque em "Ativar lembretes" (aba Agenda) no seu celular com o app instalado e logado. A notificacao de teste deve chegar.
+5. iPhone: so recebe com o app **instalado na tela de inicio** (iOS 16.4+). Android: navegador ou app, ambos funcionam.
