@@ -2212,12 +2212,60 @@ async function dispararLembretes() {
   localStorage.setItem('controleFaltas.lembretes', JSON.stringify(vistos));
 }
 
-document.getElementById('btn-lembretes').addEventListener('click', () => {
-  if (!('Notification' in window)) { toast('Este navegador não suporta notificações.'); return; }
-  Notification.requestPermission().then(p => {
-    if (p === 'granted') { toast('Lembretes ativados! 🔔'); dispararLembretes(); }
-    else { toast('Permissão negada — o destaque no Início continua funcionando.'); }
-  });
+/* ─── web push: aviso de prova com o app fechado ─── */
+const PUSH_CHAVE_PUBLICA = 'BC_iB6J7uDfOk6SKCOS3xhWpaFjT2o3nTcsnhsN_S7o7Slj23berxLg2M6li5x1Wn5l5auk7oJh6jUqrhtZPGao';
+function pushChaveBytes(b64url) {
+  const b64 = (b64url + '='.repeat((4 - b64url.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  const bruto = atob(b64);
+  return Uint8Array.from([...bruto].map(c => c.charCodeAt(0)));
+}
+async function inscricaoPushAtual() {
+  if (!('serviceWorker' in navigator)) return null;
+  const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+  if (!reg || !reg.pushManager) return null;
+  return { reg, sub: await reg.pushManager.getSubscription().catch(() => null) };
+}
+async function ativarPush() {
+  try {
+    if (!nuvemDisponivel() || !usuarioNuvem) return false;
+    const atual = await inscricaoPushAtual();
+    if (!atual) return false;
+    const sub = atual.sub || await atual.reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: pushChaveBytes(PUSH_CHAVE_PUBLICA)
+    });
+    const s = sub.toJSON();
+    const linha = { endpoint: s.endpoint, user_id: usuarioNuvem.id, dados: s.keys };
+    const ins = await nuvem.from('push_inscricoes').insert(linha);
+    if (ins.error && ins.error.code === '23505') {
+      await nuvem.from('push_inscricoes').update({ user_id: linha.user_id, dados: linha.dados }).eq('endpoint', linha.endpoint);
+    } else if (ins.error) { return false; }
+    return true;
+  } catch { return false; }
+}
+async function desativarPushDoAparelho() {
+  try {
+    const atual = await inscricaoPushAtual();
+    if (atual && atual.sub && nuvemDisponivel()) {
+      await nuvem.from('push_inscricoes').delete().eq('endpoint', atual.sub.endpoint);
+    }
+  } catch { /* melhor sair do que travar o logout */ }
+}
+
+document.getElementById('btn-lembretes').addEventListener('click', async () => {
+  if (!('Notification' in window)) {
+    toast(ehIphoneInstalado() || !/iPhone|iPad|iPod/.test(navigator.userAgent)
+      ? 'Este navegador não suporta notificações.'
+      : 'No iPhone, primeiro instale o app: Compartilhar → Adicionar à Tela de Início.');
+    return;
+  }
+  const p = await Notification.requestPermission();
+  if (p !== 'granted') { toast('Permissão negada — o destaque no Início continua funcionando.'); return; }
+  dispararLembretes();
+  const comPush = await ativarPush();
+  toast(comPush
+    ? 'Lembretes ativados! 🔔 Você recebe aviso de prova até com o app fechado.'
+    : 'Lembretes ativados com o app aberto! 🔔');
 });
 
 /* ─────────── backup ─────────── */
@@ -2647,6 +2695,7 @@ async function aposLogin(user) {
   await puxarNuvem();
   tentarConectarWidget();
   aplicarSairRelatorio();
+  if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
 }
 
 /* ─────────── tela de entrada (conta obrigatória) ─────────── */
@@ -3718,6 +3767,7 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
     await nuvem.from('widget_aparelhos').delete().eq('device_id', widgetConectado).then(() => {});
     localStorage.removeItem('controleFaltas.widgetConectado');
   }
+  await desativarPushDoAparelho(); // este aparelho para de receber push da conta
   if (nuvemDisponivel()) await nuvem.auth.signOut();
   usuarioNuvem = null;
   planoNuvem = 'gratis';
@@ -3915,6 +3965,7 @@ if (retornoPagamento) {
       puxarNuvem();
       tentarConectarWidget();
       aplicarSairRelatorio();
+      if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
       if (veioRecovery) mostrarAuth('novaSenha');
       else if (!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.nome)) {
         /* conta veio do Google (ou perfil incompleto): completa o perfil antes de seguir */
