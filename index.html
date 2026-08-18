@@ -1,4 +1,4 @@
-<title>Faltaê — não reprove por falta</title>
+<title>Faltaê — sua vida acadêmica sem sustos</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Faltaê: controle suas faltas, veja o conteúdo que perdeu, acompanhe provas e notas. O app que não deixa você reprovar por falta.">
@@ -3748,7 +3748,7 @@ document.getElementById('btn-zerar').addEventListener('click', () => {
 
 /* ─────────── indicação ─────────── */
 document.getElementById('btn-indicar').addEventListener('click', () => {
-  const texto = 'Uso o Faltaê pra não reprovar por falta: ele avisa quantas faltas ainda posso usar, mostra o que caiu nas aulas que perdi e calcula quanto preciso tirar nas provas. Grátis: https://faltae.com.br/';
+  const texto = 'Uso o Faltaê pra organizar a faculdade: ele avisa quantas faltas ainda posso usar, organiza minhas provas com contagem regressiva e calcula quanto preciso tirar pra fechar a média. Grátis: https://faltae.com.br/';
   if (navigator.share) navigator.share({ text: texto }).catch(() => {});
   else navigator.clipboard.writeText(texto).then(() => toast('Convite copiado — manda pra quem precisa 💚')).catch(() => {});
 });
