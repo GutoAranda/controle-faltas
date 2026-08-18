@@ -97,6 +97,8 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   }
 
   * { box-sizing: border-box; }
+  /* [hidden] SEMPRE esconde, mesmo em elementos com display próprio (flex/grid) */
+  [hidden] { display: none !important; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg);
