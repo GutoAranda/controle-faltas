@@ -190,7 +190,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     border-radius: 10px; padding: 10px 12px; width: 100%; min-height: 44px;
   }
   textarea { min-height: 72px; resize: vertical; }
-  .campos-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .campos-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .campos-2 label.campo { align-content: start; }
+  .campos-2 label.campo input { height: 45px; width: 100%; min-width: 0; box-sizing: border-box; }
   .campos-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
   .vazio {
@@ -485,6 +487,14 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   #tela-auth[hidden] { display: none; }
   body.auth-aberta { overflow: hidden; }
   .auth-caixa { width: 100%; max-width: 380px; padding: 52px 20px 40px; align-self: flex-start; }
+  @media (min-width: 700px) {
+    #tela-auth { padding: 30px 16px; }
+    .auth-caixa {
+      align-self: auto; margin: auto; max-width: 448px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 38px 36px 34px;
+    }
+  }
   .auth-logo { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; }
   .auth-logo svg { width: 46px; height: 46px; flex: none; }
   .auth-logo span { font-size: 27px; font-weight: 800; letter-spacing: -0.5px; color: var(--ink); }
