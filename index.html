@@ -1368,7 +1368,7 @@ function abrirSheetMateria(matId) {
   if (!mat) return;
   const r = resumoMateria(mat);
   const hoje = hojeISO();
-  const temAulaHoje = db.aulas.some(a => a.materiaId === matId && a.data === hoje);
+  const temAulaHoje = db.aulas.some(a => a.materiaId === matId && a.data === hoje) || (mat.diaSemana && mat.diaSemana === diaSemana(hoje));
   const faltouHoje = db.faltas.some(f => f.materiaId === matId && f.data === hoje);
   const acoes = [];
   if (temAulaHoje) {
@@ -1464,8 +1464,12 @@ function renderInicio() {
   /* hoje */
   const alvoHoje = document.getElementById('inicio-hoje');
   const aulasHoje = db.aulas.filter(a => a.data === hoje);
-  const materiasHoje = [...new Set(aulasHoje.map(a => a.materiaId))]
-    .map(id => materiaPorId(id)).filter(Boolean);
+  /* aparece tudo que tem aula hoje: pelo cronograma OU pelo dia da semana da grade */
+  const diaHoje = diaSemana(hoje);
+  const idsHoje = new Set(aulasHoje.map(a => a.materiaId));
+  db.materias.forEach(m => { if (m.diaSemana === diaHoje) idsHoje.add(m.id); });
+  const materiasHoje = [...idsHoje].map(id => materiaPorId(id)).filter(Boolean)
+    .sort((a, b) => String(a.horario || '99:99').localeCompare(String(b.horario || '99:99')));
   document.getElementById('hoje-extra').textContent = materiasHoje.length
     ? `${materiasHoje.length} aula${materiasHoje.length === 1 ? '' : 's'}` : '';
   if (!db.materias.length) {
@@ -1482,15 +1486,16 @@ function renderInicio() {
       abrirMinhaGrade('codigo');
     });
   } else if (!materiasHoje.length) {
-    alvoHoje.innerHTML = '<div class="vazio">Sem aulas no plano para hoje. Bom descanso! 🎉</div>';
+    alvoHoje.innerHTML = '<div class="vazio">Sem aulas hoje. Bom descanso! 🎉</div>';
   } else {
     alvoHoje.innerHTML = `<div class="card">` + materiasHoje.map(mat => {
       const conteudo = aulasHoje.filter(a => a.materiaId === mat.id).map(a => esc(a.conteudo)).join(' · ');
+      const foraDoPlano = !aulasHoje.some(a => a.materiaId === mat.id) && db.aulas.some(a => a.materiaId === mat.id);
       const marcada = db.faltas.some(f => f.materiaId === mat.id && f.data === hoje);
       return `<div class="aula-hoje">
         <div class="info">
           <div class="nome trunca">${esc(mat.nome)}</div>
-          <div class="sutil trunca">${[mat.horario, mat.sala ? 'sala ' + mat.sala : null, conteudo || null].filter(Boolean).map(esc).join(' · ')}</div>
+          <div class="sutil trunca">${[mat.horario, mat.sala ? 'sala ' + mat.sala : null, conteudo || (foraDoPlano ? 'fora do cronograma de hoje' : null)].filter(Boolean).map(esc).join(' · ')}</div>
         </div>
         <button class="btn-falta small ${marcada ? 'marcada' : ''}" data-falta-hoje="${mat.id}" aria-pressed="${marcada}">
           ${marcada ? 'Faltei ✓' : 'Faltei'}
