@@ -549,6 +549,23 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   .sheetd-botoes { display: flex; flex-direction: column; gap: 9px; }
   .sheetd-botoes .primary { width: 100%; }
   .sheetd-botoes .small { align-self: center; }
+  /* listas dentro do sheet (escolher matérias, gavetas de provas, revisão do pacote) */
+  .sheetd-lista { max-height: 46vh; overflow-y: auto; text-align: left; margin-bottom: 10px; }
+  .sheetd-lista .check { padding: 7px 2px; align-items: flex-start; }
+  @media (min-width: 700px) {
+    .sheetd-caixa.largo { max-width: 640px; }
+    .sheetd-lista { max-height: 52vh; }
+  }
+  @media (min-width: 1000px) {
+    /* telas grandes: o sheet respira e a lista usa duas colunas em vez de rolar à toa */
+    .sheetd-caixa.largo { max-width: 760px; padding: 26px 26px 22px; }
+    .sheetd-caixa.largo .sheetd-lista {
+      max-height: 56vh; display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4px 20px; align-content: start;
+    }
+    .sheetd-caixa.largo .sheetd-lista .larguraTotal { grid-column: 1 / -1; }
+    .sheetd-caixa.largo .sheetd-botoes { display: grid; grid-template-columns: 1fr; }
+  }
 
   /* ─── tela do plano (vendas) — desenhada pra celular, tablet e PC ─── */
   #tela-plano {
@@ -2944,7 +2961,7 @@ function sheetEscolherAtivas(motivo) {
   const pintar = () => {
     caixa.innerHTML = '';
     const lista = document.createElement('div');
-    lista.style.cssText = 'max-height:46vh; overflow-y:auto; margin-bottom:10px; text-align:left';
+    lista.className = 'sheetd-lista';
     ranking.forEach(m => {
       const l = document.createElement('label');
       l.className = 'check';
@@ -2980,6 +2997,7 @@ function sheetEscolherAtivas(motivo) {
     alt.addEventListener('click', () => { fundo.hidden = true; registrarMetrica('ativas_upgrade'); abrirTelaPlano(); });
     caixa.appendChild(alt);
   };
+  sheetLargo(true);
   pintar();
   fundo.onclick = ev => {
     if (ev.target !== fundo) return;
@@ -3049,6 +3067,7 @@ function trocarPorEsta(matId) {
   cancelar.textContent = 'Cancelar';
   cancelar.addEventListener('click', () => { fundo.hidden = true; });
   caixa.appendChild(cancelar);
+  sheetLargo(false);
   fundo.onclick = ev => { if (ev.target === fundo) fundo.hidden = true; };
   fundo.hidden = false;
 }
@@ -3434,7 +3453,7 @@ function selecionarProvas(intencao) {
   const pintar = () => {
     caixa.innerHTML = '';
     const lista = document.createElement('div');
-    lista.style.cssText = 'max-height:48vh; overflow-y:auto; text-align:left; margin-bottom:10px';
+    lista.className = 'sheetd-lista';
     grupos.forEach((evs, matId) => {
       const mat = materiaPorId(matId);
       const marcadosAqui = evs.filter(e => sel.has(e.id)).length;
@@ -3490,6 +3509,7 @@ function selecionarProvas(intencao) {
     cancelar.addEventListener('click', () => { fundo.hidden = true; });
     caixa.appendChild(cancelar);
   };
+  sheetLargo(true);
   pintar();
   fundo.onclick = ev => { if (ev.target === fundo) fundo.hidden = true; };
   fundo.hidden = false;
@@ -3560,7 +3580,7 @@ async function abrirPacoteProvas(codigo) {
   const pintar = () => {
     caixa.innerHTML = '';
     const lista = document.createElement('div');
-    lista.style.cssText = 'max-height:46vh; overflow-y:auto; text-align:left; margin-bottom:10px';
+    lista.className = 'sheetd-lista';
     grupos.forEach((g, nomeMat) => {
       const cab = document.createElement('div');
       cab.style.cssText = 'font-size:11.5px; font-weight:800; color:var(--ink-2); margin:10px 0 4px';
@@ -3621,6 +3641,7 @@ async function abrirPacoteProvas(codigo) {
     depois.addEventListener('click', () => { fundo.hidden = true; history.replaceState(null, '', location.pathname); });
     caixa.appendChild(depois);
   };
+  sheetLargo(true);
   pintar();
   fundo.onclick = ev => { if (ev.target === fundo) { fundo.hidden = true; history.replaceState(null, '', location.pathname); } };
   fundo.hidden = false;
@@ -4019,7 +4040,13 @@ document.getElementById('puc-turno').addEventListener('change', prepararSecaoPUC
 document.getElementById('puc-origem').addEventListener('change', atualizarDisciplinasPUC);
 
 /* ─────────── sheet de decisão + onboarding guiado (grade → extras → planos) ─────────── */
+function sheetLargo(sim) {
+  const c = document.querySelector('.sheetd-caixa');
+  if (c) c.classList.toggle('largo', !!sim);
+}
+
 function abrirSheet(cfg) {
+  sheetLargo(false); // sheets simples ficam estreitos
   const fundo = document.getElementById('sheetd-fundo');
   document.getElementById('sheetd-titulo').textContent = cfg.titulo;
   document.getElementById('sheetd-texto').textContent = cfg.texto;
