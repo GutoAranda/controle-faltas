@@ -138,6 +138,32 @@ select cron.schedule('rebaixar-planos-vencidos', '15 3 * * *',
   $cron$ update public.dados_usuario set plano = 'gratis'
           where plano <> 'gratis' and plano_valido_ate is not null and plano_valido_ate < now() $cron$);
 
+
+-- [9] COMPARTILHAR PROVAS/ATIVIDADES (codigo de 7 dias) --------
+-- Pacote de eventos que um aluno manda pro grupo. Some sozinho: o app recusa
+-- na leitura depois de 7 dias e a faxina apaga da base. Sem dado pessoal:
+-- so titulo, tipo, data, peso e nome da materia (nunca faltas, notas ou "feita").
+create table if not exists public.eventos_compartilhados (
+  codigo     text primary key,
+  dados      jsonb not null,
+  criado_por uuid references auth.users(id) on delete set null,
+  criado_em  timestamptz not null default now(),
+  expira_em  timestamptz not null default (now() + interval '7 days')
+);
+alter table public.eventos_compartilhados enable row level security;
+drop policy if exists ev_leitura on public.eventos_compartilhados;
+drop policy if exists ev_criar on public.eventos_compartilhados;
+-- leitura publica (quem recebe o link pode nao ter conta ainda) mas so no prazo
+create policy ev_leitura on public.eventos_compartilhados for select to anon, authenticated
+  using (expira_em > now());
+create policy ev_criar on public.eventos_compartilhados for insert to authenticated
+  with check (auth.uid() = criado_por);
+grant select on public.eventos_compartilhados to anon, authenticated;
+grant insert (codigo, dados, criado_por) on public.eventos_compartilhados to authenticated;
+
+do $$ begin perform cron.unschedule('faltae-faxina-eventos'); exception when others then null; end $$;
+select cron.schedule('faltae-faxina-eventos', '20 7 * * *',
+  $cron$ delete from public.eventos_compartilhados where expira_em < now() $cron$);
 -- CONSULTAS UTEIS (rode quando quiser ver o funil)
 -- select * from public.metricas_diarias order by dia desc, total desc;
 -- select plano_origem, count(*) from public.dados_usuario where plano <> 'gratis' group by 1;
