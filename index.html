@@ -5494,10 +5494,30 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   if (!confirm('Última confirmação: excluir a conta ' + usuarioNuvem.email + ' definitivamente?')) return;
   const { data, error } = await nuvem.functions.invoke('excluir-conta', { method: 'POST' });
   if (error || !data || !data.ok) {
-    /* mostrar a razão curta: sem ela, todo problema vira "tente mais tarde" e ninguém consegue diagnosticar */
-    const razao = (data && data.erro) || (error && error.message) || 'sem resposta do servidor';
     console.error('Falha ao excluir conta:', error || data);
-    toast('Não deu pra excluir agora (' + razao + '). Tente mais tarde ou peça pelo formulário de Sugestões.');
+    /* Dois problemas MUITO diferentes davam a mesma mensagem:
+       (a) o serviço recusou — aí existe uma razão pra mostrar;
+       (b) a requisição nem chegou nele. Quando a função não está publicada, o gateway
+           responde 404 SEM cabeçalho CORS, o navegador bloqueia antes do app ler o
+           status, e sobra um 'failed to send' que não explica nada.
+       No caso (b) o pedido de exclusão não pode evaporar: é direito do titular (LGPD),
+       então fica registrado na caixa de entrada pra ser atendido à mão. */
+    const falha = ((error && error.name) || '') + ' ' + ((error && error.message) || '');
+    const naoChegou = /FunctionsFetchError|Failed to (send|fetch)/i.test(falha);
+    if (naoChegou) {
+      await nuvem.from('sugestoes').insert({
+        mensagem: '[EXCLUSAO DE CONTA - LGPD] Pedido feito pelo app em ' + new Date().toISOString()
+          + '. O servico de exclusao estava indisponivel; atender manualmente.',
+        email: usuarioNuvem.email,
+      }).then(() => {}, () => {});
+      abrirSheet({
+        titulo: 'Pedido registrado',
+        texto: 'O serviço de exclusão está fora do ar neste momento, então guardamos seu pedido — ele será atendido. Sua conta continua funcionando normalmente até lá, e nada foi apagado.',
+        botoes: [{ txt: 'Entendi', classe: 'primary' }],
+      });
+      return;
+    }
+    toast('Não deu pra excluir agora (' + ((data && data.erro) || (error && error.message) || 'sem resposta') + '). Tente mais tarde ou peça pelo formulário de Sugestões.');
     return;
   }
   await nuvem.auth.signOut().catch(() => {});
