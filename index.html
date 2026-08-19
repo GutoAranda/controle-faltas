@@ -525,6 +525,45 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       box-shadow: var(--shadow); padding: 38px 36px 34px;
     }
   }
+  /* sheet de decisão (onboarding guiado) */
+  #sheet-fundo {
+    position: fixed; inset: 0; z-index: 320; background: rgba(10, 12, 24, .55);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  #sheet-fundo[hidden] { display: none; }
+  .sheet-caixa {
+    width: 100%; max-width: 460px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 20px 20px 0 0;
+    padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -14px 44px rgba(10, 12, 24, .3);
+    animation: sheet-sobe .22s ease-out;
+  }
+  @keyframes sheet-sobe { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .sheet-caixa { animation: none; } }
+  @media (min-width: 700px) {
+    #sheet-fundo { align-items: center; padding: 20px; }
+    .sheet-caixa { border-radius: 20px; }
+  }
+  .sheet-titulo { font-size: 18px; font-weight: 800; color: var(--ink); margin: 0 0 6px; }
+  .sheet-texto { font-size: 14px; color: var(--ink-2); margin: 0 0 18px; line-height: 1.55; }
+  .sheet-botoes { display: flex; flex-direction: column; gap: 9px; }
+  .sheet-botoes .primary { width: 100%; }
+  .sheet-botoes .small { align-self: center; }
+
+  /* cesta da grade: nada grava até confirmar */
+  .cesta-caixa { background: var(--surface); border: 1.5px solid var(--accent); border-radius: 12px; padding: 10px 12px; }
+  .cesta-chip {
+    display: inline-flex; align-items: center; gap: 7px; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 6px 5px 12px;
+    font-size: 12.5px; font-weight: 600; margin: 7px 7px 0 0; color: var(--ink);
+  }
+  .cesta-chip .sub-chip { color: var(--ink-3); font-weight: 500; font-size: 11px; }
+  .cesta-chip button {
+    background: none; border: 0; color: var(--ink-3); font-weight: 800; font-size: 14px;
+    padding: 2px 7px; cursor: pointer; border-radius: 999px; line-height: 1;
+  }
+  .cesta-chip button:hover { color: #C2263F; background: var(--line); }
+
   .auth-logo { display: flex; align-items: center; gap: 11px; margin-bottom: 30px; }
   .auth-logo svg { width: 46px; height: 46px; flex: none; }
   .auth-logo span { font-size: 27px; font-weight: 800; letter-spacing: -0.5px; color: var(--ink); }
@@ -638,6 +677,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     <div id="inicio-lembrete"></div>
 
     <h2>Hoje <span class="extra num" id="hoje-extra"></span></h2>
+    <div id="inicio-pendencias"></div>
     <div id="inicio-hoje"></div>
 
     <h2>Sua sequência</h2>
@@ -650,7 +690,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     <div id="inicio-materias"></div>
 
     <details class="passadas" id="semana-wrap">
-      <summary>Próximas aulas dos próximos 7 dias ▾</summary>
+      <summary>Aulas dos próximos 7 dias ▾</summary>
       <div class="card" id="inicio-semana" style="margin-top:6px; opacity:1"></div>
     </details>
   </section>
@@ -847,6 +887,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M9 5V3M15 5V3M8.5 13h.5M11.5 13h.5M14.5 13h.5M8.5 16.5h.5M11.5 16.5h.5"/></svg></span> Minha grade <span class="sutil num" id="materias-extra" style="margin-left:6px"></span></summary>
         <div class="corpo-menu">
           <div id="grade-seguindo"></div>
+          <div id="guia-planos" hidden class="painel" style="margin:10px 0 12px"></div>
           <div id="lista-materias"></div>
 
           <button class="primary" type="button" id="btn-add-materias" style="width:100%; margin-top:14px">＋ Adicionar matérias</button>
@@ -888,7 +929,17 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             <label class="campo" style="max-width:420px; margin-top:8px">Disciplina
               <select id="puc-disciplina"></select>
             </label>
-            <button class="small" id="btn-add-avulsa" type="button" style="margin-top:10px">Adicionar esta disciplina</button>
+            <button class="small" id="btn-add-avulsa" type="button" style="margin-top:10px">＋ Pôr na cesta</button>
+            <p class="sutil" style="margin:10px 0 0">Não achou sua disciplina? <a href="#" id="link-criar-zero">Criar do zero</a> — monitoria, curso de fora da grade, o que for.</p>
+          </div>
+
+          <div id="cesta-grade" hidden style="margin-top:14px">
+            <div class="cesta-caixa">
+              <strong id="cesta-titulo" style="font-size:13.5px"></strong>
+              <div id="cesta-chips"></div>
+            </div>
+            <p class="sutil" style="margin:8px 0 10px">Já cursou alguma (ou não vai acompanhar)? Toque no ✕ que ela fica de fora — dá pra trazer depois. Nada é gravado até você confirmar.</p>
+            <button class="primary" id="btn-confirmar-cesta" type="button"></button>
           </div>
 
           <div id="add-codigo" hidden style="margin-top:12px">
@@ -1065,6 +1116,14 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
 </main>
 
 <div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-acao" hidden type="button">Desfazer</button></div>
+
+<div id="sheet-fundo" hidden>
+  <div class="sheet-caixa" role="dialog" aria-modal="true" aria-labelledby="sheet-titulo">
+    <h3 class="sheet-titulo" id="sheet-titulo"></h3>
+    <p class="sheet-texto" id="sheet-texto"></p>
+    <div class="sheet-botoes" id="sheet-botoes"></div>
+  </div>
+</div>
 
 <div id="sheet-fundo"></div>
 <div id="sheet" role="dialog" aria-modal="true" aria-label="Ações">
@@ -1463,6 +1522,44 @@ function abrirSheetAtraso(matId) {
 /* ─────────── render: início ─────────── */
 function renderInicio() {
   const hoje = hojeISO();
+
+  /* pendências do onboarding guiado (rede de segurança de quem escapou do fluxo) */
+  const alvoPend = document.getElementById('inicio-pendencias');
+  if (alvoPend) {
+    let ph = '';
+    if (typeof cestaRestaurar === 'function') cestaRestaurar();
+    if (typeof cestaEstado !== 'undefined' && cestaEstado && cestaEstado.itens.length) {
+      const n = cestaEstado.itens.length;
+      ph = `<div class="painel" style="margin-bottom:10px">🧺 <strong>Você deixou ${n} disciplina${n === 1 ? '' : 's'} na cesta</strong>
+        <p class="sutil" style="margin:4px 0 10px">${esc(cestaEstado.itens.slice(0, 3).map(i => i.nome).join(', '))}${n > 3 ? '…' : ''} — esperando sua confirmação.</p>
+        <div class="acoes-dados" style="margin-top:0">
+          <button class="small primary" type="button" data-pend-cesta>Revisar e confirmar</button>
+          <button class="small" type="button" data-pend-esvaziar>Esvaziar</button>
+        </div></div>`;
+    } else if (db.materias.length && db.gradeOk === false) {
+      ph = `<div class="painel" style="margin-bottom:10px">🧩 <strong>Sua grade está completa?</strong>
+        <p class="sutil" style="margin:4px 0 10px">Eletivas, prática jurídica (NPJ) e DPs não vêm no pacote da turma.</p>
+        <div class="acoes-dados" style="margin-top:0">
+          <button class="small primary" type="button" data-pend-extras>➕ Adicionar extras</button>
+          <button class="small" type="button" data-pend-completa>Está completa</button>
+        </div></div>`;
+    } else if (db.materias.length && db.planosLembrar && materiasSemConteudo().length) {
+      const n = materiasSemConteudo().length;
+      ph = `<div class="painel" style="margin-bottom:10px">📄 <strong>Preencha os planos de ensino</strong>
+        <p class="sutil" style="margin:4px 0 10px">O app lê o plano, preenche o conteúdo de cada aula <strong>e já coloca as provas na agenda</strong> — ${n} matéria${n === 1 ? '' : 's'} ainda sem isso.</p>
+        <div class="acoes-dados" style="margin-top:0">
+          <button class="small primary" type="button" data-pend-planos>📄 Preencher</button>
+          <button class="small" type="button" data-pend-dispensar>Agora não</button>
+        </div></div>`;
+    }
+    alvoPend.innerHTML = ph;
+    const bCe = alvoPend.querySelector('[data-pend-cesta]'); if (bCe) bCe.addEventListener('click', mostrarCesta);
+    const bEs = alvoPend.querySelector('[data-pend-esvaziar]'); if (bEs) bEs.addEventListener('click', () => { cestaEstado = null; cestaSalvar(); renderCesta(); renderInicio(); toast('Cesta esvaziada.'); });
+    const bE = alvoPend.querySelector('[data-pend-extras]'); if (bE) bE.addEventListener('click', mostrarAvulsas);
+    const bC = alvoPend.querySelector('[data-pend-completa]'); if (bC) bC.addEventListener('click', () => { db.gradeOk = true; salvar(); renderInicio(); perguntarPlanos(); });
+    const bP = alvoPend.querySelector('[data-pend-planos]'); if (bP) bP.addEventListener('click', guiarPlanos);
+    const bD = alvoPend.querySelector('[data-pend-dispensar]'); if (bD) bD.addEventListener('click', () => { db.planosLembrar = false; salvar(); renderInicio(); });
+  }
 
   const alvoLem = document.getElementById('inicio-lembrete');
   const perto = db.eventos
@@ -2493,6 +2590,8 @@ function renderTudo() {
   renderAgenda();
   renderNotas();
   renderMaterias();
+  if (typeof renderGuiaPlanos === 'function') renderGuiaPlanos();
+  if (typeof renderCesta === 'function') renderCesta();
   const sem = infoSemestre();
   document.getElementById('semana').textContent = sem ? `semana ${sem.atual} de ${sem.total}` : '';
 }
@@ -3003,6 +3102,179 @@ function atualizarDisciplinasPUC() {
 document.getElementById('puc-turno').addEventListener('change', prepararSecaoPUC);
 document.getElementById('puc-origem').addEventListener('change', atualizarDisciplinasPUC);
 
+/* ─────────── sheet de decisão + onboarding guiado (grade → extras → planos) ─────────── */
+function abrirSheet(cfg) {
+  const fundo = document.getElementById('sheet-fundo');
+  document.getElementById('sheet-titulo').textContent = cfg.titulo;
+  document.getElementById('sheet-texto').textContent = cfg.texto;
+  const caixa = document.getElementById('sheet-botoes');
+  caixa.innerHTML = '';
+  const fechar = () => { fundo.hidden = true; fundo.onclick = null; };
+  (cfg.botoes || []).forEach(b => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = b.classe || 'small';
+    btn.textContent = b.txt;
+    btn.addEventListener('click', () => { fechar(); if (b.cb) b.cb(); });
+    caixa.appendChild(btn);
+  });
+  fundo.onclick = ev => { if (ev.target === fundo) { fechar(); if (cfg.aoFechar) cfg.aoFechar(); } };
+  fundo.hidden = false;
+}
+
+function materiasSemConteudo() {
+  const com = new Set(db.aulas.filter(a => a.conteudo && a.conteudo.trim()).map(a => a.materiaId));
+  return db.materias.filter(m => !com.has(m.id));
+}
+
+/* etapa 2: a cesta — a turma inteira entra como chips, tira o que não cursa,
+   soma eletivas/NPJ/DPs, e NADA é gravado até o "✓ Confirmar" (um commit só). */
+var cestaEstado = null; // var de propósito: renderInicio roda no boot antes deste módulo. { turma?, semestre?, itens: [...], pacote? }
+
+function cestaSalvar() {
+  try {
+    if (cestaEstado && cestaEstado.itens.length) localStorage.setItem('controleFaltas.cesta', JSON.stringify(cestaEstado));
+    else localStorage.removeItem('controleFaltas.cesta');
+  } catch { }
+}
+var cestaRestaurada; // hoisted: falso/undefined até a primeira restauração
+function cestaRestaurar() {
+  if (cestaRestaurada) return;
+  cestaRestaurada = true;
+  try { cestaEstado = JSON.parse(localStorage.getItem('controleFaltas.cesta')); } catch { cestaEstado = null; }
+  if (!cestaEstado || !Array.isArray(cestaEstado.itens) || !cestaEstado.itens.length) cestaEstado = null;
+}
+const cestaJa = nome => !!cestaEstado && cestaEstado.itens.some(i => i.nome.trim().toLowerCase() === String(nome).trim().toLowerCase());
+const jaNaGrade = nome => db.materias.some(m => m.nome.trim().toLowerCase() === String(nome).trim().toLowerCase());
+
+function renderCesta() {
+  cestaRestaurar(); // o boot chama renderTudo antes deste módulo inicializar — restaura antes de qualquer decisão
+  const wrap = document.getElementById('cesta-grade');
+  if (!wrap) return;
+  const itens = cestaEstado ? cestaEstado.itens : [];
+  if (!itens.length) { wrap.hidden = true; cestaEstado = null; cestaSalvar(); return; }
+  wrap.hidden = false;
+  const daTurma = itens.filter(i => i.origem === 'turma').length;
+  const extras = itens.length - daTurma;
+  document.getElementById('cesta-titulo').textContent =
+    daTurma && extras ? `Sua grade: ${daTurma} da turma + ${extras} extra${extras > 1 ? 's' : ''}`
+    : daTurma ? `Turma ${cestaEstado.turma || (cestaEstado.pacote && cestaEstado.pacote.titulo) || ''} na cesta: ${daTurma} matérias`
+    : `Na cesta: ${itens.length} disciplina${itens.length > 1 ? 's' : ''}`;
+  const chips = document.getElementById('cesta-chips');
+  chips.innerHTML = itens.map((i, idx) =>
+    `<span class="cesta-chip">${esc(i.nome)}${i.sub ? ` <span class="sub-chip">${esc(i.sub)}</span>` : ''}<button type="button" data-cesta-tira="${idx}" aria-label="tirar ${esc(i.nome)} da cesta">✕</button></span>`
+  ).join('');
+  chips.querySelectorAll('[data-cesta-tira]').forEach(b => b.addEventListener('click', () => {
+    cestaEstado.itens.splice(Number(b.dataset.cestaTira), 1);
+    renderCesta(); renderInicio();
+  }));
+  document.getElementById('btn-confirmar-cesta').textContent =
+    `✓ Confirmar minha grade (${itens.length} matéria${itens.length > 1 ? 's' : ''})`;
+  cestaSalvar();
+}
+
+function mostrarCesta() {
+  irParaAba('menu');
+  document.getElementById('menu-materias').open = true;
+  renderCesta();
+  setTimeout(() => document.getElementById('cesta-grade').scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
+}
+
+function mostrarAvulsas() {
+  irParaAba('menu');
+  document.getElementById('menu-materias').open = true;
+  abrirPainelAdd('puc', true);
+  setTimeout(() => {
+    const alvo = document.getElementById('puc-origem');
+    if (alvo) alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 260);
+}
+
+document.getElementById('btn-confirmar-cesta').addEventListener('click', () => {
+  if (!cestaEstado || !cestaEstado.itens.length) return;
+  const itens = cestaEstado.itens;
+  const r = { materias: 0, aulas: 0, eventos: 0 };
+  const soma = x => { r.materias += x.materias; r.aulas += x.aulas; r.eventos += x.eventos; };
+  const cats = itens.filter(i => i.tipo === 'cat');
+  if (cats.length) soma(aplicarGrade(pacoteOficial(cats.map(i => i.disc), cestaEstado.semestre)));
+  if (cestaEstado.pacote) {
+    const mantidas = new Set(itens.filter(i => i.tipo === 'pac').map(i => i.materiaId));
+    if (mantidas.size) {
+      const d = cestaEstado.pacote.dados || {};
+      soma(aplicarGrade({
+        materias: (d.materias || []).filter(m => mantidas.has(m.id)),
+        aulas: (d.aulas || []).filter(a => mantidas.has(a.materiaId)),
+        eventos: (d.eventos || []).filter(e => mantidas.has(e.materiaId)),
+      }));
+      // seguir a turma só com o pacote inteiro — senão as removidas voltariam na próxima atualização do curador
+      if (mantidas.size === (d.materias || []).length) seguirTurma(cestaEstado.pacote.codigo, cestaEstado.pacote.atualizadoEm);
+    }
+  }
+  cestaEstado = null; cestaSalvar(); renderCesta();
+  db.gradeOk = true; salvar();
+  toast(r.materias || r.aulas || r.eventos
+    ? `Grade confirmada: +${r.materias} matérias e +${r.aulas} datas de aula${r.eventos ? ` (+${r.eventos} provas)` : ''} 🎉`
+    : 'Você já tinha tudo — nada foi duplicado.');
+  perguntarPlanos();
+});
+
+document.getElementById('link-criar-zero').addEventListener('click', ev => {
+  ev.preventDefault();
+  abrirPainelAdd('manual', true);
+});
+cestaRestaurar(); // rascunho sobrevive a fechar o app
+
+/* etapa 3: planos de ensino — o conteúdo de cada aula */
+function perguntarPlanos() {
+  renderInicio();
+  const pend = materiasSemConteudo();
+  if (!pend.length) { irParaAba('inicio'); toast('Grade completa e com conteúdo — seu semestre tá no controle! 🎉'); return; }
+  abrirSheet({
+    titulo: 'Última etapa: os planos de ensino 📄',
+    texto: `Envie o plano de ensino de cada professor (PDF, ou cole o texto) e o app preenche o que cai em cada aula — toda falta passa a mostrar o conteúdo perdido — e ainda coloca as provas na agenda. ${pend.length === 1 ? '1 matéria está' : pend.length + ' matérias estão'} sem conteúdo.`,
+    botoes: [
+      { txt: '📄 Preencher agora', classe: 'primary', cb: guiarPlanos },
+      { txt: 'Deixar pra depois', classe: 'small', cb: () => { db.planosLembrar = true; salvar(); irParaAba('inicio'); renderInicio(); toast('Deixei um atalho na tela inicial pra quando os planos chegarem. 😉'); } },
+    ],
+    aoFechar: () => { db.planosLembrar = true; salvar(); irParaAba('inicio'); renderInicio(); },
+  });
+}
+
+function guiarPlanos() {
+  db.planosGuia = true; db.planosLembrar = false; salvar();
+  irParaAba('menu');
+  document.getElementById('menu-materias').open = true;
+  renderGuiaPlanos();
+  setTimeout(() => {
+    const alvo = document.getElementById('guia-planos');
+    if (alvo && !alvo.hidden) alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 260);
+}
+
+function renderGuiaPlanos() {
+  const alvo = document.getElementById('guia-planos');
+  if (!alvo) return;
+  if (!db.planosGuia) { alvo.hidden = true; return; }
+  const pend = materiasSemConteudo();
+  if (!pend.length) {
+    db.planosGuia = false; salvar();
+    alvo.hidden = true;
+    toast('Todos os planos preenchidos — semestre mapeado! 🎉');
+    return;
+  }
+  const feitas = db.materias.length - pend.length;
+  alvo.hidden = false;
+  alvo.innerHTML = `<strong>📄 Preenchendo os planos de ensino</strong>
+    <p class="sutil" style="margin:6px 0 8px">Toque numa matéria abaixo e depois em <strong>"Preencher com o plano do professor"</strong>. Sem o PDF em mãos? Peça no grupo da turma.</p>
+    <p class="sutil" style="margin:0">${feitas} de ${db.materias.length} matérias com conteúdo · <a href="#" id="guia-planos-parar">parar por aqui</a></p>`;
+  document.getElementById('guia-planos-parar').addEventListener('click', ev => {
+    ev.preventDefault();
+    db.planosGuia = false; db.planosLembrar = materiasSemConteudo().length > 0; salvar();
+    renderGuiaPlanos(); renderInicio();
+    toast('Tranquilo — o atalho fica na tela inicial.');
+  });
+}
+
 /* ─────────── Minha grade: um seletor só pra adicionar matérias ─────────── */
 function abrirPainelAdd(qual, forcar) {
   const alvo = document.getElementById('add-' + qual);
@@ -3096,12 +3368,22 @@ document.getElementById('btn-importar-turma').addEventListener('click', async ()
   const turma = document.getElementById('puc-turma').value;
   const disciplinas = cat.turmas[turma];
   if (!disciplinas) return;
-  if (!confirm(`Trazer a turma ${turma}?\n\n${disciplinas.length} matérias com dia, horário, professor, sala e todas as datas de aula do semestre. Nada que você já tem é duplicado.`)) return;
-  const r = aplicarGrade(pacoteOficial(disciplinas, cat.semestre));
-  irParaAba('inicio');
-  toast(r.materias || r.aulas
-    ? `Turma ${turma} montada: +${r.materias} matérias e +${r.aulas} datas de aula 🏛️`
-    : 'Você já tinha tudo dessa turma — nada foi duplicado.');
+  if (!cestaEstado) cestaEstado = { itens: [] };
+  cestaEstado.turma = turma;
+  cestaEstado.semestre = cat.semestre;
+  let novas = 0;
+  for (const d of disciplinas) {
+    if (cestaJa(d.n)) continue;
+    cestaEstado.itens.push({
+      tipo: 'cat', origem: 'turma', nome: d.n,
+      sub: jaNaGrade(d.n) ? 'já na sua grade' : [d.d, d.h].filter(Boolean).join(' '),
+      disc: d,
+    });
+    novas++;
+  }
+  renderCesta(); renderInicio();
+  toast(novas ? `Turma ${turma} na cesta — tire o que não cursa e confirme 🧺` : 'Essa turma já está na cesta.');
+  setTimeout(() => document.getElementById('cesta-grade').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
 });
 
 document.getElementById('btn-add-avulsa').addEventListener('click', async () => {
@@ -3121,8 +3403,17 @@ document.getElementById('btn-add-avulsa').addEventListener('click', async () => 
     item = (catalogoPUC.turmas[origem.slice(2)] || [])[idx];
   }
   if (!item) return;
-  const r = aplicarGrade(pacoteOficial([item], cat.semestre));
-  toast(r.materias ? `"${item.n}" adicionada com ${r.aulas} datas de aula ✓` : 'Essa disciplina você já tem.');
+  if (cestaJa(item.n)) { toast('Essa já está na cesta. 😉'); return; }
+  if (jaNaGrade(item.n)) { toast('Essa disciplina você já tem.'); return; }
+  if (!cestaEstado) cestaEstado = { itens: [] };
+  cestaEstado.semestre = cat.semestre;
+  cestaEstado.itens.push({
+    tipo: 'cat', origem: 'extra', nome: item.n,
+    sub: [item.d, item.h].filter(Boolean).join(' '),
+    disc: item,
+  });
+  renderCesta(); renderInicio();
+  toast(`"${item.n}" na cesta ✓`);
 });
 
 async function importarGradePorCodigo(codigo) {
@@ -3135,14 +3426,21 @@ async function importarGradePorCodigo(codigo) {
   if (error) { toast('Não deu pra buscar agora — tente de novo em instantes.'); return; }
   if (!data) { toast('Código não encontrado — confere com quem te passou.'); return; }
   const d = data.dados || {};
-  const resumo = `${(d.materias || []).length} matérias, ${(d.aulas || []).length} aulas e ${(d.eventos || []).length} provas/atividades`;
-  if (!confirm(`Importar a grade "${data.titulo}"?\n\n${resumo}.\nSuas faltas e notas não mudam.`)) return;
-  const r = aplicarGrade(d);
-  seguirTurma(codigo, data.atualizado_em || null);
-  irParaAba('inicio');
-  toast(r.materias + r.aulas + r.eventos
-    ? `Grade importada: +${r.materias} matérias, +${r.aulas} aulas, +${r.eventos} provas 🎉`
-    : 'Você já tinha tudo dessa grade — nada foi duplicado.');
+  if (!cestaEstado) cestaEstado = { itens: [] };
+  cestaEstado.pacote = { codigo, titulo: data.titulo, atualizadoEm: data.atualizado_em || null, dados: d };
+  let novas = 0;
+  for (const m of (d.materias || [])) {
+    if (!m || !m.nome || cestaJa(m.nome)) continue;
+    cestaEstado.itens.push({
+      tipo: 'pac', origem: 'turma', nome: String(m.nome),
+      sub: jaNaGrade(m.nome) ? 'já na sua grade — só completa' : [m.diaSemana, m.horario].filter(Boolean).join(' '),
+      materiaId: m.id,
+    });
+    novas++;
+  }
+  renderCesta(); renderInicio();
+  toast(novas ? `"${data.titulo}" na cesta — revise e confirme 🧺` : 'Essa grade já está na cesta.');
+  setTimeout(() => document.getElementById('cesta-grade').scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
 }
 
 /* ─────────── seguir a turma: novidades do curador chegam sozinhas ───────────
