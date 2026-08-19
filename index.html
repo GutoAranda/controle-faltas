@@ -5498,7 +5498,7 @@ document.getElementById('btn-cancelar-assinatura').addEventListener('click', asy
 document.getElementById('btn-ja-paguei').addEventListener('click', async () => {
   await puxarNuvem();
   toast(planoNuvem === 'gratis'
-    ? 'Pagamento ainda não confirmado — costuma levar alguns segundos. Tente de novo já já.'
+    ? 'Ainda não confirmado. Cartão e Pix costumam ser na hora; boleto leva até 3 dias úteis — e ativa sozinho quando cair.'
     : 'Plano Essencial ativo. Bem-vindo! 💚');
 });
 
@@ -5631,17 +5631,31 @@ if (retornoAssinatura) {
   }
 }
 
-/* retorno do pagamento (?pagamento=ok) */
+/* retorno do pagamento (?pagamento=ok | pendente | erro) */
 const retornoPagamento = new URLSearchParams(location.search).get('pagamento');
 if (retornoPagamento) {
   history.replaceState(null, '', location.pathname);
   if (retornoPagamento === 'ok') {
     setTimeout(async () => {
       await puxarNuvem();
-      toast(planoNuvem === 'gratis'
-        ? 'Pagamento recebido! A confirmação leva alguns segundos — use "Já paguei" no Menu › Conta.'
-        : 'Plano Essencial ativo. Bem-vindo! 💚');
+      if (planoNuvem !== 'gratis') { toast('Plano Essencial ativo. Bem-vindo! 💚'); return; }
+      /* pagou mas o aviso do Mercado Pago ainda não chegou. NÃO prometer "segundos":
+         no cartão e no Pix é quase imediato, mas no boleto leva dias úteis — quem
+         pagou assim ficaria apertando "Já paguei" achando que perdeu o dinheiro. */
+      abrirSheet({
+        titulo: 'Pagamento registrado 🎉',
+        texto: 'Assim que o Mercado Pago confirmar, seu plano ativa sozinho — você não precisa fazer mais nada. No cartão e no Pix costuma ser na hora; no boleto pode levar até 3 dias úteis. Enquanto isso o app segue funcionando normalmente.',
+        botoes: [{ txt: 'Entendi', classe: 'primary' }],
+      });
     }, 1500);
+  } else if (retornoPagamento === 'pendente') {
+    /* boleto gerado, ou Pix ainda não compensado: antes disto o aluno voltava pra
+       uma tela muda, sem saber se tinha dado certo */
+    abrirSheet({
+      titulo: 'Falta só o pagamento cair',
+      texto: 'O Mercado Pago ainda não confirmou. Se você gerou um boleto, ele vale pelo prazo impresso e a confirmação leva até 3 dias úteis depois de pago. No Pix, costuma ser na hora. Seu plano ativa sozinho quando cair — pode fechar o app.',
+      botoes: [{ txt: 'Entendi', classe: 'primary' }],
+    });
   } else if (retornoPagamento === 'erro') {
     toast('O pagamento não foi concluído — tente de novo quando quiser.');
   }
