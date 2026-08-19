@@ -525,30 +525,30 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       box-shadow: var(--shadow); padding: 38px 36px 34px;
     }
   }
-  /* sheet de decisão (onboarding guiado) */
-  #sheet-fundo {
+  /* sheet de decisão (onboarding guiado) — namespace sheetd pra não colidir com o sheet legado de ações */
+  #sheetd-fundo {
     position: fixed; inset: 0; z-index: 320; background: rgba(10, 12, 24, .55);
     display: flex; align-items: flex-end; justify-content: center;
   }
-  #sheet-fundo[hidden] { display: none; }
-  .sheet-caixa {
+  #sheetd-fundo[hidden] { display: none; }
+  .sheetd-caixa {
     width: 100%; max-width: 460px; background: var(--surface);
     border: 1px solid var(--line); border-radius: 20px 20px 0 0;
     padding: 24px 20px calc(20px + env(safe-area-inset-bottom));
     box-shadow: 0 -14px 44px rgba(10, 12, 24, .3);
-    animation: sheet-sobe .22s ease-out;
+    animation: sheetd-sobe .22s ease-out;
   }
-  @keyframes sheet-sobe { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .sheet-caixa { animation: none; } }
+  @keyframes sheetd-sobe { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .sheetd-caixa { animation: none; } }
   @media (min-width: 700px) {
-    #sheet-fundo { align-items: center; padding: 20px; }
-    .sheet-caixa { border-radius: 20px; }
+    #sheetd-fundo { align-items: center; padding: 20px; }
+    .sheetd-caixa { border-radius: 20px; }
   }
-  .sheet-titulo { font-size: 18px; font-weight: 800; color: var(--ink); margin: 0 0 6px; }
-  .sheet-texto { font-size: 14px; color: var(--ink-2); margin: 0 0 18px; line-height: 1.55; }
-  .sheet-botoes { display: flex; flex-direction: column; gap: 9px; }
-  .sheet-botoes .primary { width: 100%; }
-  .sheet-botoes .small { align-self: center; }
+  .sheetd-titulo { font-size: 18px; font-weight: 800; color: var(--ink); margin: 0 0 6px; }
+  .sheetd-texto { font-size: 14px; color: var(--ink-2); margin: 0 0 18px; line-height: 1.55; }
+  .sheetd-botoes { display: flex; flex-direction: column; gap: 9px; }
+  .sheetd-botoes .primary { width: 100%; }
+  .sheetd-botoes .small { align-self: center; }
 
   /* cesta da grade: nada grava até confirmar */
   .cesta-caixa { background: var(--surface); border: 1.5px solid var(--accent); border-radius: 12px; padding: 10px 12px; }
@@ -850,7 +850,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             <p class="muted" style="margin:12px 0 0">Entre na sua conta (seção acima) pra ver e gerenciar seu plano.</p>
           </div>
           <div id="plano-logado" hidden>
-            <div id="meu-plano" class="painel" style="margin:12px 0 14px">
+            <div id="meu-plano" class="painel" style="margin:12px 0 0">
               <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px">
                 <div style="min-width:0">
                   <strong id="mp-nome" style="font-size:15px"></strong>
@@ -858,47 +858,8 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
                 </div>
                 <span id="mp-selo" class="num" style="flex:none; font-size:10.5px; font-weight:800; letter-spacing:.04em; border-radius:999px; padding:4px 11px"></span>
               </div>
-              <div class="acoes-dados" id="mp-acoes" style="margin-top:10px"></div>
+              <div class="acoes-dados" id="mp-acoes" style="margin-top:12px"></div>
             </div>
-            <div id="conta-assinatura" hidden>
-              <p class="muted" style="margin:0 0 8px">🔁 Renovação automática <strong>ativa</strong> — R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</p>
-              <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
-              <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
-            </div>
-            <div id="conta-upgrade" hidden>
-              <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático. Pagamento avulso via Pix — sem assinatura, sem renovação automática.</p>
-              <div class="passes">
-                <button class="passe heroi" type="button" data-assinar="semestral">
-                  <span class="passe-selo">Semestre inteiro</span>
-                  <span class="passe-preco num">R$ 59,90</span>
-                  <span class="passe-eq num">sai a R$ 9,98/mês · um Pix só</span>
-                </button>
-                <button class="passe" type="button" data-assinar="mensal">
-                  <span class="passe-selo">30 dias</span>
-                  <span class="passe-preco num">R$ 15</span>
-                  <span class="passe-eq">pra experimentar</span>
-                </button>
-              </div>
-              <button class="passe" type="button" data-assinar-rec style="margin-top:8px; max-width:420px">
-                <span class="passe-selo">🔁 Renovação automática</span>
-                <span class="passe-preco num">R$ 15<small style="font-size:12px; font-weight:600; color:var(--ink-3)">/mês</small></span>
-                <span class="passe-eq">no cartão de crédito · cancele quando quiser</span>
-              </button>
-              <div class="acoes-dados" style="margin-top:8px">
-                <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
-              </div>
-            </div>
-            <details style="margin-top:10px">
-              <summary class="sutil" style="cursor:pointer">🎟️ Tenho um código promocional</summary>
-              <div class="campos-2" style="margin-top:8px; max-width:420px">
-                <label class="campo">Código
-                  <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: ATV-XXXXXX" maxlength="24" style="text-transform:uppercase">
-                </label>
-                <label class="campo">&nbsp;
-                  <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
-                </label>
-              </div>
-            </details>
           </div>
         </div>
       </details>
@@ -1137,6 +1098,79 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
 
 <div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-acao" hidden type="button">Desfazer</button></div>
 
+<div id="tela-plano" hidden style="position:fixed; inset:0; z-index:285; background:var(--bg); overflow-y:auto">
+  <div style="max-width:560px; margin:0 auto; padding:20px 18px 60px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+      <button class="small" id="tp-voltar" type="button">← Voltar</button>
+      <span id="tp-selo" class="num" style="font-size:10.5px; font-weight:800; letter-spacing:.04em; border-radius:999px; padding:4px 11px"></span>
+    </div>
+
+    <div id="tp-hero-gratis">
+      <h2 style="font-size:26px; letter-spacing:-.5px; margin:14px 0 6px">Seu semestre inteiro protegido<br>por <span style="color:var(--ok)">um Pix de R$ 59,90</span></h2>
+      <p class="muted" style="margin:0 0 16px">Você já usa o Faltaê todo dia. O Essencial garante que nada se perde — e libera o resto.</p>
+      <div class="painel" style="padding:14px 16px; margin-bottom:14px">
+        <table style="width:100%; border-collapse:collapse; font-size:13.5px">
+          <tr><th style="text-align:left; padding:6px 0; font-size:11px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em">O que você tem</th><th style="width:64px; font-size:11px; color:var(--ink-3)">Grátis</th><th style="width:64px; font-size:11px; color:var(--ok)">Essencial</th></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)">Faltas, provas, notas e agenda</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Backup na nuvem</strong> — quebrou/perdeu o celular, seus dados sobrevivem</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Sincronização</strong> — celular + computador, sempre iguais</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Widget</strong> na tela do Android</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Provas no Google Calendar</strong>, atualizando sozinhas</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Relatório do semestre</strong> (PDF) + resumo quinzenal por email</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)">Matérias criadas à mão</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">até 6</td><td style="text-align:center; border-top:1px solid var(--line)">∞</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div id="tp-hero-essencial" hidden>
+      <h2 style="font-size:24px; letter-spacing:-.5px; margin:14px 0 6px">Seu plano Essencial 💚</h2>
+      <p class="muted num" id="tp-status-essencial" style="margin:0 0 16px"></p>
+    </div>
+
+    <div id="conta-assinatura" hidden>
+      <p class="muted" style="margin:0 0 8px">🔁 Renovação automática <strong>ativa</strong> — R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</p>
+      <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
+      <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
+    </div>
+
+    <div id="conta-upgrade" hidden>
+      <div class="passes">
+        <button class="passe heroi" type="button" data-assinar="semestral">
+          <span class="passe-selo">🏆 Semestre inteiro</span>
+          <span class="passe-preco num">R$ 59,90</span>
+          <span class="passe-eq num">sai a R$ 9,98/mês · um Pix e acabou</span>
+        </button>
+        <button class="passe" type="button" data-assinar="mensal">
+          <span class="passe-selo">30 dias</span>
+          <span class="passe-preco num">R$ 15</span>
+          <span class="passe-eq">pra experimentar</span>
+        </button>
+      </div>
+      <button class="passe" type="button" data-assinar-rec style="margin-top:8px; max-width:420px">
+        <span class="passe-selo">🔁 Renovação automática</span>
+        <span class="passe-preco num">R$ 15<small style="font-size:12px; font-weight:600; color:var(--ink-3)">/mês</small></span>
+        <span class="passe-eq">no cartão · cancele quando quiser</span>
+      </button>
+      <p class="sutil" style="margin:12px 0 0">✓ Pix aprovado, plano ativo na hora &nbsp;·&nbsp; ✓ sem cadastro de cartão &nbsp;·&nbsp; ✓ dias somam, nunca se perdem &nbsp;·&nbsp; ✓ seus dados são seus, com ou sem plano</p>
+      <div class="acoes-dados" style="margin-top:10px">
+        <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
+      </div>
+    </div>
+
+    <details style="margin-top:16px">
+      <summary class="sutil" style="cursor:pointer">🎟️ Tenho um código promocional</summary>
+      <div class="campos-2" style="margin-top:8px; max-width:420px">
+        <label class="campo">Código
+          <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: ATV-XXXXXX" maxlength="24" style="text-transform:uppercase">
+        </label>
+        <label class="campo">&nbsp;
+          <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
+        </label>
+      </div>
+    </details>
+  </div>
+</div>
+
 <div id="tela-parcerias" hidden style="position:fixed; inset:0; z-index:290; background:var(--bg); overflow-y:auto">
   <div style="max-width:520px; margin:0 auto; padding:44px 20px 60px">
     <h2 style="margin:0 0 4px">Parcerias 🤝</h2>
@@ -1165,11 +1199,11 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   </div>
 </div>
 
-<div id="sheet-fundo" hidden>
-  <div class="sheet-caixa" role="dialog" aria-modal="true" aria-labelledby="sheet-titulo">
-    <h3 class="sheet-titulo" id="sheet-titulo"></h3>
-    <p class="sheet-texto" id="sheet-texto"></p>
-    <div class="sheet-botoes" id="sheet-botoes"></div>
+<div id="sheetd-fundo" hidden>
+  <div class="sheetd-caixa" role="dialog" aria-modal="true" aria-labelledby="sheetd-titulo">
+    <h3 class="sheetd-titulo" id="sheetd-titulo"></h3>
+    <p class="sheetd-texto" id="sheetd-texto"></p>
+    <div class="sheetd-botoes" id="sheetd-botoes"></div>
   </div>
 </div>
 
@@ -2436,10 +2470,7 @@ function infoBackup() {
 /* ─────────── relatório do semestre (frequência + notas) — recurso Essencial ─────────── */
 document.getElementById('btn-relatorio').addEventListener('click', () => {
   if (planoNuvem === 'gratis') {
-    toast('O relatório do semestre é um recurso do plano Essencial.', 'Ver planos', () => {
-      const sec = document.getElementById('menu-plano');
-      if (sec) { sec.open = true; sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
-    });
+    toast('O relatório do semestre é um recurso do plano Essencial.', 'Ver planos', () => abrirTelaPlano());
     return;
   }
   if (!db.materias.length) { toast('Cadastre suas matérias primeiro (Menu → Minha grade).'); return; }
@@ -2798,10 +2829,7 @@ function renderConta() {
   const assinatura = localStorage.getItem('controleFaltas.assinatura') || '';
   const validoAteLido = localStorage.getItem('controleFaltas.validoAte');
   const diasRestantes = validoAteLido ? Math.ceil((new Date(validoAteLido) - Date.now()) / 86400000) : null;
-  // passes aparecem pro grátis e pro Essencial sem renovação automática perto de vencer (renovar soma dias)
-  const mostrarPasses = planoNuvem === 'gratis' || (!assinatura && diasRestantes !== null && diasRestantes <= 7);
-  document.getElementById('conta-upgrade').hidden = !mostrarPasses;
-  document.getElementById('conta-assinatura').hidden = planoNuvem === 'gratis' || !assinatura;
+  /* passes e assinatura agora vivem na tela do plano (renderTelaPlano) */
   const nomeExibicao = (usuarioNuvem.user_metadata && (usuarioNuvem.user_metadata.nome || usuarioNuvem.user_metadata.full_name)) || usuarioNuvem.email;
   const primeiroNome = String(nomeExibicao).split(' ')[0];
   resumo.textContent = primeiroNome;
@@ -2845,8 +2873,8 @@ function renderConta() {
       mpDet.textContent = 'Tudo neste aparelho · matérias manuais até 6 (importar a turma é livre)';
     } else {
       mpSelo.textContent = vencido ? 'VENCIDO' : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO');
-      mpSelo.style.background = vencido ? '#FBE4EA' : (vencendo ? '#FBEEDB' : '#E9F4D8');
-      mpSelo.style.color = vencido ? '#B31138' : (vencendo ? '#965009' : '#47720E');
+      mpSelo.style.background = vencido ? 'var(--danger-soft)' : (vencendo ? 'var(--warn-soft)' : 'var(--ok-soft)');
+      mpSelo.style.color = vencido ? 'var(--danger)' : (vencendo ? 'var(--warn)' : 'var(--ok)');
       const ateTxt = validoAte ? new Date(validoAte).toLocaleDateString('pt-BR') : '—';
       mpDet.textContent = assinatura
         ? `Renovação automática ativa · R$ 15/mês no cartão · próxima em ${ateTxt}`
@@ -2858,26 +2886,43 @@ function renderConta() {
       b.type = 'button'; b.className = classe; b.textContent = txt;
       b.addEventListener('click', cb); mpAcoes.appendChild(b);
     };
-    const abrirPasses = () => {
-      const up = document.getElementById('conta-upgrade');
-      up.hidden = false;
-      up.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
     if (planoNuvem === 'gratis') {
-      botao('💚 Conhecer o Essencial', 'small primary', abrirPasses);
+      botao('💚 Conhecer o Essencial', 'small primary', () => abrirTelaPlano());
     } else {
-      botao(assinatura ? '➕ Ver os passes avulsos' : '➕ Estender meu plano', 'small primary', abrirPasses);
-      if (assinatura) botao('Cancelar renovação automática', 'small', () => {
-        const c = document.getElementById('btn-cancelar-assinatura');
-        if (c) c.click();
-      });
+      botao(assinatura ? 'Gerenciar renovação' : '➕ Estender meu plano', 'small primary', () => abrirTelaPlano(true));
     }
     botao('🔄 Atualizar status', 'small', async () => {
       await puxarNuvem();
       toast('Status do plano atualizado.');
     });
   }
+  if (!document.getElementById('tela-plano').hidden) renderTelaPlano();
 }
+
+/* ─────────── tela do plano: onde o Essencial se apresenta e se gerencia ─────────── */
+function abrirTelaPlano(forcarPasses) {
+  document.getElementById('tela-plano').hidden = false;
+  renderTelaPlano(forcarPasses);
+}
+function renderTelaPlano(forcarPasses) {
+  const gratis = planoNuvem === 'gratis';
+  document.getElementById('tp-hero-gratis').hidden = !gratis;
+  document.getElementById('tp-hero-essencial').hidden = gratis;
+  const selo = document.getElementById('tp-selo');
+  const mpSelo = document.getElementById('mp-selo');
+  selo.textContent = mpSelo.textContent;
+  selo.style.background = mpSelo.style.background;
+  selo.style.color = mpSelo.style.color;
+  if (!gratis) document.getElementById('tp-status-essencial').textContent = document.getElementById('mp-detalhe').textContent;
+  const assinatura = localStorage.getItem('controleFaltas.assinatura') || '';
+  document.getElementById('conta-assinatura').hidden = gratis || !assinatura;
+  // grátis vê os passes sempre; Essencial só quando pede pra estender (renovar soma dias)
+  document.getElementById('conta-upgrade').hidden = !(gratis || forcarPasses);
+  document.getElementById('btn-ja-paguei').hidden = false;
+}
+document.getElementById('tp-voltar').addEventListener('click', () => {
+  document.getElementById('tela-plano').hidden = true;
+});
 
 /* lembrete de vencimento: só pra quem NÃO tem renovação automática, 1 aviso por dia */
 function avisarVencimento() {
@@ -2892,12 +2937,7 @@ function avisarVencimento() {
   toast(
     dias <= 0 ? 'Seu Essencial vence hoje — renovar antes soma os dias, nada se perde.'
       : `Seu Essencial vence em ${dias} dia${dias === 1 ? '' : 's'} — renovar antes soma os dias, nada se perde.`,
-    'Renovar', () => {
-      irParaAba('menu');
-      const sec = document.getElementById('menu-plano');
-      if (sec) sec.open = true;
-      sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
+    'Renovar', () => abrirTelaPlano(true));
 }
 
 async function aposLogin(user) {
@@ -3208,10 +3248,10 @@ document.getElementById('puc-origem').addEventListener('change', atualizarDiscip
 
 /* ─────────── sheet de decisão + onboarding guiado (grade → extras → planos) ─────────── */
 function abrirSheet(cfg) {
-  const fundo = document.getElementById('sheet-fundo');
-  document.getElementById('sheet-titulo').textContent = cfg.titulo;
-  document.getElementById('sheet-texto').textContent = cfg.texto;
-  const caixa = document.getElementById('sheet-botoes');
+  const fundo = document.getElementById('sheetd-fundo');
+  document.getElementById('sheetd-titulo').textContent = cfg.titulo;
+  document.getElementById('sheetd-texto').textContent = cfg.texto;
+  const caixa = document.getElementById('sheetd-botoes');
   caixa.innerHTML = '';
   const fechar = () => { fundo.hidden = true; fundo.onclick = null; };
   (cfg.botoes || []).forEach(b => {
