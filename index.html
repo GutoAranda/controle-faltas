@@ -798,7 +798,17 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
           </div>
           <div id="conta-logado" hidden>
             <p class="muted" style="margin:12px 0 4px">Conectado como <strong id="conta-usuario"></strong></p>
-            <p class="sutil num" id="conta-status" style="margin:0 0 8px"></p>
+            <p class="sutil num" id="conta-status" style="margin:0 0 10px"></p>
+            <div id="meu-plano" class="painel" style="margin:0 0 14px">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px">
+                <div style="min-width:0">
+                  <strong id="mp-nome" style="font-size:15px"></strong>
+                  <p class="sutil num" id="mp-detalhe" style="margin:3px 0 0"></p>
+                </div>
+                <span id="mp-selo" class="num" style="flex:none; font-size:10.5px; font-weight:800; letter-spacing:.04em; border-radius:999px; padding:4px 11px"></span>
+              </div>
+              <div class="acoes-dados" id="mp-acoes" style="margin-top:10px"></div>
+            </div>
             <div id="conta-upgrade" hidden>
               <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático. Pagamento avulso via Pix — sem assinatura, sem renovação automática.</p>
               <div class="passes">
@@ -1116,6 +1126,34 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
 </main>
 
 <div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-acao" hidden type="button">Desfazer</button></div>
+
+<div id="tela-parcerias" hidden style="position:fixed; inset:0; z-index:290; background:var(--bg); overflow-y:auto">
+  <div style="max-width:520px; margin:0 auto; padding:44px 20px 60px">
+    <h2 style="margin:0 0 4px">Parcerias 🤝</h2>
+    <p class="sutil" style="margin:0 0 18px">Gere um código de ativação <strong>nominal</strong>: só funciona na conta do email informado — pode circular no grupo que não ativa pra mais ninguém. Vale 30 dias pra ser resgatado.</p>
+    <div class="painel">
+      <label class="campo">Email do aluno
+        <input type="email" id="pc-email" autocomplete="off" placeholder="aluno@exemplo.com">
+      </label>
+      <label class="campo" style="margin-top:8px">Plano promocional
+        <select id="pc-plano">
+          <option value="semestral">Bolsista — Essencial até 31/12</option>
+          <option value="mensal">Mensal — Essencial por 30 dias</option>
+        </select>
+      </label>
+      <button class="primary" id="pc-gerar" type="button" style="margin-top:12px">Gerar código de ativação</button>
+    </div>
+    <div id="pc-resultado" hidden class="painel" style="margin-top:12px">
+      <strong style="font-size:14px">Pronto! Manda pro aluno:</strong>
+      <div id="pc-codigo" class="num" style="font-size:24px; font-weight:800; letter-spacing:.1em; margin:8px 0; text-align:center; background:var(--bg); border-radius:12px; padding:10px"></div>
+      <p class="sutil num" id="pc-info" style="margin:0 0 10px"></p>
+      <div class="acoes-dados" style="margin-top:0">
+        <button class="small primary" id="pc-copiar" type="button">Copiar mensagem com o link</button>
+      </div>
+    </div>
+    <p class="sutil" style="margin-top:16px"><a href="#" id="pc-fechar">← Voltar pro app</a></p>
+  </div>
+</div>
 
 <div id="sheet-fundo" hidden>
   <div class="sheet-caixa" role="dialog" aria-modal="true" aria-labelledby="sheet-titulo">
@@ -2771,9 +2809,57 @@ function renderConta() {
     ? ' · ' + (assinatura ? 'renova' : 'vence') + ' em ' + new Date(validoAte).toLocaleDateString('pt-BR')
     : '';
   document.getElementById('conta-status').textContent =
-    'Plano ' + nomePlano + vence + (planoNuvem === 'gratis'
-      ? ' · sincronização disponível no plano Essencial'
-      : (ultima ? ' · sincronizado em ' + new Date(ultima).toLocaleString('pt-BR') : ' · ainda não sincronizado'));
+    planoNuvem === 'gratis'
+      ? 'Sincronização entre aparelhos disponível no plano Essencial'
+      : (ultima ? 'Sincronizado em ' + new Date(ultima).toLocaleString('pt-BR') : 'Ainda não sincronizado');
+
+  /* ── Meu plano: o painel de gestão da assinatura ── */
+  const mpNome = document.getElementById('mp-nome');
+  const mpDet = document.getElementById('mp-detalhe');
+  const mpSelo = document.getElementById('mp-selo');
+  const mpAcoes = document.getElementById('mp-acoes');
+  if (mpNome) {
+    mpNome.textContent = 'Plano ' + nomePlano;
+    const vencendo = !assinatura && diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 7;
+    const vencido = planoNuvem !== 'gratis' && diasRestantes !== null && diasRestantes < 0;
+    if (planoNuvem === 'gratis') {
+      mpSelo.textContent = 'GRÁTIS';
+      mpSelo.style.background = 'var(--line)'; mpSelo.style.color = 'var(--ink-2)';
+      mpDet.textContent = 'Tudo neste aparelho · matérias manuais até 6 (importar a turma é livre)';
+    } else {
+      mpSelo.textContent = vencido ? 'VENCIDO' : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO');
+      mpSelo.style.background = vencido ? '#FBE4EA' : (vencendo ? '#FBEEDB' : '#E9F4D8');
+      mpSelo.style.color = vencido ? '#B31138' : (vencendo ? '#965009' : '#47720E');
+      const ateTxt = validoAte ? new Date(validoAte).toLocaleDateString('pt-BR') : '—';
+      mpDet.textContent = assinatura
+        ? `Renovação automática ativa · R$ 15/mês no cartão · próxima em ${ateTxt}`
+        : `Válido até ${ateTxt}${diasRestantes !== null && diasRestantes >= 0 ? ` (${diasRestantes} dia${diasRestantes === 1 ? '' : 's'})` : ''} · sem renovação automática — os dias que você somar nunca se perdem`;
+    }
+    mpAcoes.innerHTML = '';
+    const botao = (txt, classe, cb) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = classe; b.textContent = txt;
+      b.addEventListener('click', cb); mpAcoes.appendChild(b);
+    };
+    const abrirPasses = () => {
+      const up = document.getElementById('conta-upgrade');
+      up.hidden = false;
+      up.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    if (planoNuvem === 'gratis') {
+      botao('💚 Conhecer o Essencial', 'small primary', abrirPasses);
+    } else {
+      botao(assinatura ? '➕ Ver os passes avulsos' : '➕ Estender meu plano', 'small primary', abrirPasses);
+      if (assinatura) botao('Cancelar renovação automática', 'small', () => {
+        const c = document.getElementById('btn-cancelar-assinatura');
+        if (c) c.click();
+      });
+    }
+    botao('🔄 Atualizar status', 'small', async () => {
+      await puxarNuvem();
+      toast('Status do plano atualizado.');
+    });
+  }
 }
 
 /* lembrete de vencimento: só pra quem NÃO tem renovação automática, 1 aviso por dia */
@@ -2806,6 +2892,7 @@ async function aposLogin(user) {
   tentarConectarWidget();
   aplicarSairRelatorio();
   if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
+  if (typeof processarAtivacaoPendente === 'function') processarAtivacaoPendente(); // link de parceria (?ativar=) sobrevive ao cadastro
 }
 
 /* ─────────── tela de entrada (conta obrigatória) ─────────── */
@@ -3223,6 +3310,69 @@ document.getElementById('link-criar-zero').addEventListener('click', ev => {
   abrirPainelAdd('manual', true);
 });
 cestaRestaurar(); // rascunho sobrevive a fechar o app
+
+/* ─────────── parcerias: ativação nominal (código preso ao email) ─────────── */
+(() => {
+  const params = new URLSearchParams(location.search);
+  if (params.get('ativar')) localStorage.setItem('controleFaltas.ativarPendente', params.get('ativar'));
+  if (params.get('parcerias') !== null) document.getElementById('tela-parcerias').hidden = false;
+})();
+
+document.getElementById('pc-fechar').addEventListener('click', ev => {
+  ev.preventDefault();
+  document.getElementById('tela-parcerias').hidden = true;
+  history.replaceState(null, '', location.pathname);
+});
+
+document.getElementById('pc-gerar').addEventListener('click', async () => {
+  if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
+  const email = document.getElementById('pc-email').value.trim().toLowerCase();
+  const plano = document.getElementById('pc-plano').value;
+  if (!email.includes('@')) { toast('Confere o email.'); return; }
+  const btn = document.getElementById('pc-gerar');
+  btn.disabled = true; btn.textContent = 'Gerando…';
+  try {
+    const { data, error } = await nuvem.functions.invoke('gerar-ativacao', { body: { email, plano } });
+    if (error || !data || !data.ok) {
+      let msg = 'Não deu pra gerar agora.';
+      try { const c = error && error.context ? await error.context.json() : data; if (c && c.erro) msg = c.erro; } catch { }
+      toast(msg);
+      return;
+    }
+    document.getElementById('pc-resultado').hidden = false;
+    document.getElementById('pc-codigo').textContent = data.codigo;
+    document.getElementById('pc-info').textContent =
+      `${data.email} · ${data.plano === 'mensal' ? 'Essencial por 30 dias' : 'Essencial até 31/12'} · resgatável até ${new Date(data.expira_em).toLocaleDateString('pt-BR')}`;
+    document.getElementById('pc-copiar').onclick = async () => {
+      const msgZap = `🎓 Seu acesso ao Faltaê Essencial tá liberado!\n1. Cria sua conta (grátis) com ESTE email: ${data.email}\n2. Abre o link: ${data.link}\nPronto — plano ativado na hora. O código é pessoal e vale 7 dias de teste + o plano da parceria.`;
+      try { await navigator.clipboard.writeText(msgZap); toast('Mensagem copiada — manda pro aluno!'); }
+      catch { prompt('Copie:', msgZap); }
+    };
+  } finally {
+    btn.disabled = false; btn.textContent = 'Gerar código de ativação';
+  }
+});
+
+async function processarAtivacaoPendente() {
+  const codigo = localStorage.getItem('controleFaltas.ativarPendente');
+  if (!codigo || !usuarioNuvem || !nuvemDisponivel()) return;
+  localStorage.removeItem('controleFaltas.ativarPendente');
+  const { data, error } = await nuvem.functions.invoke('resgatar-ativacao', { body: { codigo } });
+  if (error || !data || !data.ok) {
+    let msg = 'Não deu pra ativar esse código.';
+    try { const c = error && error.context ? await error.context.json() : data; if (c && c.erro) msg = c.erro; } catch { }
+    toast(msg);
+    return;
+  }
+  await puxarNuvem();
+  abrirSheet({
+    titulo: 'Plano ativado! 🎉',
+    texto: `Seu Faltaê Essencial vale até ${new Date(data.valido_ate).toLocaleDateString('pt-BR')} — sincronização entre aparelhos, matérias ilimitadas, relatórios e calendário automático liberados.`,
+    botoes: [{ txt: 'Bora usar', classe: 'primary' }],
+  });
+  history.replaceState(null, '', location.pathname);
+}
+if (usuarioNuvem) processarAtivacaoPendente();
 
 /* etapa 3: planos de ensino — o conteúdo de cada aula */
 function perguntarPlanos() {
@@ -4201,7 +4351,7 @@ document.getElementById('btn-resgatar').addEventListener('click', async () => {
   const btn = document.getElementById('btn-resgatar');
   btn.disabled = true; btn.textContent = 'Ativando…';
   try {
-    const { data, error } = await nuvem.functions.invoke('resgatar-codigo', { body: { codigo } });
+    const { data, error } = await nuvem.functions.invoke('resgatar-ativacao', { body: { codigo } });
     if (error || !data || !data.ok) {
       let msg = 'Não deu pra resgatar agora — tente de novo.';
       try { const corpo = error && error.context ? await error.context.json() : data; if (corpo && corpo.erro) msg = corpo.erro; } catch { }
