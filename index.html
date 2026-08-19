@@ -5517,7 +5517,13 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
       });
       return;
     }
-    toast('Não deu pra excluir agora (' + ((data && data.erro) || (error && error.message) || 'sem resposta') + '). Tente mais tarde ou peça pelo formulário de Sugestões.');
+    /* a função respondeu com erro: o motivo util esta no CORPO da resposta, nao na
+       mensagem generica do supabase-js ('non-2xx status code'), que nao ajuda ninguem */
+    let razao = (data && data.erro) || '';
+    if (!razao && error && error.context && typeof error.context.json === 'function') {
+      try { const corpo = await error.context.json(); razao = corpo && corpo.erro; } catch { /* corpo nao-JSON */ }
+    }
+    toast('Não deu pra excluir agora (' + (razao || (error && error.message) || 'sem resposta') + '). Tente mais tarde ou peça pelo formulário de Sugestões.');
     return;
   }
   await nuvem.auth.signOut().catch(() => {});
