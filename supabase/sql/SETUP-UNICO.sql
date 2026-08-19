@@ -10,6 +10,15 @@
 -- DEPOIS de rodar, faltam 3 coisas que SQL nao faz (checklist no fim).
 -- ================================================================
 
+-- [0] DESTRAVA O CADASTRO (bug 'muitas tentativas') ------------
+-- Confirma os emails de quem criou conta mas nunca recebeu o email
+-- de confirmacao (o servidor embutido tem limite de ~2/hora e travou
+-- no lancamento). Essas contas nao conseguiam logar.
+-- IMPORTANTE: a outra metade do conserto e um BOTAO no painel, nao SQL:
+--   Authentication > Sign In / Providers > Email > DESLIGAR 'Confirm email'
+-- (religa depois de configurar o SMTP do Resend, ultimo item do checklist)
+update auth.users set email_confirmed_at = now() where email_confirmed_at is null;
+
 -- [1] PUSH ------------------------------------------------------
 create table if not exists public.push_inscricoes (
   endpoint   text primary key,
