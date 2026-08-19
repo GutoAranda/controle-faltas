@@ -3261,6 +3261,83 @@ function agendarSync() {
   timerSync = setTimeout(empurrarNuvem, 2000);
 }
 
+/* ══════════ DE QUEM SÃO OS DADOS DESTE APARELHO ══════════
+   O banco local não é da máquina, é de uma conta. Sem este carimbo, sair e entrar
+   com outra conta fazia as matérias e faltas de um aluno subirem pra nuvem do outro
+   — no PC do laboratório isso é dado pessoal indo parar em conta alheia.
+   Regra: se quem entrou não é quem gravou, o que estava aqui NUNCA é enviado nem
+   fundido. Fica guardado à espera do dono e o app começa limpo pra conta nova. */
+const CHAVE_DONO = 'controleFaltas.dono';
+const CHAVE_GUARDADO = 'controleFaltas.guardado';
+const GUARDADO_DIAS = 30;
+
+function guardarDeOutraConta(donoAntigo) {
+  if (bancoVazio(db)) return false;
+  try {
+    localStorage.setItem(CHAVE_GUARDADO, JSON.stringify({
+      dono: donoAntigo, em: new Date().toISOString(), dados: db,
+    }));
+  } catch { /* aparelho sem espaço: melhor limpar do que vazar */ }
+  db = novoBanco();
+  salvarLocal();
+  return true;
+}
+
+/* Chamado no login, antes de qualquer insert/merge com a nuvem. */
+function conferirDono() {
+  if (!usuarioNuvem) return;
+  const dono = localStorage.getItem(CHAVE_DONO) || '';
+  if (dono && dono !== usuarioNuvem.id) {
+    if (guardarDeOutraConta(dono)) {
+      toast('Este aparelho tinha anotações de outra conta. Elas ficaram guardadas para o dono e não entram aqui.');
+    }
+  }
+  localStorage.setItem(CHAVE_DONO, usuarioNuvem.id);
+  limparGuardadoVencido();
+}
+
+function lerGuardado() {
+  try {
+    const g = JSON.parse(localStorage.getItem(CHAVE_GUARDADO) || 'null');
+    return g && g.dados ? g : null;
+  } catch { return null; }
+}
+
+function limparGuardadoVencido() {
+  const g = lerGuardado();
+  if (!g) return;
+  const dias = (Date.now() - new Date(g.em).getTime()) / 86400000;
+  if (dias > GUARDADO_DIAS) localStorage.removeItem(CHAVE_GUARDADO);
+}
+
+/* Só o dono original recebe a oferta de volta — pra outra conta nem a existência aparece. */
+function oferecerGuardado() {
+  const g = lerGuardado();
+  if (!g || !usuarioNuvem || g.dono !== usuarioNuvem.id) return;
+  /* a gaveta de decisão é a sheetd-*, não a de ações — se o aviso do teste grátis
+     estiver aberto, espera a vez em vez de sobrescrever */
+  const gaveta = document.getElementById('sheetd-fundo');
+  if (gaveta && !gaveta.hidden) { setTimeout(oferecerGuardado, 4000); return; }
+  const n = (g.dados.materias || []).length;
+  abrirSheet({
+    titulo: 'Achamos anotações suas neste aparelho',
+    texto: `Ficaram aqui ${n} matéria${n === 1 ? '' : 's'} de quando você usou esta máquina antes. Quer trazer de volta? Elas se juntam ao que já está na sua conta, sem apagar nada.`,
+    botoes: [
+      { txt: 'Trazer de volta', classe: 'primary', cb: () => {
+        db = fundirBancos(db, g.dados);
+        localStorage.removeItem(CHAVE_GUARDADO);
+        salvar(); renderTudo();
+        toast('Pronto, suas anotações voltaram.');
+      } },
+      { txt: 'Descartar', classe: 'small ghost-danger', cb: () => {
+        localStorage.removeItem(CHAVE_GUARDADO);
+        toast('Descartado.');
+      } },
+      { txt: 'Agora não', classe: 'small' },
+    ],
+  });
+}
+
 async function empurrarNuvem() {
   if (!usuarioNuvem || planoNuvem === 'gratis' || !nuvemDisponivel()) return false;
   const { data, error } = await nuvem.from('dados_usuario')
@@ -3275,6 +3352,9 @@ async function empurrarNuvem() {
 
 async function puxarNuvem() {
   if (!usuarioNuvem || !nuvemDisponivel()) return;
+
+  // ANTES de qualquer insert ou fusão: os dados aqui são mesmo desta conta?
+  conferirDono();
 
   // aluno grátis não sincroniza — baixa só o plano (1 palavra) em vez da linha
   // inteira (dezenas de KB); se detectar upgrade, cai pro fluxo completo abaixo
@@ -5237,8 +5317,19 @@ if (codigoConvite) {
   importarGradePorCodigo(codigoConvite);
 }
 
-document.getElementById('btn-sair').addEventListener('click', async () => {
-  if (!confirm('Sair da conta? Seus dados continuam salvos neste aparelho.')) return;
+document.getElementById('btn-sair').addEventListener('click', () => {
+  abrirSheet({
+    titulo: 'Sair da conta',
+    texto: 'Suas anotações estão salvas na nuvem de qualquer jeito. A pergunta é o que fazer com a cópia que fica neste aparelho.',
+    botoes: [
+      { txt: 'Sair e manter neste aparelho', classe: 'primary', cb: () => sairDaConta(false) },
+      { txt: 'Sair e limpar (aparelho compartilhado)', classe: 'small ghost-danger', cb: () => sairDaConta(true) },
+      { txt: 'Cancelar', classe: 'small' },
+    ],
+  });
+});
+
+async function sairDaConta(limpar) {
   const widgetConectado = localStorage.getItem('controleFaltas.widgetConectado');
   if (widgetConectado && nuvemDisponivel()) {
     await nuvem.from('widget_aparelhos').delete().eq('device_id', widgetConectado).then(() => {});
@@ -5253,10 +5344,21 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
   localStorage.removeItem('controleFaltas.contaOk');
   localStorage.removeItem('controleFaltas.validoAte');
   localStorage.removeItem('controleFaltas.assinatura');
+  if (limpar) {
+    /* não sobra nada do aluno nesta máquina: nem os dados, nem a rede de resgate,
+       nem o carimbo de dono (que é o id da conta) */
+    db = novoBanco();
+    salvarLocal();
+    [CHAVE_DONO, CHAVE_GUARDADO, 'controleFaltas.antesDaSync', 'controleFaltas.antesDaSyncQuando',
+      'controleFaltas.planoOrigem', 'controleFaltas.turmasSeguidas']
+      .forEach(k => localStorage.removeItem(k));
+    renderTudo();
+  }
+  // sem limpar, o carimbo de dono FICA: é ele que impede a próxima conta de herdar isto
   renderConta();
-  toast('Você saiu da conta.');
+  toast(limpar ? 'Você saiu e este aparelho ficou limpo.' : 'Você saiu da conta.');
   mostrarAuth('entrar');
-});
+}
 
 document.getElementById('form-perfil').addEventListener('submit', async ev => {
   ev.preventDefault();
@@ -5392,7 +5494,10 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   if (!confirm('Última confirmação: excluir a conta ' + usuarioNuvem.email + ' definitivamente?')) return;
   const { data, error } = await nuvem.functions.invoke('excluir-conta', { method: 'POST' });
   if (error || !data || !data.ok) {
-    toast('Não deu pra excluir agora — tente mais tarde ou peça pelo formulário de Sugestões.');
+    /* mostrar a razão curta: sem ela, todo problema vira "tente mais tarde" e ninguém consegue diagnosticar */
+    const razao = (data && data.erro) || (error && error.message) || 'sem resposta do servidor';
+    console.error('Falha ao excluir conta:', error || data);
+    toast('Não deu pra excluir agora (' + razao + '). Tente mais tarde ou peça pelo formulário de Sugestões.');
     return;
   }
   await nuvem.auth.signOut().catch(() => {});
@@ -5403,6 +5508,10 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   localStorage.removeItem('controleFaltas.contaOk');
   localStorage.removeItem('controleFaltas.validoAte');
   localStorage.removeItem('controleFaltas.assinatura');
+  /* a conta deixou de existir: o carimbo de dono aponta pra um id morto e não
+     pode ficar barrando quem entrar depois neste aparelho */
+  localStorage.removeItem(CHAVE_DONO);
+  localStorage.removeItem(CHAVE_GUARDADO);
   renderConta();
   toast('Conta excluída. Seus dados continuam salvos neste aparelho.');
   mostrarAuth('entrar');
@@ -5464,7 +5573,7 @@ if (retornoPagamento) {
       usuarioNuvem = data.session.user;
       localStorage.setItem('controleFaltas.contaOk', usuarioNuvem.email || '1');
       renderConta();
-      puxarNuvem();
+      puxarNuvem().then(() => setTimeout(oferecerGuardado, 900));
       tentarConectarWidget();
       aplicarSairRelatorio();
       if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
