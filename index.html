@@ -827,7 +827,10 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     </details>
 
     <h2>Próximas</h2>
-    <div class="filtro"><select id="filtro-evento" aria-label="Filtrar agenda por matéria"></select></div>
+    <div class="filtro" style="display:flex; gap:8px; align-items:stretch">
+      <select id="filtro-evento" aria-label="Filtrar agenda por matéria" style="flex:1"></select>
+      <button class="small" id="btn-compartilhar-provas" type="button" style="flex:none; white-space:nowrap">📤 Compartilhar</button>
+    </div>
     <div id="lista-eventos"></div>
 
     <h2>Lembretes e calendário</h2>
@@ -3379,6 +3382,262 @@ function renderConta() {
   if (!document.getElementById('tela-plano').hidden) renderTelaPlano();
 }
 
+/* ══════════ COMPARTILHAR PROVAS E ATIVIDADES ══════════
+   Um aluno seleciona o que quer mandar, o app publica um pacote com validade de
+   7 dias e devolve um link. Quem abre revisa item a item e escolhe onde entra.
+   Só estrutura viaja: título, tipo, data, peso e nome da matéria — nunca faltas,
+   notas ou o "feita" de ninguém. */
+const CODIGO_LETRAS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function codigoNovo(tam) {
+  let c = '';
+  for (const b of crypto.getRandomValues(new Uint8Array(tam || 6))) c += CODIGO_LETRAS[b % CODIGO_LETRAS.length];
+  return c;
+}
+const eventosFuturos = () => db.eventos.filter(e => !e.feita && e.data >= hojeISO())
+  .sort((a, b) => a.data.localeCompare(b.data));
+
+/* passo 1: o que você vai mandar? (a intenção é atalho, não cadeado) */
+document.getElementById('btn-compartilhar-provas').addEventListener('click', () => {
+  const futuros = eventosFuturos();
+  if (!futuros.length) { toast('Nada futuro pra compartilhar — cadastre uma prova primeiro.'); return; }
+  if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta pra compartilhar.'); return; }
+  registrarMetrica('compartilhar_abriu');
+  const porMateria = new Map();
+  futuros.forEach(e => porMateria.set(e.materiaId, (porMateria.get(e.materiaId) || 0) + 1));
+  abrirSheet({
+    titulo: 'Compartilhar 📤',
+    texto: 'O que você vai mandar? Sai um link pronto pro grupo da turma — quem abrir escolhe o que entra na agenda dele.',
+    botoes: [
+      { txt: 'Uma prova ou atividade', classe: 'primary', cb: () => selecionarProvas('uma') },
+      { txt: 'As de uma matéria', classe: 'small', cb: () => selecionarProvas('materia') },
+      { txt: `Todas as ${futuros.length} futuras`, classe: 'small', cb: () => selecionarProvas('todas') },
+    ],
+  });
+});
+
+/* passo 2: gavetas por matéria, fechadas, com contagem */
+function selecionarProvas(intencao) {
+  const futuros = eventosFuturos();
+  const sel = new Set(intencao === 'todas' ? futuros.map(e => e.id) : []);
+  const grupos = new Map();
+  futuros.forEach(e => {
+    if (!grupos.has(e.materiaId)) grupos.set(e.materiaId, []);
+    grupos.get(e.materiaId).push(e);
+  });
+  const abertas = new Set(intencao === 'materia' && grupos.size ? [[...grupos.keys()][0]] : []);
+  const fundo = document.getElementById('sheetd-fundo');
+  document.getElementById('sheetd-titulo').textContent = 'Escolha o que vai no pacote';
+  document.getElementById('sheetd-texto').textContent = intencao === 'uma'
+    ? 'Abra a matéria e marque a prova que você quer mandar.'
+    : 'Abra as matérias e marque o que entra. Pode misturar quantas quiser.';
+  const caixa = document.getElementById('sheetd-botoes');
+  const pintar = () => {
+    caixa.innerHTML = '';
+    const lista = document.createElement('div');
+    lista.style.cssText = 'max-height:48vh; overflow-y:auto; text-align:left; margin-bottom:10px';
+    grupos.forEach((evs, matId) => {
+      const mat = materiaPorId(matId);
+      const marcadosAqui = evs.filter(e => sel.has(e.id)).length;
+      const cab = document.createElement('button');
+      cab.type = 'button';
+      cab.className = 'card-opcao';
+      cab.style.cssText = 'width:100%; text-align:left; margin-bottom:6px';
+      cab.innerHTML = `<span class="ico">${abertas.has(matId) ? '▾' : '▸'}</span>
+        <span><strong>${esc(mat ? mat.nome : 'Matéria')}</strong><br>
+        <span class="sutil">${evs.length} futura${evs.length === 1 ? '' : 's'}${marcadosAqui ? ` · ${marcadosAqui} marcada${marcadosAqui === 1 ? '' : 's'}` : ''}</span></span>`;
+      cab.addEventListener('click', () => { abertas.has(matId) ? abertas.delete(matId) : abertas.add(matId); pintar(); });
+      lista.appendChild(cab);
+      if (!abertas.has(matId)) return;
+      const corpo = document.createElement('div');
+      corpo.style.cssText = 'padding:2px 0 8px 10px; border-left:2px solid var(--line); margin:0 0 8px 12px';
+      evs.forEach(e => {
+        const l = document.createElement('label');
+        l.className = 'check';
+        l.style.cssText = 'padding:6px 2px; align-items:flex-start';
+        l.innerHTML = `<input type="checkbox" ${sel.has(e.id) ? 'checked' : ''}>
+          <span><strong style="font-size:13px">${esc(e.titulo)}</strong>
+          <span class="sutil" style="display:block; font-size:11.5px">${e.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(e.data)}${e.peso ? ' · vale ' + e.peso : ''}</span></span>`;
+        l.querySelector('input').addEventListener('change', ev2 => {
+          if (intencao === 'uma' && ev2.target.checked) sel.clear();
+          ev2.target.checked ? sel.add(e.id) : sel.delete(e.id);
+          pintar();
+        });
+        corpo.appendChild(l);
+      });
+      if (intencao !== 'uma' && evs.length > 1) {
+        const todos = document.createElement('button');
+        todos.type = 'button'; todos.className = 'small';
+        todos.textContent = marcadosAqui === evs.length ? 'desmarcar todas' : `marcar as ${evs.length}`;
+        todos.addEventListener('click', () => {
+          const marcarTudo = marcadosAqui !== evs.length;
+          evs.forEach(e => marcarTudo ? sel.add(e.id) : sel.delete(e.id));
+          pintar();
+        });
+        corpo.appendChild(todos);
+      }
+      lista.appendChild(corpo);
+    });
+    caixa.appendChild(lista);
+    const gerar = document.createElement('button');
+    gerar.type = 'button'; gerar.className = 'primary';
+    gerar.textContent = sel.size ? `Gerar link — ${sel.size} selecionada${sel.size === 1 ? '' : 's'} 📤` : 'Marque o que vai no pacote';
+    gerar.disabled = !sel.size;
+    gerar.addEventListener('click', () => { fundo.hidden = true; publicarPacoteProvas([...sel]); });
+    caixa.appendChild(gerar);
+    const cancelar = document.createElement('button');
+    cancelar.type = 'button'; cancelar.className = 'small';
+    cancelar.textContent = 'Cancelar';
+    cancelar.addEventListener('click', () => { fundo.hidden = true; });
+    caixa.appendChild(cancelar);
+  };
+  pintar();
+  fundo.onclick = ev => { if (ev.target === fundo) fundo.hidden = true; };
+  fundo.hidden = false;
+}
+
+/* passo 3: publica o pacote e entrega o link pronto */
+async function publicarPacoteProvas(ids) {
+  const escolhidos = db.eventos.filter(e => ids.includes(e.id));
+  if (!escolhidos.length) return;
+  const itens = escolhidos.map(e => {
+    const mat = materiaPorId(e.materiaId);
+    return { titulo: e.titulo, tipo: e.tipo, data: e.data, peso: e.peso || null, descricao: e.descricao || null, materia: mat ? mat.nome : 'Matéria' };
+  });
+  const codigo = codigoNovo(6);
+  const { error } = await nuvem.from('eventos_compartilhados')
+    .insert({ codigo, dados: { itens }, criado_por: usuarioNuvem.id });
+  if (error) { toast('Não deu pra gerar o link agora — tente de novo em instantes.'); return; }
+  registrarMetrica('compartilhar_gerou');
+  const link = location.origin + location.pathname + '?provas=' + codigo;
+  const materias = [...new Set(itens.map(i => i.materia))];
+  const resumo = itens.length === 1
+    ? `${itens[0].tipo === 'prova' ? 'Prova' : 'Atividade'} de ${itens[0].materia} — ${formatarData(itens[0].data)}`
+    : (materias.length === 1
+      ? `${itens.length} provas/atividades de ${materias[0]}`
+      : `${itens.length} provas e atividades de ${materias.length} matérias`);
+  const msg = `📅 ${resumo} — adiciona na sua agenda do Faltaê em 2 toques:\n${link}\n(vale por 7 dias)`;
+  abrirSheet({
+    titulo: 'Pacote pronto 📤',
+    texto: `${resumo}. Quem abrir escolhe o que entra. O link vale por 7 dias.`,
+    botoes: [
+      { txt: 'Compartilhar 📲', classe: 'primary', cb: async () => {
+        if (navigator.share) { try { await navigator.share({ text: msg }); return; } catch { /* cancelou */ } }
+        try { await navigator.clipboard.writeText(msg); toast('Mensagem copiada — cola no grupo!'); }
+        catch { prompt('Copie e mande no grupo:', msg); }
+      } },
+      { txt: 'Copiar só o link', classe: 'small', cb: async () => {
+        try { await navigator.clipboard.writeText(link); toast('Link copiado!'); } catch { prompt('Copie o link:', link); }
+      } },
+    ],
+  });
+}
+
+/* passo 4: quem recebe — revisa item a item, com destino explícito */
+async function abrirPacoteProvas(codigo) {
+  if (!nuvemDisponivel()) { toast('Sem conexão — abra o link quando estiver online.'); return; }
+  const { data, error } = await nuvem.from('eventos_compartilhados').select('dados, expira_em').eq('codigo', codigo).maybeSingle();
+  if (error || !data) { toast('Esse link venceu (dura 7 dias) — peça um novo pra quem te mandou. 😉'); return; }
+  const itens = (data.dados && data.dados.itens) || [];
+  if (!itens.length) { toast('Esse pacote está vazio.'); return; }
+  registrarMetrica('pacote_aberto');
+  const chave = t => String(t || '').trim().toLowerCase();
+  // agrupa por matéria de origem e tenta casar com a grade de quem recebe
+  const grupos = new Map();
+  itens.forEach(i => {
+    if (!grupos.has(i.materia)) {
+      const casada = db.materias.find(m => chave(m.nome) === chave(i.materia))
+        || db.materias.find(m => chave(m.nome).includes(chave(i.materia)) || chave(i.materia).includes(chave(m.nome)));
+      grupos.set(i.materia, { itens: [], destino: casada ? casada.id : '', exato: !!casada && chave(casada.nome) === chave(i.materia) });
+    }
+    grupos.get(i.materia).itens.push(i);
+  });
+  const sel = new Set();
+  itens.forEach((i, idx) => { if (grupos.get(i.materia).destino) sel.add(idx); });
+  const fundo = document.getElementById('sheetd-fundo');
+  document.getElementById('sheetd-titulo').textContent = `📅 ${itens.length} prova${itens.length === 1 ? '' : 's'}/atividade${itens.length === 1 ? '' : 's'} pra você`;
+  document.getElementById('sheetd-texto').textContent = 'Enviadas por um colega. Confira onde cada uma entra e desmarque o que não quiser — suas faltas e notas não mudam.';
+  const caixa = document.getElementById('sheetd-botoes');
+  const pintar = () => {
+    caixa.innerHTML = '';
+    const lista = document.createElement('div');
+    lista.style.cssText = 'max-height:46vh; overflow-y:auto; text-align:left; margin-bottom:10px';
+    grupos.forEach((g, nomeMat) => {
+      const cab = document.createElement('div');
+      cab.style.cssText = 'font-size:11.5px; font-weight:800; color:var(--ink-2); margin:10px 0 4px';
+      cab.textContent = `${nomeMat} → entra em:`;
+      lista.appendChild(cab);
+      const sele = document.createElement('select');
+      sele.style.cssText = 'width:100%; margin-bottom:6px';
+      sele.innerHTML = `<option value="">— escolher matéria —</option>` +
+        db.materias.map(m => `<option value="${m.id}" ${g.destino === m.id ? 'selected' : ''}>${esc(m.nome)}${ehAtiva(m) ? '' : ' 🔒 guardada'}</option>`).join('');
+      sele.addEventListener('change', () => {
+        g.destino = sele.value;
+        itens.forEach((i, idx) => { if (i.materia === nomeMat) { g.destino ? sel.add(idx) : sel.delete(idx); } });
+        pintar();
+      });
+      lista.appendChild(sele);
+      g.itens.forEach(i => {
+        const idx = itens.indexOf(i);
+        const l = document.createElement('label');
+        l.className = 'check';
+        l.style.cssText = 'padding:5px 2px; align-items:flex-start';
+        l.innerHTML = `<input type="checkbox" ${sel.has(idx) ? 'checked' : ''} ${g.destino ? '' : 'disabled'}>
+          <span><strong style="font-size:13px">${esc(i.titulo)}</strong>
+          <span class="sutil" style="display:block; font-size:11.5px">${i.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(i.data)}${i.peso ? ' · vale ' + i.peso : ''}${g.destino ? '' : ' · escolha a matéria acima'}</span></span>`;
+        l.querySelector('input').addEventListener('change', e => { e.target.checked ? sel.add(idx) : sel.delete(idx); pintar(); });
+        lista.appendChild(l);
+      });
+    });
+    caixa.appendChild(lista);
+    const add = document.createElement('button');
+    add.type = 'button'; add.className = 'primary';
+    add.textContent = sel.size ? `Adicionar ${sel.size} à minha agenda` : 'Escolha o que entra';
+    add.disabled = !sel.size;
+    add.addEventListener('click', () => {
+      fundo.hidden = true;
+      let entraram = 0, travadas = 0;
+      itens.forEach((i, idx) => {
+        if (!sel.has(idx)) return;
+        const destino = grupos.get(i.materia).destino;
+        if (!destino) return;
+        const mat = materiaPorId(destino);
+        if (mat && !ehAtiva(mat)) { travadas++; return; }
+        const jaTem = db.eventos.some(e => e.materiaId === destino && e.data === i.data && chave(e.titulo) === chave(i.titulo));
+        if (jaTem) return;
+        db.eventos.push({ id: uid(), materiaId: destino, tipo: i.tipo === 'prova' ? 'prova' : 'atividade', titulo: String(i.titulo), data: i.data, peso: i.peso || null, descricao: i.descricao || null, feita: false, novoAte: Date.now() + 864e5 });
+        entraram++;
+      });
+      salvar(); renderTudo(); irParaAba('agenda');
+      registrarMetrica('pacote_aplicado');
+      history.replaceState(null, '', location.pathname);
+      toast(entraram
+        ? `${entraram} ${entraram === 1 ? 'item' : 'itens'} na sua agenda — com lembrete e contagem regressiva ✓${travadas ? ` (${travadas} em matéria guardada)` : ''}`
+        : 'Você já tinha tudo isso na agenda.');
+    });
+    caixa.appendChild(add);
+    const depois = document.createElement('button');
+    depois.type = 'button'; depois.className = 'small';
+    depois.textContent = 'Agora não';
+    depois.addEventListener('click', () => { fundo.hidden = true; history.replaceState(null, '', location.pathname); });
+    caixa.appendChild(depois);
+  };
+  pintar();
+  fundo.onclick = ev => { if (ev.target === fundo) { fundo.hidden = true; history.replaceState(null, '', location.pathname); } };
+  fundo.hidden = false;
+}
+
+/* link ?provas=CODIGO — sobrevive ao cadastro, igual ao de parceria */
+(() => {
+  const cod = new URLSearchParams(location.search).get('provas');
+  if (cod) localStorage.setItem('controleFaltas.pacoteProvas', cod.toUpperCase());
+})();
+function processarPacotePendente() {
+  const cod = localStorage.getItem('controleFaltas.pacoteProvas');
+  if (!cod || !usuarioNuvem || !nuvemDisponivel()) return;
+  localStorage.removeItem('controleFaltas.pacoteProvas');
+  setTimeout(() => abrirPacoteProvas(cod), 700); // deixa o app assentar antes do sheet
+}
+
 /* ─────────── medição de conversão: contador agregado, sem rastrear ninguém ───────────
    Manda só o nome do evento. O banco soma por dia (dia + evento + total) — não
    guarda quem, nem quando exatamente, nem nada que ligue a uma pessoa. */
@@ -3446,6 +3705,7 @@ async function aposLogin(user) {
   aplicarSairRelatorio();
   if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
   if (typeof processarAtivacaoPendente === 'function') processarAtivacaoPendente(); // link de parceria (?ativar=) sobrevive ao cadastro
+  if (typeof processarPacotePendente === 'function') processarPacotePendente();     // link de provas (?provas=) idem
 }
 
 /* ─────────── tela de entrada (conta obrigatória) ─────────── */
@@ -3941,7 +4201,7 @@ async function processarAtivacaoPendente() {
   });
   history.replaceState(null, '', location.pathname);
 }
-if (usuarioNuvem) processarAtivacaoPendente();
+if (usuarioNuvem) { processarAtivacaoPendente(); processarPacotePendente(); }
 
 /* etapa 3: planos de ensino — o conteúdo de cada aula */
 /* momento-aha: uma vez só, no pico de valor percebido (grade montada e mapeada),
