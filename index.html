@@ -799,56 +799,6 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
           <div id="conta-logado" hidden>
             <p class="muted" style="margin:12px 0 4px">Conectado como <strong id="conta-usuario"></strong></p>
             <p class="sutil num" id="conta-status" style="margin:0 0 10px"></p>
-            <div id="meu-plano" class="painel" style="margin:0 0 14px">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px">
-                <div style="min-width:0">
-                  <strong id="mp-nome" style="font-size:15px"></strong>
-                  <p class="sutil num" id="mp-detalhe" style="margin:3px 0 0"></p>
-                </div>
-                <span id="mp-selo" class="num" style="flex:none; font-size:10.5px; font-weight:800; letter-spacing:.04em; border-radius:999px; padding:4px 11px"></span>
-              </div>
-              <div class="acoes-dados" id="mp-acoes" style="margin-top:10px"></div>
-            </div>
-            <div id="conta-upgrade" hidden>
-              <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático. Pagamento avulso via Pix — sem assinatura, sem renovação automática.</p>
-              <div class="passes">
-                <button class="passe heroi" type="button" data-assinar="semestral">
-                  <span class="passe-selo">Semestre inteiro</span>
-                  <span class="passe-preco num">R$ 59,90</span>
-                  <span class="passe-eq num">sai a R$ 9,98/mês · um Pix só</span>
-                </button>
-                <button class="passe" type="button" data-assinar="mensal">
-                  <span class="passe-selo">30 dias</span>
-                  <span class="passe-preco num">R$ 15</span>
-                  <span class="passe-eq">pra experimentar</span>
-                </button>
-              </div>
-              <button class="passe" type="button" data-assinar-rec style="margin-top:8px; max-width:420px">
-                <span class="passe-selo">🔁 Renovação automática</span>
-                <span class="passe-preco num">R$ 15<small style="font-size:12px; font-weight:600; color:var(--ink-3)">/mês</small></span>
-                <span class="passe-eq">no cartão de crédito · cancele quando quiser</span>
-              </button>
-              <div class="acoes-dados" style="margin-top:8px">
-                <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
-              </div>
-              <details style="margin-top:10px">
-                <summary class="sutil" style="cursor:pointer">🎟️ Tenho um código promocional</summary>
-                <div class="campos-2" style="margin-top:8px; max-width:420px">
-                  <label class="campo">Código
-                    <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: NA9MES" maxlength="24" style="text-transform:uppercase">
-                  </label>
-                  <label class="campo">&nbsp;
-                    <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
-                  </label>
-                </div>
-              </details>
-              <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
-            </div>
-            <div id="conta-assinatura" hidden>
-              <p class="muted" style="margin:0 0 8px">🔁 Renovação automática <strong>ativa</strong> — R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</p>
-              <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
-              <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
-            </div>
             <div class="acoes-dados">
               <button class="small" id="btn-sync-agora">Sincronizar agora</button>
               <button class="small" id="btn-sair">Sair</button>
@@ -889,6 +839,66 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             <div style="border-top:1px solid var(--line); margin:14px 0 10px"></div>
             <button class="small ghost-danger" id="btn-excluir-conta" type="button">Excluir minha conta…</button>
             <p class="sutil" style="margin:6px 0 0">Apaga sua conta e tudo que está na nuvem, sem volta. Os dados deste aparelho continuam aqui.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="menu-sec" id="menu-plano">
+        <summary><span class="ico-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15h4"/></svg></span> Meu plano <span class="sutil num" id="plano-resumo" style="margin-left:6px"></span></summary>
+        <div class="corpo-menu">
+          <div id="plano-deslogado">
+            <p class="muted" style="margin:12px 0 0">Entre na sua conta (seção acima) pra ver e gerenciar seu plano.</p>
+          </div>
+          <div id="plano-logado" hidden>
+            <div id="meu-plano" class="painel" style="margin:12px 0 14px">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px">
+                <div style="min-width:0">
+                  <strong id="mp-nome" style="font-size:15px"></strong>
+                  <p class="sutil num" id="mp-detalhe" style="margin:3px 0 0"></p>
+                </div>
+                <span id="mp-selo" class="num" style="flex:none; font-size:10.5px; font-weight:800; letter-spacing:.04em; border-radius:999px; padding:4px 11px"></span>
+              </div>
+              <div class="acoes-dados" id="mp-acoes" style="margin-top:10px"></div>
+            </div>
+            <div id="conta-assinatura" hidden>
+              <p class="muted" style="margin:0 0 8px">🔁 Renovação automática <strong>ativa</strong> — R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</p>
+              <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
+              <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
+            </div>
+            <div id="conta-upgrade" hidden>
+              <p class="muted" style="margin:0 0 8px">Desbloqueie a sincronização entre aparelhos, matérias ilimitadas e o calendário automático. Pagamento avulso via Pix — sem assinatura, sem renovação automática.</p>
+              <div class="passes">
+                <button class="passe heroi" type="button" data-assinar="semestral">
+                  <span class="passe-selo">Semestre inteiro</span>
+                  <span class="passe-preco num">R$ 59,90</span>
+                  <span class="passe-eq num">sai a R$ 9,98/mês · um Pix só</span>
+                </button>
+                <button class="passe" type="button" data-assinar="mensal">
+                  <span class="passe-selo">30 dias</span>
+                  <span class="passe-preco num">R$ 15</span>
+                  <span class="passe-eq">pra experimentar</span>
+                </button>
+              </div>
+              <button class="passe" type="button" data-assinar-rec style="margin-top:8px; max-width:420px">
+                <span class="passe-selo">🔁 Renovação automática</span>
+                <span class="passe-preco num">R$ 15<small style="font-size:12px; font-weight:600; color:var(--ink-3)">/mês</small></span>
+                <span class="passe-eq">no cartão de crédito · cancele quando quiser</span>
+              </button>
+              <div class="acoes-dados" style="margin-top:8px">
+                <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
+              </div>
+            </div>
+            <details style="margin-top:10px">
+              <summary class="sutil" style="cursor:pointer">🎟️ Tenho um código promocional</summary>
+              <div class="campos-2" style="margin-top:8px; max-width:420px">
+                <label class="campo">Código
+                  <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: ATV-XXXXXX" maxlength="24" style="text-transform:uppercase">
+                </label>
+                <label class="campo">&nbsp;
+                  <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
+                </label>
+              </div>
+            </details>
           </div>
         </div>
       </details>
@@ -2427,7 +2437,7 @@ function infoBackup() {
 document.getElementById('btn-relatorio').addEventListener('click', () => {
   if (planoNuvem === 'gratis') {
     toast('O relatório do semestre é um recurso do plano Essencial.', 'Ver planos', () => {
-      const sec = document.getElementById('menu-conta');
+      const sec = document.getElementById('menu-plano');
       if (sec) { sec.open = true; sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
     });
     return;
@@ -2771,15 +2781,20 @@ function renderConta() {
   const deslogado = document.getElementById('conta-deslogado');
   const logado = document.getElementById('conta-logado');
   const resumo = document.getElementById('conta-resumo');
+  const planoDeslog = document.getElementById('plano-deslogado');
+  const planoLog = document.getElementById('plano-logado');
   if (!usuarioNuvem) {
     deslogado.hidden = false;
     logado.hidden = true;
     resumo.textContent = '';
+    if (planoDeslog) { planoDeslog.hidden = false; planoLog.hidden = true; }
+    const pr = document.getElementById('plano-resumo'); if (pr) pr.textContent = '';
     document.getElementById('nuvem-ind').hidden = true;
     return;
   }
   deslogado.hidden = true;
   logado.hidden = false;
+  if (planoDeslog) { planoDeslog.hidden = true; planoLog.hidden = false; }
   const assinatura = localStorage.getItem('controleFaltas.assinatura') || '';
   const validoAteLido = localStorage.getItem('controleFaltas.validoAte');
   const diasRestantes = validoAteLido ? Math.ceil((new Date(validoAteLido) - Date.now()) / 86400000) : null;
@@ -2818,6 +2833,8 @@ function renderConta() {
   const mpDet = document.getElementById('mp-detalhe');
   const mpSelo = document.getElementById('mp-selo');
   const mpAcoes = document.getElementById('mp-acoes');
+  const pr = document.getElementById('plano-resumo');
+  if (pr) pr.textContent = nomePlano;
   if (mpNome) {
     mpNome.textContent = 'Plano ' + nomePlano;
     const vencendo = !assinatura && diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 7;
@@ -2877,7 +2894,7 @@ function avisarVencimento() {
       : `Seu Essencial vence em ${dias} dia${dias === 1 ? '' : 's'} — renovar antes soma os dias, nada se perde.`,
     'Renovar', () => {
       irParaAba('menu');
-      const sec = document.getElementById('menu-conta');
+      const sec = document.getElementById('menu-plano');
       if (sec) sec.open = true;
       sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
