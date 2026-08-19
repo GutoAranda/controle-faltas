@@ -64,6 +64,21 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
+  // IDEMPOTÊNCIA: o Mercado Pago reenvia a mesma notificação (retry, ou payment +
+  // merchant_order do mesmo Pix). Sem esta trava, um pagamento creditaria dias duas
+  // vezes. A chave primária da tabela é o id do pagamento: repetido = conflito = sai.
+  const marca = await supabase.from('pagamentos_processados')
+    .insert({ pagamento_id: String(pagamentoId), user_id: userId })
+  if (marca.error) {
+    if (marca.error.code === '23505') {
+      console.log(`Pagamento ${pagamentoId} já creditado — notificação repetida, ignorando`)
+      return new Response('ok')
+    }
+    // tabela ausente (SQL não rodado) não pode travar o crédito de quem pagou —
+    // segue creditando e deixa o rastro no log pra auditoria
+    console.log(`Aviso: sem trava de idempotência (${marca.error.code}) — creditando ${pagamentoId}`)
+  }
+
   // quantos dias creditar: vem da metadata da cobrança; se faltar (cobrança antiga),
   // deduz pelo valor pago — R$ 50+ só existe no passe semestral
   let dias = Number(pagamento?.metadata?.dias)
