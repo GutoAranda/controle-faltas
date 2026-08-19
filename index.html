@@ -549,22 +549,105 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   .sheetd-botoes { display: flex; flex-direction: column; gap: 9px; }
   .sheetd-botoes .primary { width: 100%; }
   .sheetd-botoes .small { align-self: center; }
-  /* listas dentro do sheet (escolher matérias, gavetas de provas, revisão do pacote) */
-  .sheetd-lista { max-height: 46vh; overflow-y: auto; text-align: left; margin-bottom: 10px; }
-  .sheetd-lista .check { padding: 7px 2px; align-items: flex-start; }
+  /* ═══════ SELETOR — escolher itens de uma lista (matérias, provas, destinos) ═══════
+     Cabeçalho fixo, corpo que rola, rodapé com contador e ação. Cada item é um
+     cartão inteiro clicável, não um checkbox solto no meio do texto. */
+  #seletor {
+    position: fixed; inset: 0; z-index: 330; background: rgba(10, 12, 24, .58);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  #seletor[hidden] { display: none; }
+  .sel-caixa {
+    background: var(--surface); width: 100%; max-width: 560px;
+    border-radius: 22px 22px 0 0; display: flex; flex-direction: column;
+    max-height: 92vh; box-shadow: 0 -18px 50px rgba(10, 12, 24, .34);
+    /* animação só de opacidade: se ela não completar (aba em segundo plano, motor
+       sem suporte), a caixa continua no lugar certo — deslocamento preso escondia
+       o botão de confirmar embaixo da tela no celular */
+    animation: sel-entra .2s ease-out;
+  }
+  @keyframes sel-entra { from { opacity: .55; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .sel-caixa { animation: none; } }
+  .sel-cab {
+    padding: 20px 20px 14px; border-bottom: 1px solid var(--line);
+    display: flex; gap: 12px; align-items: flex-start; flex: none;
+  }
+  .sel-cab h3 { font-size: 18px; font-weight: 800; margin: 0 0 4px; color: var(--ink); letter-spacing: -.2px; }
+  .sel-cab p { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+  .sel-fechar {
+    flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink-2); font-size: 16px; line-height: 1; cursor: pointer;
+  }
+  .sel-fechar:hover { background: var(--surface-2); color: var(--ink); }
+  .sel-corpo { overflow-y: auto; padding: 12px 16px; flex: 1; -webkit-overflow-scrolling: touch; }
+  .sel-grupo { margin: 0 0 6px; }
+  .sel-grupo + .sel-grupo { margin-top: 14px; }
+  .sel-grupo-rot {
+    display: flex; align-items: center; gap: 8px; padding: 6px 4px;
+    font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .sel-grupo-rot .conta { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 700; color: var(--ink-2); }
+  .sel-grupo-abre {
+    width: 100%; display: flex; align-items: center; gap: 10px; text-align: left;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; font: inherit; color: var(--ink); cursor: pointer; margin-bottom: 6px;
+  }
+  .sel-grupo-abre:hover { border-color: var(--accent); }
+  .sel-grupo-abre .seta { color: var(--ink-3); font-size: 13px; transition: transform .15s ease; }
+  .sel-grupo-abre[aria-expanded="true"] .seta { transform: rotate(90deg); }
+  .sel-grupo-abre strong { font-size: 14.5px; display: block; }
+  .sel-grupo-abre .sub { font-size: 12px; color: var(--ink-2); }
+  .sel-grupo-abre .selo-conta {
+    margin-left: auto; flex: none; font-size: 11px; font-weight: 800; border-radius: 999px;
+    padding: 3px 9px; background: var(--accent-soft); color: var(--accent);
+  }
+  .sel-corpo-grupo { padding: 2px 0 6px 8px; margin: 0 0 4px 12px; border-left: 2px solid var(--line); }
+  .item-sel {
+    display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left;
+    background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 8px; cursor: pointer; font: inherit; color: var(--ink);
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .item-sel:hover { border-color: var(--accent); }
+  .item-sel:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .item-sel.on { border-color: var(--accent); background: var(--accent-soft); }
+  .item-sel.travado { opacity: .55; cursor: not-allowed; }
+  .item-sel .marca {
+    flex: none; width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--line);
+    display: grid; place-items: center; font-size: 13px; font-weight: 900; color: transparent; margin-top: 1px;
+  }
+  .item-sel.on .marca { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .item-sel .txt { min-width: 0; }
+  .item-sel .titulo { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+  .item-sel .detalhe { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.45; }
+  .item-sel .etiqueta {
+    display: inline-block; font-size: 10.5px; font-weight: 800; border-radius: 999px;
+    padding: 2px 8px; margin-top: 6px; background: var(--ok-soft); color: var(--ok);
+  }
+  .sel-rodape {
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line);
+    background: var(--surface); border-radius: 0 0 22px 22px; flex: none;
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .sel-contador { font-size: 13px; color: var(--ink-2); text-align: center; }
+  .sel-contador b { color: var(--ink); }
+  .sel-rodape .primary { width: 100%; }
+  .sel-secundario { background: none; border: 0; color: var(--ink-2); font: inherit; font-size: 13px; padding: 6px; cursor: pointer; }
+  .sel-secundario:hover { color: var(--accent); }
+  .sel-atalho { background: none; border: 0; color: var(--accent); font: 700 12.5px var(--fonte-corpo); padding: 4px 2px 8px; cursor: pointer; }
+
   @media (min-width: 700px) {
-    .sheetd-caixa.largo { max-width: 640px; }
-    .sheetd-lista { max-height: 52vh; }
+    #seletor { align-items: center; padding: 24px; }
+    .sel-caixa { border-radius: 20px; max-height: 86vh; }
+    .sel-rodape { border-radius: 0 0 20px 20px; flex-direction: row; align-items: center; justify-content: space-between; }
+    .sel-rodape .primary { width: auto; min-width: 220px; order: 2; }
+    .sel-contador { text-align: left; order: 1; }
+    .sel-secundario { order: 0; }
   }
   @media (min-width: 1000px) {
-    /* telas grandes: o sheet respira e a lista usa duas colunas em vez de rolar à toa */
-    .sheetd-caixa.largo { max-width: 760px; padding: 26px 26px 22px; }
-    .sheetd-caixa.largo .sheetd-lista {
-      max-height: 56vh; display: grid; grid-template-columns: 1fr 1fr;
-      gap: 4px 20px; align-content: start;
-    }
-    .sheetd-caixa.largo .sheetd-lista .larguraTotal { grid-column: 1 / -1; }
-    .sheetd-caixa.largo .sheetd-botoes { display: grid; grid-template-columns: 1fr; }
+    .sel-caixa { max-width: 620px; }
+    .sel-corpo { padding: 16px 22px; }
+    .sel-cab { padding: 24px 24px 16px; }
   }
 
   /* ─── tela do plano (vendas) — desenhada pra celular, tablet e PC ─── */
@@ -1309,6 +1392,24 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </div>
     </div>
     <p class="sutil" style="margin-top:16px"><a href="#" id="pc-fechar">← Voltar pro app</a></p>
+  </div>
+</div>
+
+<div id="seletor" hidden>
+  <div class="sel-caixa" role="dialog" aria-modal="true" aria-labelledby="sel-titulo">
+    <div class="sel-cab">
+      <div style="min-width:0">
+        <h3 id="sel-titulo"></h3>
+        <p id="sel-sub"></p>
+      </div>
+      <button class="sel-fechar" id="sel-fechar" type="button" aria-label="Fechar">✕</button>
+    </div>
+    <div class="sel-corpo" id="sel-corpo"></div>
+    <div class="sel-rodape">
+      <button class="sel-secundario" id="sel-secundario" type="button" hidden></button>
+      <span class="sel-contador" id="sel-contador"></span>
+      <button class="primary" id="sel-confirmar" type="button"></button>
+    </div>
   </div>
 </div>
 
@@ -2952,60 +3053,37 @@ function sheetEscolherAtivas(motivo) {
   const ranking = rankearMaterias();
   const sugeridas = new Set(ranking.slice(0, LIMITE_ACOMPANHADAS).map(m => m.id));
   const marcadas = new Set(db.materias.filter(m => m.ativa !== false).map(m => m.id));
-  const sel = new Set(marcadas.size && marcadas.size <= LIMITE_ACOMPANHADAS ? marcadas : sugeridas);
-  const fundo = document.getElementById('sheetd-fundo');
-  document.getElementById('sheetd-titulo').textContent = motivo || `Escolha as ${LIMITE_ACOMPANHADAS} matérias que você acompanha`;
-  document.getElementById('sheetd-texto').textContent =
-    `No plano grátis o Faltaê acompanha ${LIMITE_ACOMPANHADAS} matérias de perto — as outras ficam guardadas, com tudo que você já anotou, e voltam quando quiser. Já marquei as que você mais usa.`;
-  const caixa = document.getElementById('sheetd-botoes');
-  const pintar = () => {
-    caixa.innerHTML = '';
-    const lista = document.createElement('div');
-    lista.className = 'sheetd-lista';
-    ranking.forEach(m => {
-      const l = document.createElement('label');
-      l.className = 'check';
-      l.style.cssText = 'padding:7px 2px; align-items:flex-start';
-      const marcado = sel.has(m.id);
-      l.innerHTML = `<input type="checkbox" ${marcado ? 'checked' : ''}>
-        <span style="min-width:0"><strong style="font-size:13.5px">${esc(m.nome)}</strong>
-        <span class="sutil" style="display:block; font-size:11.5px">${[m.diaSemana, m.horario].filter(Boolean).join(' ') || 'sem horário'}${db.faltas.some(f => f.materiaId === m.id) ? ' · você já marcou falta aqui' : ''}</span></span>`;
-      l.querySelector('input').addEventListener('change', e => {
-        if (e.target.checked) {
-          if (sel.size >= LIMITE_ACOMPANHADAS) { e.target.checked = false; toast(`No grátis são ${LIMITE_ACOMPANHADAS} — desmarque uma antes.`); return; }
-          sel.add(m.id);
-        } else sel.delete(m.id);
-        pintar();
-      });
-      lista.appendChild(l);
-    });
-    caixa.appendChild(lista);
-    const btn = document.createElement('button');
-    btn.type = 'button'; btn.className = 'primary';
-    btn.textContent = `✓ Acompanhar estas ${sel.size}`;
-    btn.disabled = sel.size === 0;
-    btn.addEventListener('click', () => {
-      fundo.hidden = true;
-      aplicarAtivas([...sel]);
+  const jaEscolhidas = marcadas.size && marcadas.size <= LIMITE_ACOMPANHADAS ? marcadas : sugeridas;
+  abrirSeletor({
+    titulo: motivo || `Quais matérias você acompanha?`,
+    sub: `No plano grátis o Faltaê acompanha ${LIMITE_ACOMPANHADAS} de perto. As outras ficam guardadas com tudo que você já anotou — e voltam quando quiser. Já deixei marcadas as que você mais usa.`,
+    max: LIMITE_ACOMPANHADAS,
+    avisoMax: `São ${LIMITE_ACOMPANHADAS} no grátis — toque numa marcada pra liberar espaço.`,
+    grupos: [{
+      id: 'todas',
+      itens: ranking.map(m => ({
+        id: m.id,
+        titulo: m.nome,
+        detalhe: [[m.diaSemana, m.horario].filter(Boolean).join(' ') || 'sem horário',
+          m.professor || null].filter(Boolean).join(' · '),
+        etiqueta: db.faltas.some(f => f.materiaId === m.id) ? 'você já marcou falta aqui'
+          : (db.eventos.some(e => e.materiaId === m.id && !e.feita && e.data >= hojeISO()) ? 'tem prova marcada' : null),
+        marcado: jaEscolhidas.has(m.id),
+      })),
+    }],
+    contador: n => `<b>${n}</b> de ${LIMITE_ACOMPANHADAS} escolhidas`,
+    rotulo: n => `Acompanhar ${n === 1 ? 'esta' : 'estas ' + n}`,
+    secundario: { txt: '💚 Acompanhar todas', cb: () => { registrarMetrica('ativas_upgrade'); abrirTelaPlano(); } },
+    aoConfirmar: ids => {
+      aplicarAtivas(ids);
       registrarMetrica('ativas_escolhidas');
-      toast(`Pronto — acompanhando ${sel.size} matéria${sel.size === 1 ? '' : 's'}. As outras seguem guardadas.`);
-    });
-    caixa.appendChild(btn);
-    const alt = document.createElement('button');
-    alt.type = 'button'; alt.className = 'small';
-    alt.textContent = '💚 Quero acompanhar todas (Essencial)';
-    alt.addEventListener('click', () => { fundo.hidden = true; registrarMetrica('ativas_upgrade'); abrirTelaPlano(); });
-    caixa.appendChild(alt);
-  };
-  sheetLargo(true);
-  pintar();
-  fundo.onclick = ev => {
-    if (ev.target !== fundo) return;
-    fundo.hidden = true;
-    garantirLimiteProvisorio(); renderTudo();
-    toast(`Deixei as ${LIMITE_ACOMPANHADAS} que você mais usa ativas — dá pra mudar em Minha grade.`);
-  };
-  fundo.hidden = false;
+      toast(`Pronto — acompanhando ${ids.length} matéria${ids.length === 1 ? '' : 's'}. As outras seguem guardadas.`);
+    },
+    aoFechar: () => {
+      garantirLimiteProvisorio(); renderTudo();
+      toast(`Deixei ativas as ${LIMITE_ACOMPANHADAS} que você mais usa — dá pra mudar em Minha grade.`);
+    },
+  });
 }
 
 /* chamado quando o app descobre que o plano é grátis e há mais de 6 ativas */
@@ -3041,35 +3119,35 @@ function trocarPorEsta(matId) {
     });
     return;
   }
-  const ativas = materiasAtivas();
-  const fundo = document.getElementById('sheetd-fundo');
-  document.getElementById('sheetd-titulo').textContent = `Ativar "${mat.nome}" no lugar de qual?`;
-  document.getElementById('sheetd-texto').textContent =
-    `Você acompanha ${LIMITE_ACOMPANHADAS} matérias no grátis. A que sair guarda tudo que você já anotou. Depois desta, a próxima troca libera em ${TROCA_ESPERA_DIAS} dias.`;
-  const caixa = document.getElementById('sheetd-botoes');
-  caixa.innerHTML = '';
-  ativas.forEach(a => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'small';
-    b.textContent = 'Guardar "' + a.nome + '"';
-    b.addEventListener('click', () => {
-      fundo.hidden = true;
-      a.ativa = false; mat.ativa = true;
+  const hoje = hojeISO();
+  abrirSeletor({
+    titulo: `Qual matéria sai pra "${mat.nome}" entrar?`,
+    sub: `Você acompanha ${LIMITE_ACOMPANHADAS} no grátis. A que sair guarda tudo que já anotou e volta quando quiser — mas a próxima troca só libera em ${TROCA_ESPERA_DIAS} dias.`,
+    max: 1,
+    minimo: 1,
+    grupos: [{
+      id: 'ativas',
+      itens: materiasAtivas().map(a => ({
+        id: a.id,
+        titulo: a.nome,
+        detalhe: [[a.diaSemana, a.horario].filter(Boolean).join(' ') || 'sem horário',
+          `${db.faltas.filter(f => f.materiaId === a.id).length} falta(s) registrada(s)`].join(' · '),
+        etiqueta: db.eventos.some(e => e.materiaId === a.id && !e.feita && e.data >= hoje) ? 'tem prova chegando' : null,
+      })),
+    }],
+    contador: n => n ? 'Essa vai ser guardada' : 'Escolha qual guardar',
+    rotulo: n => n ? 'Trocar' : 'Escolha uma',
+    secundario: { txt: '💚 Acompanhar todas', cb: () => { registrarMetrica('troca_upgrade'); abrirTelaPlano(); } },
+    aoConfirmar: ids => {
+      const sai = materiaPorId(ids[0]);
+      if (!sai) return;
+      sai.ativa = false; mat.ativa = true;
       db.ultimaTrocaAtivas = new Date().toISOString();
       salvar(); renderTudo();
       registrarMetrica('ativas_troca');
-      toast(`Agora acompanhando "${mat.nome}".`);
-    });
-    caixa.appendChild(b);
+      toast(`Agora acompanhando "${mat.nome}" — "${sai.nome}" ficou guardada.`);
+    },
   });
-  const cancelar = document.createElement('button');
-  cancelar.type = 'button'; cancelar.className = 'small';
-  cancelar.textContent = 'Cancelar';
-  cancelar.addEventListener('click', () => { fundo.hidden = true; });
-  caixa.appendChild(cancelar);
-  sheetLargo(false);
-  fundo.onclick = ev => { if (ev.target === fundo) fundo.hidden = true; };
-  fundo.hidden = false;
 }
 
 /* ─────────── fusão de bancos (dois aparelhos, nenhum registro perdido) ───────────
@@ -3437,84 +3515,41 @@ document.getElementById('btn-compartilhar-provas').addEventListener('click', () 
 /* passo 2: gavetas por matéria, fechadas, com contagem */
 function selecionarProvas(intencao) {
   const futuros = eventosFuturos();
-  const sel = new Set(intencao === 'todas' ? futuros.map(e => e.id) : []);
-  const grupos = new Map();
+  const porMateria = new Map();
   futuros.forEach(e => {
-    if (!grupos.has(e.materiaId)) grupos.set(e.materiaId, []);
-    grupos.get(e.materiaId).push(e);
+    if (!porMateria.has(e.materiaId)) porMateria.set(e.materiaId, []);
+    porMateria.get(e.materiaId).push(e);
   });
-  const abertas = new Set(intencao === 'materia' && grupos.size ? [[...grupos.keys()][0]] : []);
-  const fundo = document.getElementById('sheetd-fundo');
-  document.getElementById('sheetd-titulo').textContent = 'Escolha o que vai no pacote';
-  document.getElementById('sheetd-texto').textContent = intencao === 'uma'
-    ? 'Abra a matéria e marque a prova que você quer mandar.'
-    : 'Abra as matérias e marque o que entra. Pode misturar quantas quiser.';
-  const caixa = document.getElementById('sheetd-botoes');
-  const pintar = () => {
-    caixa.innerHTML = '';
-    const lista = document.createElement('div');
-    lista.className = 'sheetd-lista';
-    grupos.forEach((evs, matId) => {
+  const materias = [...porMateria.keys()];
+  const primeira = materias[0];
+  abrirSeletor({
+    titulo: intencao === 'uma' ? 'Qual você vai mandar?' : 'O que vai no pacote?',
+    sub: intencao === 'uma'
+      ? 'Abra a matéria e toque na prova ou atividade que quer compartilhar.'
+      : 'Toque no que entra — pode misturar matérias. Quem receber escolhe o que aceita.',
+    max: intencao === 'uma' ? 1 : null,
+    grupos: materias.map(matId => {
       const mat = materiaPorId(matId);
-      const marcadosAqui = evs.filter(e => sel.has(e.id)).length;
-      const cab = document.createElement('button');
-      cab.type = 'button';
-      cab.className = 'card-opcao';
-      cab.style.cssText = 'width:100%; text-align:left; margin-bottom:6px';
-      cab.innerHTML = `<span class="ico">${abertas.has(matId) ? '▾' : '▸'}</span>
-        <span><strong>${esc(mat ? mat.nome : 'Matéria')}</strong><br>
-        <span class="sutil">${evs.length} futura${evs.length === 1 ? '' : 's'}${marcadosAqui ? ` · ${marcadosAqui} marcada${marcadosAqui === 1 ? '' : 's'}` : ''}</span></span>`;
-      cab.addEventListener('click', () => { abertas.has(matId) ? abertas.delete(matId) : abertas.add(matId); pintar(); });
-      lista.appendChild(cab);
-      if (!abertas.has(matId)) return;
-      const corpo = document.createElement('div');
-      corpo.style.cssText = 'padding:2px 0 8px 10px; border-left:2px solid var(--line); margin:0 0 8px 12px';
-      evs.forEach(e => {
-        const l = document.createElement('label');
-        l.className = 'check';
-        l.style.cssText = 'padding:6px 2px; align-items:flex-start';
-        l.innerHTML = `<input type="checkbox" ${sel.has(e.id) ? 'checked' : ''}>
-          <span><strong style="font-size:13px">${esc(e.titulo)}</strong>
-          <span class="sutil" style="display:block; font-size:11.5px">${e.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(e.data)}${e.peso ? ' · vale ' + e.peso : ''}</span></span>`;
-        l.querySelector('input').addEventListener('change', ev2 => {
-          if (intencao === 'uma' && ev2.target.checked) sel.clear();
-          ev2.target.checked ? sel.add(e.id) : sel.delete(e.id);
-          pintar();
-        });
-        corpo.appendChild(l);
-      });
-      if (intencao !== 'uma' && evs.length > 1) {
-        const todos = document.createElement('button');
-        todos.type = 'button'; todos.className = 'small';
-        todos.textContent = marcadosAqui === evs.length ? 'desmarcar todas' : `marcar as ${evs.length}`;
-        todos.addEventListener('click', () => {
-          const marcarTudo = marcadosAqui !== evs.length;
-          evs.forEach(e => marcarTudo ? sel.add(e.id) : sel.delete(e.id));
-          pintar();
-        });
-        corpo.appendChild(todos);
-      }
-      lista.appendChild(corpo);
-    });
-    caixa.appendChild(lista);
-    const gerar = document.createElement('button');
-    gerar.type = 'button'; gerar.className = 'primary';
-    gerar.textContent = sel.size ? `Gerar link — ${sel.size} selecionada${sel.size === 1 ? '' : 's'} 📤` : 'Marque o que vai no pacote';
-    gerar.disabled = !sel.size;
-    gerar.addEventListener('click', () => { fundo.hidden = true; publicarPacoteProvas([...sel]); });
-    caixa.appendChild(gerar);
-    const cancelar = document.createElement('button');
-    cancelar.type = 'button'; cancelar.className = 'small';
-    cancelar.textContent = 'Cancelar';
-    cancelar.addEventListener('click', () => { fundo.hidden = true; });
-    caixa.appendChild(cancelar);
-  };
-  sheetLargo(true);
-  pintar();
-  fundo.onclick = ev => { if (ev.target === fundo) fundo.hidden = true; };
-  fundo.hidden = false;
+      const evs = porMateria.get(matId);
+      return {
+        id: matId,
+        rotulo: mat ? mat.nome : 'Matéria',
+        sub: `${evs.length} futura${evs.length === 1 ? '' : 's'}`,
+        colapsavel: true,
+        aberto: intencao === 'todas' || matId === primeira,
+        itens: evs.map(e => ({
+          id: e.id,
+          titulo: e.titulo,
+          detalhe: `${e.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(e.data)}${e.peso ? ' · vale ' + e.peso : ''} · em ${diasAte(e.data)} dia${diasAte(e.data) === 1 ? '' : 's'}`,
+          marcado: intencao === 'todas',
+        })),
+      };
+    }),
+    contador: n => n ? `<b>${n}</b> ${n === 1 ? 'selecionada' : 'selecionadas'}` : 'Nada selecionado ainda',
+    rotulo: n => n ? `Gerar link (${n}) 📤` : 'Escolha o que mandar',
+    aoConfirmar: ids => publicarPacoteProvas(ids),
+  });
 }
-
 /* passo 3: publica o pacote e entrega o link pronto */
 async function publicarPacoteProvas(ids) {
   const escolhidos = db.eventos.filter(e => ids.includes(e.id));
@@ -3571,60 +3606,49 @@ async function abrirPacoteProvas(codigo) {
     }
     grupos.get(i.materia).itens.push(i);
   });
-  const sel = new Set();
-  itens.forEach((i, idx) => { if (grupos.get(i.materia).destino) sel.add(idx); });
-  const fundo = document.getElementById('sheetd-fundo');
-  document.getElementById('sheetd-titulo').textContent = `📅 ${itens.length} prova${itens.length === 1 ? '' : 's'}/atividade${itens.length === 1 ? '' : 's'} pra você`;
-  document.getElementById('sheetd-texto').textContent = 'Enviadas por um colega. Confira onde cada uma entra e desmarque o que não quiser — suas faltas e notas não mudam.';
-  const caixa = document.getElementById('sheetd-botoes');
-  const pintar = () => {
-    caixa.innerHTML = '';
-    const lista = document.createElement('div');
-    lista.className = 'sheetd-lista';
-    grupos.forEach((g, nomeMat) => {
-      const cab = document.createElement('div');
-      cab.style.cssText = 'font-size:11.5px; font-weight:800; color:var(--ink-2); margin:10px 0 4px';
-      cab.textContent = `${nomeMat} → entra em:`;
-      lista.appendChild(cab);
-      const sele = document.createElement('select');
-      sele.style.cssText = 'width:100%; margin-bottom:6px';
-      sele.innerHTML = `<option value="">— escolher matéria —</option>` +
-        db.materias.map(m => `<option value="${m.id}" ${g.destino === m.id ? 'selected' : ''}>${esc(m.nome)}${ehAtiva(m) ? '' : ' 🔒 guardada'}</option>`).join('');
-      sele.addEventListener('change', () => {
-        g.destino = sele.value;
-        itens.forEach((i, idx) => { if (i.materia === nomeMat) { g.destino ? sel.add(idx) : sel.delete(idx); } });
-        pintar();
-      });
-      lista.appendChild(sele);
-      g.itens.forEach(i => {
-        const idx = itens.indexOf(i);
-        const l = document.createElement('label');
-        l.className = 'check';
-        l.style.cssText = 'padding:5px 2px; align-items:flex-start';
-        l.innerHTML = `<input type="checkbox" ${sel.has(idx) ? 'checked' : ''} ${g.destino ? '' : 'disabled'}>
-          <span><strong style="font-size:13px">${esc(i.titulo)}</strong>
-          <span class="sutil" style="display:block; font-size:11.5px">${i.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(i.data)}${i.peso ? ' · vale ' + i.peso : ''}${g.destino ? '' : ' · escolha a matéria acima'}</span></span>`;
-        l.querySelector('input').addEventListener('change', e => { e.target.checked ? sel.add(idx) : sel.delete(idx); pintar(); });
-        lista.appendChild(l);
-      });
-    });
-    caixa.appendChild(lista);
-    const add = document.createElement('button');
-    add.type = 'button'; add.className = 'primary';
-    add.textContent = sel.size ? `Adicionar ${sel.size} à minha agenda` : 'Escolha o que entra';
-    add.disabled = !sel.size;
-    add.addEventListener('click', () => {
-      fundo.hidden = true;
+  const marcarInicial = i => !!grupos.get(i.materia).destino;
+  abrirSeletor({
+    titulo: `${itens.length} ${itens.length === 1 ? 'item chegou' : 'itens chegaram'} pra você 📅`,
+    sub: 'Enviados por um colega. Confira em qual matéria cada um entra e toque pra escolher o que aceita — suas faltas e notas não mudam.',
+    grupos: [...grupos.entries()].map(([nomeMat, g]) => ({
+      id: 'g-' + nomeMat,
+      rotulo: nomeMat,
+      controle: redesenhar => {
+        const cx = document.createElement('div');
+        cx.style.cssText = 'margin:2px 0 10px';
+        const rot = document.createElement('div');
+        rot.style.cssText = 'font-size:12px; color:var(--ink-2); margin-bottom:5px';
+        rot.textContent = g.destino ? 'entra na sua matéria:' : 'escolha em qual matéria entra:';
+        const sele = document.createElement('select');
+        sele.style.width = '100%';
+        sele.innerHTML = '<option value="">— escolher matéria —</option>' +
+          db.materias.map(m => `<option value="${m.id}" ${g.destino === m.id ? 'selected' : ''}>${esc(m.nome)}${ehAtiva(m) ? '' : ' (guardada)'}</option>`).join('');
+        sele.addEventListener('change', () => { g.destino = sele.value; redesenhar(); });
+        cx.appendChild(rot); cx.appendChild(sele);
+        return cx;
+      },
+      itens: g.itens.map(i => ({
+        id: String(itens.indexOf(i)),
+        titulo: i.titulo,
+        detalhe: `${i.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(i.data)}${i.peso ? ' · vale ' + i.peso : ''}`,
+        etiqueta: g.destino ? null : 'escolha a matéria acima',
+        travado: !g.destino,
+        marcado: marcarInicial(i),
+      })),
+    })),
+    contador: n => n ? `<b>${n}</b> ${n === 1 ? 'item entra' : 'itens entram'} na sua agenda` : 'Nada selecionado',
+    rotulo: n => n ? `Adicionar ${n} à agenda` : 'Escolha o que entra',
+    aoConfirmar: ids => {
       let entraram = 0, travadas = 0;
-      itens.forEach((i, idx) => {
-        if (!sel.has(idx)) return;
+      ids.map(Number).forEach(idx => {
+        const i = itens[idx];
         const destino = grupos.get(i.materia).destino;
         if (!destino) return;
         const mat = materiaPorId(destino);
         if (mat && !ehAtiva(mat)) { travadas++; return; }
         const jaTem = db.eventos.some(e => e.materiaId === destino && e.data === i.data && chave(e.titulo) === chave(i.titulo));
         if (jaTem) return;
-        db.eventos.push({ id: uid(), materiaId: destino, tipo: i.tipo === 'prova' ? 'prova' : 'atividade', titulo: String(i.titulo), data: i.data, peso: i.peso || null, descricao: i.descricao || null, feita: false, novoAte: Date.now() + 864e5 });
+        db.eventos.push({ id: uid(), materiaId: destino, tipo: i.tipo === 'prova' ? 'prova' : 'atividade', titulo: String(i.titulo), data: i.data, peso: i.peso || null, descricao: i.descricao || null, feita: false });
         entraram++;
       });
       salvar(); renderTudo(); irParaAba('agenda');
@@ -3633,20 +3657,10 @@ async function abrirPacoteProvas(codigo) {
       toast(entraram
         ? `${entraram} ${entraram === 1 ? 'item' : 'itens'} na sua agenda — com lembrete e contagem regressiva ✓${travadas ? ` (${travadas} em matéria guardada)` : ''}`
         : 'Você já tinha tudo isso na agenda.');
-    });
-    caixa.appendChild(add);
-    const depois = document.createElement('button');
-    depois.type = 'button'; depois.className = 'small';
-    depois.textContent = 'Agora não';
-    depois.addEventListener('click', () => { fundo.hidden = true; history.replaceState(null, '', location.pathname); });
-    caixa.appendChild(depois);
-  };
-  sheetLargo(true);
-  pintar();
-  fundo.onclick = ev => { if (ev.target === fundo) { fundo.hidden = true; history.replaceState(null, '', location.pathname); } };
-  fundo.hidden = false;
+    },
+    aoFechar: () => history.replaceState(null, '', location.pathname),
+  });
 }
-
 /* link ?provas=CODIGO — sobrevive ao cadastro, igual ao de parceria */
 (() => {
   const cod = new URLSearchParams(location.search).get('provas');
@@ -4040,6 +4054,110 @@ document.getElementById('puc-turno').addEventListener('change', prepararSecaoPUC
 document.getElementById('puc-origem').addEventListener('change', atualizarDisciplinasPUC);
 
 /* ─────────── sheet de decisão + onboarding guiado (grade → extras → planos) ─────────── */
+/* ══════════ SELETOR: um componente para toda escolha em lista ══════════
+   cfg = { titulo, sub, grupos:[{id,rotulo,sub,colapsavel,aberto,controle,itens:[
+             {id,titulo,detalhe,etiqueta,marcado,travado}]}],
+           max, minimo, rotulo(n), contador(n,total), secundario:{txt,cb},
+           aoConfirmar(ids), aoFechar() } */
+function abrirSeletor(cfg) {
+  const fundo = document.getElementById('seletor');
+  const corpo = document.getElementById('sel-corpo');
+  const btnOk = document.getElementById('sel-confirmar');
+  const btnSec = document.getElementById('sel-secundario');
+  const contador = document.getElementById('sel-contador');
+  document.getElementById('sel-titulo').textContent = cfg.titulo || '';
+  document.getElementById('sel-sub').textContent = cfg.sub || '';
+  const grupos = cfg.grupos || [];
+  const todos = grupos.flatMap(g => g.itens);
+  const sel = new Set(todos.filter(i => i.marcado && !i.travado).map(i => i.id));
+  const abertos = new Set(grupos.filter(g => g.aberto !== false).map(g => g.id));
+
+  const fechar = () => { fundo.hidden = true; fundo.onclick = null; document.removeEventListener('keydown', aoTecla); };
+  const aoTecla = ev => { if (ev.key === 'Escape') { fechar(); if (cfg.aoFechar) cfg.aoFechar(); } };
+
+  const desenhar = () => {
+    corpo.innerHTML = '';
+    grupos.forEach(g => {
+      const bloco = document.createElement('div');
+      bloco.className = 'sel-grupo';
+      const marcadosNoGrupo = g.itens.filter(i => sel.has(i.id)).length;
+      if (g.colapsavel) {
+        const abre = document.createElement('button');
+        abre.type = 'button'; abre.className = 'sel-grupo-abre';
+        abre.setAttribute('aria-expanded', String(abertos.has(g.id)));
+        abre.innerHTML = `<span class="seta" aria-hidden="true">›</span>
+          <span style="min-width:0"><strong>${esc(g.rotulo)}</strong>
+          <span class="sub">${esc(g.sub || (g.itens.length + (g.itens.length === 1 ? ' item' : ' itens')))}</span></span>
+          ${marcadosNoGrupo ? `<span class="selo-conta">${marcadosNoGrupo}</span>` : ''}`;
+        abre.addEventListener('click', () => { abertos.has(g.id) ? abertos.delete(g.id) : abertos.add(g.id); desenhar(); });
+        bloco.appendChild(abre);
+      } else if (g.rotulo) {
+        const rot = document.createElement('div');
+        rot.className = 'sel-grupo-rot';
+        rot.innerHTML = `<span>${esc(g.rotulo)}</span>${marcadosNoGrupo ? `<span class="conta">${marcadosNoGrupo} de ${g.itens.length}</span>` : ''}`;
+        bloco.appendChild(rot);
+      }
+      if (g.controle) bloco.appendChild(g.controle(desenhar));
+      if (g.colapsavel && !abertos.has(g.id)) { corpo.appendChild(bloco); return; }
+      const dentro = g.colapsavel ? document.createElement('div') : bloco;
+      if (g.colapsavel) dentro.className = 'sel-corpo-grupo';
+      g.itens.forEach(item => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'item-sel' + (sel.has(item.id) ? ' on' : '') + (item.travado ? ' travado' : '');
+        b.disabled = !!item.travado;
+        b.setAttribute('aria-pressed', String(sel.has(item.id)));
+        b.innerHTML = `<span class="marca" aria-hidden="true">✓</span>
+          <span class="txt"><span class="titulo">${esc(item.titulo)}</span>
+          ${item.detalhe ? `<span class="detalhe">${esc(item.detalhe)}</span>` : ''}
+          ${item.etiqueta ? `<span class="etiqueta">${esc(item.etiqueta)}</span>` : ''}</span>`;
+        b.addEventListener('click', () => {
+          if (item.travado) return;
+          if (sel.has(item.id)) sel.delete(item.id);
+          else {
+            if (cfg.max === 1) sel.clear();
+            else if (cfg.max && sel.size >= cfg.max) { toast(cfg.avisoMax || `São ${cfg.max} no máximo — tire uma antes.`); return; }
+            sel.add(item.id);
+          }
+          desenhar();
+        });
+        dentro.appendChild(b);
+      });
+      if (g.colapsavel && g.itens.length > 1 && cfg.max !== 1) {
+        const atalho = document.createElement('button');
+        atalho.type = 'button'; atalho.className = 'sel-atalho';
+        const todosMarcados = marcadosNoGrupo === g.itens.length;
+        atalho.textContent = todosMarcados ? 'desmarcar todas desta matéria' : `marcar as ${g.itens.length}`;
+        atalho.addEventListener('click', () => {
+          g.itens.forEach(i => {
+            if (todosMarcados) sel.delete(i.id);
+            else if (!i.travado && (!cfg.max || sel.size < cfg.max)) sel.add(i.id);
+          });
+          desenhar();
+        });
+        dentro.appendChild(atalho);
+      }
+      if (g.colapsavel) bloco.appendChild(dentro);
+      corpo.appendChild(bloco);
+    });
+    contador.innerHTML = cfg.contador ? cfg.contador(sel.size, todos.length) : `<b>${sel.size}</b> de ${todos.length}`;
+    btnOk.textContent = cfg.rotulo ? cfg.rotulo(sel.size) : `Confirmar (${sel.size})`;
+    btnOk.disabled = sel.size < (cfg.minimo == null ? 1 : cfg.minimo);
+  };
+
+  btnOk.onclick = () => { fechar(); cfg.aoConfirmar([...sel]); };
+  if (cfg.secundario) {
+    btnSec.hidden = false; btnSec.textContent = cfg.secundario.txt;
+    btnSec.onclick = () => { fechar(); cfg.secundario.cb(); };
+  } else btnSec.hidden = true;
+  document.getElementById('sel-fechar').onclick = () => { fechar(); if (cfg.aoFechar) cfg.aoFechar(); };
+  fundo.onclick = ev => { if (ev.target === fundo) { fechar(); if (cfg.aoFechar) cfg.aoFechar(); } };
+  document.addEventListener('keydown', aoTecla);
+  desenhar();
+  fundo.hidden = false;
+  corpo.scrollTop = 0;
+}
+
 function sheetLargo(sim) {
   const c = document.querySelector('.sheetd-caixa');
   if (c) c.classList.toggle('largo', !!sim);
