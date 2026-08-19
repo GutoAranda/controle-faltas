@@ -1399,8 +1399,11 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       <strong style="font-size:14px">Pronto! Manda pro aluno:</strong>
       <div id="pc-codigo" class="num" style="font-size:24px; font-weight:800; letter-spacing:.1em; margin:8px 0; text-align:center; background:var(--bg); border-radius:12px; padding:10px"></div>
       <p class="sutil num" id="pc-info" style="margin:0 0 10px"></p>
-      <div class="acoes-dados" style="margin-top:0">
-        <button class="small primary" id="pc-copiar" type="button">Copiar mensagem com o link</button>
+      <p class="sutil" style="margin:0 0 6px">Mensagem que vai pro aluno:</p>
+      <div id="pc-previa" style="white-space:pre-wrap; font-size:13px; line-height:1.5; color:var(--ink-2); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; max-height:220px; overflow-y:auto"></div>
+      <div class="acoes-dados" style="margin-top:10px">
+        <button class="small primary" id="pc-copiar" type="button">Copiar mensagem</button>
+        <button class="small" id="pc-copiar-link" type="button">Copiar só o link</button>
       </div>
     </div>
     <p class="sutil" style="margin-top:10px"><a href="#" id="pc-fechar" style="display:inline-flex; align-items:center; min-height:44px; padding:0 4px">← Voltar pro app</a></p>
@@ -3599,15 +3602,16 @@ document.getElementById('btn-compartilhar-provas').addEventListener('click', () 
   registrarMetrica('compartilhar_abriu');
   const porMateria = new Map();
   futuros.forEach(e => porMateria.set(e.materiaId, (porMateria.get(e.materiaId) || 0) + 1));
-  abrirSheet({
-    titulo: 'Compartilhar 📤',
-    texto: 'O que você vai mandar? Sai um link pronto pro grupo da turma — quem abrir escolhe o que entra na agenda dele.',
-    botoes: [
-      { txt: 'Uma prova ou atividade', classe: 'primary', cb: () => selecionarProvas('uma') },
-      { txt: 'As de uma matéria', classe: 'small', cb: () => selecionarProvas('materia') },
-      { txt: `Todas as ${futuros.length} futuras`, classe: 'small', cb: () => selecionarProvas('todas') },
-    ],
-  });
+  /* Três escolhas de peso IGUAL — isto é uma lista de opções, não uma decisão com
+     ação principal. No abrirSheet a regra '.small { align-self: center }' jogava duas
+     delas como linkzinhos centrados embaixo de um botão azul gigante. O sheet de ações
+     (montarSheet) é o componente certo: linhas inteiras, ícone, mesmo peso visual. */
+  montarSheet('Compartilhar com a turma',
+    'Sai um link pronto pro grupo. Quem abrir escolhe o que entra na agenda dele.', [
+      { ico: '📌', rotulo: 'Uma prova ou atividade', fn: () => selecionarProvas('uma') },
+      { ico: '📚', rotulo: 'As de uma matéria', fn: () => selecionarProvas('materia') },
+      { ico: '🗓', rotulo: `Todas as ${futuros.length} futuras`, fn: () => selecionarProvas('todas') },
+    ]);
 });
 
 /* passo 2: gavetas por matéria, fechadas, com contagem */
@@ -3659,7 +3663,17 @@ async function publicarPacoteProvas(ids) {
   const codigo = codigoNovo(6);
   const { error } = await nuvem.from('eventos_compartilhados')
     .insert({ codigo, dados: { itens }, criado_por: usuarioNuvem.id });
-  if (error) { toast('Não deu pra gerar o link agora — tente de novo em instantes.'); return; }
+  if (error) {
+    console.error('Falha ao publicar pacote de provas:', error);
+    /* 'tente de novo' so faz sentido se tentar de novo puder funcionar. Tabela ausente
+       ou permissao negada nao melhoram com insistencia — nesses casos e problema de
+       configuracao, e a mensagem tem que dizer isso em vez de mandar o aluno insistir. */
+    const config = error.code === 'PGRST205' || error.code === '42501' || error.code === '42P01';
+    toast(config
+      ? 'Compartilhar ainda não está disponível — avisa a gente pelo formulário de Sugestões.'
+      : 'Não deu pra gerar o link agora — tente de novo em instantes.');
+    return;
+  }
   registrarMetrica('compartilhar_gerou');
   const link = location.origin + location.pathname + '?provas=' + codigo;
   const materias = [...new Set(itens.map(i => i.materia))];
@@ -4396,6 +4410,25 @@ document.getElementById('pc-fechar').addEventListener('click', ev => {
   history.replaceState(null, '', location.pathname);
 });
 
+/* A mensagem muda com o plano: bolsista recebe um benefício que cobre o semestre,
+   aluno pagante recebe 30 dias de cortesia. Dizer a mesma coisa pros dois deixava
+   os dois errados — e a versão antiga ainda prometia "7 dias de teste + o plano",
+   que não é como o resgate funciona. */
+function mensagemParceria(data) {
+  const validade = new Date(data.expira_em).toLocaleDateString('pt-BR');
+  const passos = `1. Crie sua conta em faltae.com.br usando ESTE email: ${data.email}\n2. Depois abra este link: ${data.link}`;
+
+  if (data.plano === 'mensal') {
+    return `🎁 Você ganhou 30 dias de Faltaê Essencial.\n\n${passos}\n\n`
+      + `São 30 dias com tudo aberto: suas faltas na tela inicial do celular, as provas entrando sozinhas no seu calendário e o relatório de frequência em PDF quando precisar comprovar.\n\n`
+      + `Depois o app continua seu no plano grátis — nada é apagado. O código é pessoal, só funciona nessa conta, e vale para resgate até ${validade}.`;
+  }
+
+  return `🎓 Seu acesso ao Faltaê Essencial está liberado até 31 de dezembro.\n\n${passos}\n\n`
+    + `A partir daí o semestre inteiro fica num lugar só: quantas faltas ainda cabem em cada matéria, o que cai na próxima prova e a média que falta pra passar. Sem planilha e sem descobrir que estourou o limite quando já era.\n\n`
+    + `O código é pessoal, só funciona nessa conta — pode guardar sem pressa. Resgate até ${validade}.`;
+}
+
 document.getElementById('pc-gerar').addEventListener('click', async () => {
   if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
   const email = document.getElementById('pc-email').value.trim().toLowerCase();
@@ -4415,11 +4448,14 @@ document.getElementById('pc-gerar').addEventListener('click', async () => {
     document.getElementById('pc-codigo').textContent = data.codigo;
     document.getElementById('pc-info').textContent =
       `${data.email} · ${data.plano === 'mensal' ? 'Essencial por 30 dias' : 'Essencial até 31/12'} · resgatável até ${new Date(data.expira_em).toLocaleDateString('pt-BR')}`;
-    document.getElementById('pc-copiar').onclick = async () => {
-      const msgZap = `🎓 Seu acesso ao Faltaê Essencial tá liberado!\n1. Cria sua conta (grátis) com ESTE email: ${data.email}\n2. Abre o link: ${data.link}\nPronto — plano ativado na hora. O código é pessoal e vale 7 dias de teste + o plano da parceria.`;
-      try { await navigator.clipboard.writeText(msgZap); toast('Mensagem copiada — manda pro aluno!'); }
-      catch { prompt('Copie:', msgZap); }
+    const msgZap = mensagemParceria(data);
+    document.getElementById('pc-previa').textContent = msgZap;
+    const copiar = async (txt, ok) => {
+      try { await navigator.clipboard.writeText(txt); toast(ok); }
+      catch { prompt('Copie:', txt); }
     };
+    document.getElementById('pc-copiar').onclick = () => copiar(msgZap, 'Mensagem copiada — manda pro aluno!');
+    document.getElementById('pc-copiar-link').onclick = () => copiar(data.link, 'Link copiado.');
   } finally {
     btn.disabled = false; btn.textContent = 'Gerar código de ativação';
   }
