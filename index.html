@@ -1176,7 +1176,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     <div class="tp-argumento">
       <div id="tp-hero-gratis">
         <p class="tp-olho">Plano Essencial</p>
-        <h2 class="tp-h1">Foque em estudar. <em>Dos números a gente cuida</em>.</h2>
+        <h2 class="tp-h1">Foca em estudar. <em>Dos números a gente cuida</em>.</h2>
         <p class="tp-lede">O Essencial assume a parte chata do semestre: fica de olho no limite de faltas de cada matéria, põe a próxima prova na sua frente e guarda tudo em lugar seguro. Você só precisa decidir — nunca vigiar.</p>
 
         <div class="tp-beneficios">
@@ -2839,6 +2839,91 @@ function nuvemDisponivel() {
   return true;
 }
 
+/* ─────────── fusão de bancos (dois aparelhos, nenhum registro perdido) ───────────
+   Regra: união por chave natural. Registro que existe em qualquer lado entra.
+   Em conflito de campo, ganha o valor mais informativo — nunca apaga o que alguém
+   marcou. Efeito conhecido: desmarcar num aparelho pode voltar do outro; perder
+   uma falta é pior que reaparecer uma. */
+function fundirBancos(local, remoto) {
+  const chave = t => String(t || '').trim().toLowerCase();
+  const saida = { materias: [], aulas: [], faltas: [], eventos: [] };
+
+  // matérias: casadas por nome; o id local manda (as referências locais continuam válidas)
+  const porNome = new Map();
+  for (const m of (local.materias || [])) if (m && m.nome) porNome.set(chave(m.nome), { ...m });
+  const mapa = {}; // id do remoto -> id local
+  for (const m of (remoto.materias || [])) {
+    if (!m || !m.nome) continue;
+    const k = chave(m.nome);
+    const alvo = porNome.get(k);
+    if (!alvo) { const novo = { ...m }; porNome.set(k, novo); mapa[m.id] = novo.id; continue; }
+    mapa[m.id] = alvo.id;
+    for (const c of ['totalAulas', 'limitePct', 'diaSemana', 'horario', 'creditos', 'professor', 'sala']) {
+      if (alvo[c] == null && m[c] != null) alvo[c] = m[c];
+    }
+    if (m.notasPUC) { // nota lançada em qualquer aparelho é preservada; empate fica com a local
+      alvo.notasPUC = alvo.notasPUC || { b1: { pr: null, te: null, su: null }, b2: { pr: null, te: null, su: null }, exame: null };
+      for (const bim of ['b1', 'b2']) {
+        if (!m.notasPUC[bim]) continue;
+        alvo.notasPUC[bim] = alvo.notasPUC[bim] || { pr: null, te: null, su: null };
+        for (const cmp of ['pr', 'te', 'su']) {
+          if (alvo.notasPUC[bim][cmp] == null && m.notasPUC[bim][cmp] != null) alvo.notasPUC[bim][cmp] = m.notasPUC[bim][cmp];
+        }
+      }
+      if (alvo.notasPUC.exame == null && m.notasPUC.exame != null) alvo.notasPUC.exame = m.notasPUC.exame;
+    }
+  }
+  saida.materias = [...porNome.values()];
+  const validos = new Set(saida.materias.map(m => m.id));
+  const traduz = id => mapa[id] || (validos.has(id) ? id : null);
+
+  // aulas: matéria + data · conteúdo preenchido vence o vazio
+  const aulas = new Map();
+  for (const a of (local.aulas || [])) if (a && validos.has(a.materiaId)) aulas.set(a.materiaId + '|' + a.data, { ...a });
+  for (const a of (remoto.aulas || [])) {
+    if (!a) continue;
+    const mid = traduz(a.materiaId); if (!mid || !a.data) continue;
+    const k = mid + '|' + a.data;
+    const alvo = aulas.get(k);
+    if (!alvo) { aulas.set(k, { ...a, materiaId: mid }); continue; }
+    if (!String(alvo.conteudo || '').trim() && String(a.conteudo || '').trim()) alvo.conteudo = a.conteudo;
+  }
+  saida.aulas = [...aulas.values()];
+
+  // faltas: matéria + data · maior quantidade e marcações positivas vencem
+  const faltas = new Map();
+  for (const f of (local.faltas || [])) if (f && validos.has(f.materiaId)) faltas.set(f.materiaId + '|' + f.data, { ...f });
+  for (const f of (remoto.faltas || [])) {
+    if (!f) continue;
+    const mid = traduz(f.materiaId); if (!mid || !f.data) continue;
+    const k = mid + '|' + f.data;
+    const alvo = faltas.get(k);
+    if (!alvo) { faltas.set(k, { ...f, materiaId: mid }); continue; }
+    alvo.qtd = Math.max(Number(alvo.qtd) || 1, Number(f.qtd) || 1);
+    alvo.recuperada = !!alvo.recuperada || !!f.recuperada;
+    alvo.abonada = !!alvo.abonada || !!f.abonada;
+  }
+  saida.faltas = [...faltas.values()];
+
+  // provas/atividades: matéria + data + título · concluída vence
+  const eventos = new Map();
+  const kEv = (mid, e) => mid + '|' + e.data + '|' + chave(e.titulo);
+  for (const e of (local.eventos || [])) if (e && validos.has(e.materiaId)) eventos.set(kEv(e.materiaId, e), { ...e });
+  for (const e of (remoto.eventos || [])) {
+    if (!e) continue;
+    const mid = traduz(e.materiaId); if (!mid || !e.data || !e.titulo) continue;
+    const k = kEv(mid, e);
+    const alvo = eventos.get(k);
+    if (!alvo) { eventos.set(k, { ...e, materiaId: mid }); continue; }
+    alvo.feita = !!alvo.feita || !!e.feita;
+    if (!alvo.descricao && e.descricao) alvo.descricao = e.descricao;
+  }
+  saida.eventos = [...eventos.values()];
+
+  // flags de onboarding e afins: o aparelho de agora manda
+  return { ...remoto, ...local, ...saida };
+}
+
 function bancoVazio(banco) {
   if (!banco || !Array.isArray(banco.materias)) return true;
   return !banco.materias.length && !(banco.faltas || []).length && !(banco.eventos || []).length;
@@ -2873,19 +2958,38 @@ async function puxarNuvem() {
     if (erroLeve) return;
     if (leve && (leve.plano || 'gratis') === 'gratis') { planoNuvem = 'gratis'; renderConta(); return; }
     if (!leve) {
-      await nuvem.from('dados_usuario').insert({ user_id: usuarioNuvem.id, dados: db });
-      planoNuvem = 'gratis';
+      /* primeira vez desta conta: o banco cria a linha já com o teste de 7 dias
+         (DEFAULT da tabela — o app não tem permissão pra escolher plano). Lê de
+         volta o que o banco decidiu em vez de assumir grátis. */
+      const criada = await nuvem.from('dados_usuario')
+        .insert({ user_id: usuarioNuvem.id, dados: db })
+        .select('plano, plano_valido_ate, plano_origem')
+        .maybeSingle();
+      const nova = criada.data;
+      planoNuvem = (nova && nova.plano) || 'gratis';
+      localStorage.setItem('controleFaltas.plano', planoNuvem);
+      if (nova && nova.plano_valido_ate) localStorage.setItem('controleFaltas.validoAte', nova.plano_valido_ate);
+      if (nova && nova.plano_origem) localStorage.setItem('controleFaltas.planoOrigem', nova.plano_origem);
+      if (nova && nova.plano_origem === 'trial' && planoNuvem !== 'gratis' && !localStorage.getItem('controleFaltas.trialAvisado')) {
+        localStorage.setItem('controleFaltas.trialAvisado', '1');
+        registrarMetrica('trial_iniciado');
+        abrirSheet({
+          titulo: 'Você começa com 7 dias de Essencial 🎁',
+          texto: 'Durante esta semana está tudo liberado: backup na nuvem, suas faltas na tela inicial, provas no calendário e o relatório do semestre. Depois o app continua seu no plano grátis — nada é apagado.',
+          botoes: [{ txt: 'Boa, vamos lá', classe: 'primary' }],
+        });
+      }
       renderConta();
       return;
     }
   }
 
   let { data, error } = await nuvem.from('dados_usuario')
-    .select('dados, plano, atualizado_em, plano_valido_ate, assinatura_id')
+    .select('dados, plano, atualizado_em, plano_valido_ate, assinatura_id, plano_origem')
     .eq('user_id', usuarioNuvem.id)
     .maybeSingle();
   if (error) {
-    // colunas novas ainda sem grant (SQL 2d não rodado) — segue sem elas
+    // colunas novas ainda sem grant (SQL não rodado) — segue sem elas
     ({ data, error } = await nuvem.from('dados_usuario')
       .select('dados, plano, atualizado_em')
       .eq('user_id', usuarioNuvem.id)
@@ -2895,6 +2999,7 @@ async function puxarNuvem() {
   if (data) {
     if (data.plano_valido_ate !== undefined) localStorage.setItem('controleFaltas.validoAte', data.plano_valido_ate || '');
     if (data.assinatura_id !== undefined) localStorage.setItem('controleFaltas.assinatura', data.assinatura_id || '');
+    if (data.plano_origem !== undefined) localStorage.setItem('controleFaltas.planoOrigem', data.plano_origem || '');
   }
 
   if (!data) {
@@ -2910,25 +3015,32 @@ async function puxarNuvem() {
 
   const ultimaSync = localStorage.getItem('controleFaltas.ultimaSync') || '';
   if (!bancoVazio(data.dados) && (bancoVazio(db) || (data.atualizado_em && data.atualizado_em > ultimaSync))) {
-    /* a nuvem é mais nova e vence — mas o que estava AQUI pode conter marcações
-       feitas offline que nunca subiram. Guarda o estado local antes de trocar e
-       oferece Desfazer: sem isso, uma falta marcada sem sinal desaparece calada. */
     const antes = JSON.stringify(db);
     const tinhaCoisa = !bancoVazio(db);
-    db = { ...novoBanco(), ...data.dados };
-    salvarLocal();
-    localStorage.setItem('controleFaltas.ultimaSync', data.atualizado_em);
-    renderTudo();
     if (tinhaCoisa) {
+      /* os dois lados têm conteúdo: FUNDE em vez de substituir — o que foi marcado
+         offline aqui não pode sumir porque outro aparelho salvou depois. A rede de
+         resgate (Desfazer) fica de pé como garantia. */
+      const antesContagem = { f: db.faltas.length, e: db.eventos.length, m: db.materias.length };
+      db = fundirBancos(db, data.dados);
+      salvarLocal();
+      localStorage.setItem('controleFaltas.ultimaSync', data.atualizado_em);
       localStorage.setItem('controleFaltas.antesDaSync', antes);
       localStorage.setItem('controleFaltas.antesDaSyncQuando', new Date().toISOString());
-      toast('Dados sincronizados da nuvem', 'Desfazer', () => {
-        db = { ...novoBanco(), ...JSON.parse(antes) };
-        salvar();
-        renderTudo();
-        toast('Voltei o que estava neste aparelho — vai subir pra nuvem.');
-      });
+      renderTudo();
+      const novos = (db.faltas.length - antesContagem.f) + (db.eventos.length - antesContagem.e) + (db.materias.length - antesContagem.m);
+      toast(novos > 0 ? `Sincronizado — ${novos} item${novos === 1 ? '' : 's'} do outro aparelho chegaram` : 'Sincronizado com a nuvem',
+        'Desfazer', () => {
+          db = { ...novoBanco(), ...JSON.parse(antes) };
+          salvar(); renderTudo();
+          toast('Voltei só o que estava neste aparelho.');
+        });
+      await empurrarNuvem(); // a nuvem também recebe a união
     } else {
+      db = { ...novoBanco(), ...data.dados }; // aparelho novo/vazio: adota a nuvem
+      salvarLocal();
+      localStorage.setItem('controleFaltas.ultimaSync', data.atualizado_em);
+      renderTudo();
       toast('Dados sincronizados da nuvem');
     }
   } else {
@@ -3014,13 +3126,16 @@ function renderConta() {
       mpSelo.style.background = 'var(--line)'; mpSelo.style.color = 'var(--ink-2)';
       mpDet.textContent = 'Tudo neste aparelho · criar matéria à mão só até 6 no total (importar a turma é livre)';
     } else {
-      mpSelo.textContent = vencido ? 'VENCIDO' : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO');
-      mpSelo.style.background = vencido ? 'var(--danger-soft)' : (vencendo ? 'var(--warn-soft)' : 'var(--ok-soft)');
-      mpSelo.style.color = vencido ? 'var(--danger)' : (vencendo ? 'var(--warn)' : 'var(--ok)');
+      const ehTrial = ehPlanoDeTeste();
+      mpSelo.textContent = vencido ? 'VENCIDO' : (ehTrial ? `TESTE · ${Math.max(diasRestantes, 0)}d` : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO'));
+      mpSelo.style.background = vencido ? 'var(--danger-soft)' : ((vencendo || ehTrial) ? 'var(--warn-soft)' : 'var(--ok-soft)');
+      mpSelo.style.color = vencido ? 'var(--danger)' : ((vencendo || ehTrial) ? 'var(--warn)' : 'var(--ok)');
       const ateTxt = validoAte ? new Date(validoAte).toLocaleDateString('pt-BR') : '—';
-      mpDet.textContent = assinatura
-        ? `Renovação automática ativa · R$ 15/mês no cartão · próxima em ${ateTxt}`
-        : `Válido até ${ateTxt}${diasRestantes !== null && diasRestantes >= 0 ? ` (${diasRestantes} dia${diasRestantes === 1 ? '' : 's'})` : ''} · sem renovação automática — os dias que você somar nunca se perdem`;
+      mpDet.textContent = ehTrial
+        ? `Teste grátis do Essencial até ${ateTxt} — depois o app continua seu no plano grátis, sem perder nada`
+        : (assinatura
+          ? `Renovação automática ativa · R$ 15/mês no cartão · próxima em ${ateTxt}`
+          : `Válido até ${ateTxt}${diasRestantes !== null && diasRestantes >= 0 ? ` (${diasRestantes} dia${diasRestantes === 1 ? '' : 's'})` : ''} · sem renovação automática — os dias que você somar nunca se perdem`);
     }
     mpAcoes.innerHTML = '';
     const botao = (txt, classe, cb) => {
@@ -3041,10 +3156,26 @@ function renderConta() {
   if (!document.getElementById('tela-plano').hidden) renderTelaPlano();
 }
 
+/* ─────────── medição de conversão: contador agregado, sem rastrear ninguém ───────────
+   Manda só o nome do evento. O banco soma por dia (dia + evento + total) — não
+   guarda quem, nem quando exatamente, nem nada que ligue a uma pessoa. */
+/* o plano atual é o teste de boas-vindas? (o app guarda a origem que o banco definiu) */
+function ehPlanoDeTeste() {
+  return localStorage.getItem('controleFaltas.planoOrigem') === 'trial' && planoNuvem !== 'gratis';
+}
+
+async function registrarMetrica(evento) {
+  try {
+    if (!nuvemDisponivel() || !usuarioNuvem) return;
+    await nuvem.rpc('registrar_metrica', { p_evento: String(evento).slice(0, 40) });
+  } catch { /* métrica nunca pode atrapalhar o app */ }
+}
+
 /* ─────────── tela do plano: onde o Essencial se apresenta e se gerencia ─────────── */
 function abrirTelaPlano(forcarPasses) {
   document.getElementById('tela-plano').hidden = false;
   renderTelaPlano(forcarPasses);
+  registrarMetrica(planoNuvem === 'gratis' ? 'plano_tela_gratis' : 'plano_tela_essencial');
 }
 function renderTelaPlano(forcarPasses) {
   const gratis = planoNuvem === 'gratis';
@@ -3174,8 +3305,10 @@ document.getElementById('auth-google').addEventListener('click', async () => {
   if (error) msgAuth('Não deu pra abrir o login do Google agora — tente de novo ou entre com email e senha.', 'erro');
 });
 
+let emailConfirmadoNaTela = null; // guarda o email já conferido no sheet de confirmação
 document.getElementById('auth-form').addEventListener('submit', async ev => {
   ev.preventDefault();
+  if (emailConfirmadoNaTela && emailConfirmadoNaTela !== document.getElementById('auth-email').value.trim()) emailConfirmadoNaTela = null;
   if (!nuvemDisponivel()) { msgAuth('Sem conexão — conecte-se à internet e tente de novo.', 'erro'); return; }
   const email = document.getElementById('auth-email').value.trim();
   const senha = document.getElementById('auth-senha').value;
@@ -3211,6 +3344,20 @@ document.getElementById('auth-form').addEventListener('submit', async ev => {
         if (error) { msgAuth(traduzErroAuth(error), 'erro'); return; }
         toast('Perfil completo! Bem-vindo ao Faltaê 💚');
         await aposLogin(data.user);
+        return;
+      }
+      /* email errado entra calado e depois quebra tudo (recuperar senha, relatório,
+         cupom de parceria). Uma conferência antes de criar custa um toque. */
+      if (!emailConfirmadoNaTela) {
+        btn.disabled = false; btn.textContent = TEXTOS_AUTH[modoAuth] ? TEXTOS_AUTH[modoAuth].botao : 'Criar minha conta';
+        abrirSheet({
+          titulo: 'Confere seu email 👀',
+          texto: `Vamos criar a conta com ${email}. É esse mesmo? Ele é a chave da sua conta: recuperar senha, relatórios e liberação de plano passam por ele.`,
+          botoes: [
+            { txt: '✓ Está certo, criar conta', classe: 'primary', cb: () => { emailConfirmadoNaTela = email; document.getElementById('auth-form').requestSubmit(); } },
+            { txt: 'Corrigir o email', classe: 'small', cb: () => document.getElementById('auth-email').focus() },
+          ],
+        });
         return;
       }
       const { data, error } = await nuvem.auth.signUp({
@@ -3574,10 +3721,31 @@ async function processarAtivacaoPendente() {
 if (usuarioNuvem) processarAtivacaoPendente();
 
 /* etapa 3: planos de ensino — o conteúdo de cada aula */
+/* momento-aha: uma vez só, no pico de valor percebido (grade montada e mapeada),
+   o app conta o que o Essencial guarda. Sem repetir, sem chantagem. */
+function momentoAha() {
+  if (db.ahaVisto || planoNuvem !== 'gratis') return false;
+  db.ahaVisto = true; salvar();
+  registrarMetrica('aha_mostrado');
+  abrirSheet({
+    titulo: 'Seu semestre tá mapeado! 🎉',
+    texto: 'Tudo isso vive só neste aparelho. O Essencial guarda na nuvem, põe suas faltas na tela inicial, joga as provas no seu calendário e gera o relatório do semestre — a partir de R$ 9,98/mês.',
+    botoes: [
+      { txt: '💚 Ver o que o Essencial faz', classe: 'primary', cb: () => { registrarMetrica('aha_clique'); abrirTelaPlano(); } },
+      { txt: 'Seguir no grátis', classe: 'small', cb: () => toast('Fechado — o grátis é seu pelo tempo que quiser. 💚') },
+    ],
+  });
+  return true;
+}
+
 function perguntarPlanos() {
   renderInicio();
   const pend = materiasSemConteudo();
-  if (!pend.length) { irParaAba('inicio'); toast('Grade completa e com conteúdo — seu semestre tá no controle! 🎉'); return; }
+  if (!pend.length) {
+    irParaAba('inicio');
+    if (!momentoAha()) toast('Grade completa e com conteúdo — seu semestre tá no controle! 🎉');
+    return;
+  }
   abrirSheet({
     titulo: 'Última etapa: os planos de ensino 📄',
     texto: `Envie o plano de ensino de cada professor (PDF, ou cole o texto) e o app preenche o que cai em cada aula — toda falta passa a mostrar o conteúdo perdido — e ainda coloca as provas na agenda. ${pend.length === 1 ? '1 matéria está' : pend.length + ' matérias estão'} sem conteúdo.`,
@@ -4490,6 +4658,7 @@ document.getElementById('btn-sync-agora').addEventListener('click', async () => 
 /* ─────────── assinar o Essencial (Mercado Pago) ─────────── */
 document.querySelectorAll('[data-assinar]').forEach(btn => btn.addEventListener('click', async () => {
   if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
+  registrarMetrica('passe_toque_' + btn.dataset.assinar);
   const todos = document.querySelectorAll('[data-assinar]');
   todos.forEach(b => b.disabled = true);
   try {
@@ -4508,6 +4677,7 @@ document.querySelectorAll('[data-assinar]').forEach(btn => btn.addEventListener(
 
 document.querySelectorAll('[data-assinar-rec]').forEach(btn => btn.addEventListener('click', async () => {
   if (!usuarioNuvem || !nuvemDisponivel()) { toast('Entre na sua conta primeiro.'); return; }
+  registrarMetrica('passe_toque_recorrente');
   btn.disabled = true;
   try {
     const { data, error } = await nuvem.functions.invoke('criar-assinatura');
