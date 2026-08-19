@@ -614,6 +614,8 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   }
 
   /* cesta da grade: nada grava até confirmar */
+  .mat-linha.guardada { opacity: .62; }
+  .mat-linha.guardada .mat-nome { text-decoration: line-through solid var(--ink-3) 1px; }
   .cesta-caixa { background: var(--surface); border: 1.5px solid var(--accent); border-radius: 12px; padding: 10px 12px; }
   .cesta-chip {
     display: inline-flex; align-items: center; gap: 7px; background: var(--bg);
@@ -932,6 +934,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
         <div class="corpo-menu">
           <div id="grade-seguindo"></div>
           <div id="guia-planos" hidden class="painel" style="margin:10px 0 12px"></div>
+          <div id="aviso-limite" hidden class="painel" style="margin:10px 0 12px"></div>
           <div id="lista-materias"></div>
 
           <button class="primary" type="button" id="btn-add-materias" style="width:100%; margin-top:14px">＋ Adicionar matérias</button>
@@ -1619,7 +1622,10 @@ function abrirSheetMateria(matId) {
     acoes.push({ ico: '✗', rotulo: faltouHoje ? 'Desfazer a falta de hoje' : 'Faltei hoje', perigo: !faltouHoje, fn: () => {
       const existente = db.faltas.find(f => f.materiaId === matId && f.data === hoje);
       if (existente) { db.faltas = db.faltas.filter(f => f.id !== existente.id); toast('Falta desfeita — ' + mat.nome); }
-      else { db.faltas.push({ id: uid(), materiaId: matId, data: hoje, qtd: 1, recuperada: false, abonada: false }); toast('Falta registrada — ' + mat.nome); }
+      else {
+        if (bloqueadaParaRegistro(matId, 'falta')) return;
+        db.faltas.push({ id: uid(), materiaId: matId, data: hoje, qtd: 1, recuperada: false, abonada: false }); toast('Falta registrada — ' + mat.nome);
+      }
       salvar(); renderTudo();
     }});
   }
@@ -1996,6 +2002,7 @@ document.getElementById('form-falta').addEventListener('submit', ev => {
   const qtd = parseInt(document.getElementById('falta-qtd').value, 10) || 1;
   const abonada = document.getElementById('falta-abonada').checked;
   if (!materiaId) { toast('Cadastre uma matéria primeiro, no Menu.'); return; }
+  if (bloqueadaParaRegistro(materiaId, 'falta')) return;
   db.faltas.push({ id: uid(), materiaId, data, qtd, recuperada: false, abonada });
   if (!filtroFaltaMat) filtroFaltaMat = materiaId;
   salvar(); renderTudo();
@@ -2069,6 +2076,7 @@ document.getElementById('form-evento').addEventListener('submit', ev => {
   ev.preventDefault();
   const materiaId = document.getElementById('evento-materia').value;
   if (!materiaId) { toast('Cadastre uma matéria primeiro, no Menu.'); return; }
+  if (bloqueadaParaRegistro(materiaId, 'evento')) return;
   db.eventos.push({
     id: uid(),
     tipo: document.getElementById('evento-tipo').value,
@@ -2166,6 +2174,7 @@ function renderNotas() {
     const [matId, bim, campo] = inp.dataset.nota.split('|');
     const mat = materiaPorId(matId);
     if (!mat) return;
+    if (inp.value !== '' && bloqueadaParaRegistro(matId, 'nota')) { inp.value = ''; return; }
     const n = notasDe(mat);
     const v = inp.value === '' ? null : Math.min(10, Math.max(0, parseFloat(inp.value)));
     if (bim === 'ex') n.exame = v;
@@ -2209,8 +2218,31 @@ function renderMaterias() {
       mats.map(mat => linhaMateria(mat, hoje)).join('') + '</div>';
   }).join('');
   ligarEventosMaterias(alvo);
+  alvo.querySelectorAll('[data-ativar-mat]').forEach(b => b.addEventListener('click', ev => {
+    ev.stopPropagation();
+    trocarPorEsta(b.dataset.ativarMat);
+  }));
   renderSeguindo();
   renderEscolhaMaterias();
+  renderAvisoLimite();
+}
+
+/* faixa em Minha grade explicando o limite (só quando ele está agindo) */
+function renderAvisoLimite() {
+  const alvo = document.getElementById('aviso-limite');
+  if (!alvo) return;
+  const guardadas = db.materias.filter(m => !ehAtiva(m)).length;
+  if (semLimiteDeMaterias() || !guardadas) { alvo.hidden = true; return; }
+  const espera = diasParaTrocar();
+  alvo.hidden = false;
+  alvo.innerHTML = `🔒 <strong>${guardadas} matéria${guardadas === 1 ? '' : 's'} guardada${guardadas === 1 ? '' : 's'}</strong>
+    <p class="sutil" style="margin:4px 0 8px">No grátis o app acompanha ${LIMITE_ACOMPANHADAS} de perto. O histórico das guardadas está inteiro — ${espera > 0 ? `próxima troca em ${espera} dia${espera === 1 ? '' : 's'}` : 'você pode trocar uma agora'}.</p>
+    <div class="acoes-dados" style="margin-top:0">
+      <button class="small" type="button" data-refazer-escolha>Refazer minha escolha</button>
+      <button class="small primary" type="button" data-limite-upgrade>💚 Acompanhar todas</button>
+    </div>`;
+  alvo.querySelector('[data-refazer-escolha]').addEventListener('click', () => sheetEscolherAtivas('Quais você acompanha agora?'));
+  alvo.querySelector('[data-limite-upgrade]').addEventListener('click', () => { registrarMetrica('limite_upgrade'); abrirTelaPlano(); });
 }
 
 function linhaMateria(mat, hoje) {
@@ -2219,13 +2251,15 @@ function linhaMateria(mat, hoje) {
   const dadas = aulas.filter(a => a.data <= hoje).length;
   const aberta = matAbertaId === mat.id;
   const meta = [mat.sala ? 'sala ' + mat.sala : null, mat.professor, aulas.length ? `${dadas} de ${aulas.length} aulas` : `${mat.totalAulas} aulas`].filter(Boolean).join(' · ');
+  const guardada = !ehAtiva(mat);
   return `<div id="mat-${mat.id}">
-    <div class="mat-linha${aberta ? ' aberta' : ''}" data-abrir-mat="${mat.id}" role="button" tabindex="0" aria-expanded="${aberta}">
-      <span class="mat-hora num">${esc(mat.horario || '—')}</span>
+    <div class="mat-linha${aberta ? ' aberta' : ''}${guardada ? ' guardada' : ''}" data-abrir-mat="${mat.id}" role="button" tabindex="0" aria-expanded="${aberta}">
+      <span class="mat-hora num">${guardada ? '🔒' : esc(mat.horario || '—')}</span>
       <div class="grow" style="min-width:0">
         <div class="mat-nome trunca">${esc(mat.nome)}</div>
-        <div class="mat-meta trunca num">${esc(meta)}</div>
+        <div class="mat-meta trunca num">${guardada ? 'guardada — histórico salvo, sem registro novo' : esc(meta)}</div>
       </div>
+      ${guardada ? `<button class="small" type="button" data-ativar-mat="${mat.id}" style="flex:none; margin-right:4px">Ativar</button>` : ''}
       <span class="mat-seta" aria-hidden="true">›</span>
     </div>
     ${aberta ? `<div class="mat-detalhe">${detalheMateria(mat, r, aulas, dadas)}</div>` : ''}
@@ -2827,16 +2861,193 @@ const NUVEM_URL = 'https://ejdvolbpqrvtuemunzto.supabase.co';
 const NUVEM_CHAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZHZvbGJwcXJ2dHVlbXVuenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODc5NjcsImV4cCI6MjEwMjE2Mzk2N30.yNVdaz0cxJ06rPuxFIGxqVMztx-CKLe6Q8qw1Vc2NcY';
 const LIMITE_MATERIAS_GRATIS = 6;
 
-let nuvem = null;
-let usuarioNuvem = null;
-let planoNuvem = localStorage.getItem('controleFaltas.plano') || 'gratis';
-let timerSync = null;
+/* var (não let) de propósito: renderTudo() do boot roda antes deste módulo e as
+   funções de limite/métrica consultam estas variáveis — com let elas caem em TDZ
+   e o app morre no carregamento. Com var, valem undefined até aqui (sem travar). */
+var nuvem = null;
+var usuarioNuvem = null;
+var planoNuvem = localStorage.getItem('controleFaltas.plano') || 'gratis';
+var timerSync = null;
 
 function nuvemDisponivel() {
   if (nuvem) return true;
   if (!window.supabase) return false; // offline ou CDN bloqueado — app segue 100% local
   nuvem = window.supabase.createClient(NUVEM_URL, NUVEM_CHAVE);
   return true;
+}
+
+/* ══════════ ACOMPANHAR 6 MATÉRIAS (limite do plano grátis) ══════════
+   Importar a turma inteira continua livre — o limite é de quantas matérias você
+   ACOMPANHA de perto. Trancada continua visível com todo o histórico; só não
+   aceita registro novo. Essencial libera todas. Troca: 1 por semana. */
+const LIMITE_ACOMPANHADAS = 6;
+const TROCA_ESPERA_DIAS = 7;
+
+/* no boot, antes de saber o plano, nada é trancado — puxarNuvem confere depois */
+function semLimiteDeMaterias() { return (typeof planoNuvem === 'undefined') || planoNuvem !== 'gratis'; }
+function ehAtiva(mat) { return semLimiteDeMaterias() || !mat || mat.ativa !== false; }
+function materiasAtivas() { return db.materias.filter(ehAtiva); }
+function excedeLimite() { return !semLimiteDeMaterias() && materiasAtivas().length > LIMITE_ACOMPANHADAS; }
+
+/* ranking de engajamento: onde o aluno já se mexeu vem primeiro */
+function rankearMaterias() {
+  const hoje = hojeISO();
+  const pontos = mat => {
+    let p = 0;
+    if (db.faltas.some(f => f.materiaId === mat.id)) p += 1000;
+    const n = mat.notasPUC;
+    if (n && [n.b1?.pr, n.b1?.te, n.b1?.su, n.b2?.pr, n.b2?.te, n.b2?.su, n.exame].some(v => v != null)) p += 500;
+    if (db.eventos.some(e => e.materiaId === mat.id && !e.feita && e.data >= hoje)) p += 250;
+    p += db.aulas.filter(a => a.materiaId === mat.id && a.data >= hoje).length;
+    return p;
+  };
+  return [...db.materias].sort((a, b) => pontos(b) - pontos(a) || a.nome.localeCompare(b.nome));
+}
+
+function aplicarAtivas(ids) {
+  const manter = new Set(ids);
+  db.materias.forEach(m => { m.ativa = manter.has(m.id); });
+  db.ativasEscolhidas = true;
+  salvar(); renderTudo();
+}
+
+/* quem fugiu da escolha não fica travado: as 6 do ranking valem provisoriamente */
+function garantirLimiteProvisorio() {
+  if (!excedeLimite()) return false;
+  const seis = rankearMaterias().slice(0, LIMITE_ACOMPANHADAS).map(m => m.id);
+  const manter = new Set(seis);
+  db.materias.forEach(m => { m.ativa = manter.has(m.id); });
+  db.ativasEscolhidas = false; // segue pendente até o aluno confirmar
+  salvar();
+  return true;
+}
+
+function diasParaTrocar() {
+  if (!db.ultimaTrocaAtivas) return 0;
+  const passou = (Date.now() - new Date(db.ultimaTrocaAtivas)) / 864e5;
+  return Math.max(0, Math.ceil(TROCA_ESPERA_DIAS - passou));
+}
+
+function sheetEscolherAtivas(motivo) {
+  const ranking = rankearMaterias();
+  const sugeridas = new Set(ranking.slice(0, LIMITE_ACOMPANHADAS).map(m => m.id));
+  const marcadas = new Set(db.materias.filter(m => m.ativa !== false).map(m => m.id));
+  const sel = new Set(marcadas.size && marcadas.size <= LIMITE_ACOMPANHADAS ? marcadas : sugeridas);
+  const fundo = document.getElementById('sheetd-fundo');
+  document.getElementById('sheetd-titulo').textContent = motivo || `Escolha as ${LIMITE_ACOMPANHADAS} matérias que você acompanha`;
+  document.getElementById('sheetd-texto').textContent =
+    `No plano grátis o Faltaê acompanha ${LIMITE_ACOMPANHADAS} matérias de perto — as outras ficam guardadas, com tudo que você já anotou, e voltam quando quiser. Já marquei as que você mais usa.`;
+  const caixa = document.getElementById('sheetd-botoes');
+  const pintar = () => {
+    caixa.innerHTML = '';
+    const lista = document.createElement('div');
+    lista.style.cssText = 'max-height:46vh; overflow-y:auto; margin-bottom:10px; text-align:left';
+    ranking.forEach(m => {
+      const l = document.createElement('label');
+      l.className = 'check';
+      l.style.cssText = 'padding:7px 2px; align-items:flex-start';
+      const marcado = sel.has(m.id);
+      l.innerHTML = `<input type="checkbox" ${marcado ? 'checked' : ''}>
+        <span style="min-width:0"><strong style="font-size:13.5px">${esc(m.nome)}</strong>
+        <span class="sutil" style="display:block; font-size:11.5px">${[m.diaSemana, m.horario].filter(Boolean).join(' ') || 'sem horário'}${db.faltas.some(f => f.materiaId === m.id) ? ' · você já marcou falta aqui' : ''}</span></span>`;
+      l.querySelector('input').addEventListener('change', e => {
+        if (e.target.checked) {
+          if (sel.size >= LIMITE_ACOMPANHADAS) { e.target.checked = false; toast(`No grátis são ${LIMITE_ACOMPANHADAS} — desmarque uma antes.`); return; }
+          sel.add(m.id);
+        } else sel.delete(m.id);
+        pintar();
+      });
+      lista.appendChild(l);
+    });
+    caixa.appendChild(lista);
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'primary';
+    btn.textContent = `✓ Acompanhar estas ${sel.size}`;
+    btn.disabled = sel.size === 0;
+    btn.addEventListener('click', () => {
+      fundo.hidden = true;
+      aplicarAtivas([...sel]);
+      registrarMetrica('ativas_escolhidas');
+      toast(`Pronto — acompanhando ${sel.size} matéria${sel.size === 1 ? '' : 's'}. As outras seguem guardadas.`);
+    });
+    caixa.appendChild(btn);
+    const alt = document.createElement('button');
+    alt.type = 'button'; alt.className = 'small';
+    alt.textContent = '💚 Quero acompanhar todas (Essencial)';
+    alt.addEventListener('click', () => { fundo.hidden = true; registrarMetrica('ativas_upgrade'); abrirTelaPlano(); });
+    caixa.appendChild(alt);
+  };
+  pintar();
+  fundo.onclick = ev => {
+    if (ev.target !== fundo) return;
+    fundo.hidden = true;
+    garantirLimiteProvisorio(); renderTudo();
+    toast(`Deixei as ${LIMITE_ACOMPANHADAS} que você mais usa ativas — dá pra mudar em Minha grade.`);
+  };
+  fundo.hidden = false;
+}
+
+/* chamado quando o app descobre que o plano é grátis e há mais de 6 ativas */
+function conferirLimiteAcompanhadas(motivo) {
+  if (!excedeLimite()) return false;
+  sheetEscolherAtivas(motivo);
+  return true;
+}
+
+/* portão único: registrar algo numa matéria trancada não passa */
+function bloqueadaParaRegistro(matId, oQue) {
+  const mat = materiaPorId(matId);
+  if (!mat || ehAtiva(mat)) return false;
+  toast(`"${mat.nome}" está guardada — no grátis você acompanha ${LIMITE_ACOMPANHADAS} matérias.`,
+    'Ativar esta', () => trocarPorEsta(mat.id));
+  registrarMetrica('bloqueio_' + (oQue || 'registro'));
+  return true;
+}
+
+/* troca 1 por semana: ativa esta no lugar de outra */
+function trocarPorEsta(matId) {
+  const mat = materiaPorId(matId);
+  if (!mat) return;
+  const espera = diasParaTrocar();
+  if (espera > 0) {
+    abrirSheet({
+      titulo: `Próxima troca em ${espera} dia${espera === 1 ? '' : 's'}`,
+      texto: 'A lista pode ser trocada uma vez por semana — assim ela reflete seu semestre de verdade, e não um revezamento. No Essencial você acompanha todas ao mesmo tempo.',
+      botoes: [
+        { txt: '💚 Ver o Essencial', classe: 'primary', cb: () => abrirTelaPlano() },
+        { txt: 'Entendi', classe: 'small' },
+      ],
+    });
+    return;
+  }
+  const ativas = materiasAtivas();
+  const fundo = document.getElementById('sheetd-fundo');
+  document.getElementById('sheetd-titulo').textContent = `Ativar "${mat.nome}" no lugar de qual?`;
+  document.getElementById('sheetd-texto').textContent =
+    `Você acompanha ${LIMITE_ACOMPANHADAS} matérias no grátis. A que sair guarda tudo que você já anotou. Depois desta, a próxima troca libera em ${TROCA_ESPERA_DIAS} dias.`;
+  const caixa = document.getElementById('sheetd-botoes');
+  caixa.innerHTML = '';
+  ativas.forEach(a => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'small';
+    b.textContent = 'Guardar "' + a.nome + '"';
+    b.addEventListener('click', () => {
+      fundo.hidden = true;
+      a.ativa = false; mat.ativa = true;
+      db.ultimaTrocaAtivas = new Date().toISOString();
+      salvar(); renderTudo();
+      registrarMetrica('ativas_troca');
+      toast(`Agora acompanhando "${mat.nome}".`);
+    });
+    caixa.appendChild(b);
+  });
+  const cancelar = document.createElement('button');
+  cancelar.type = 'button'; cancelar.className = 'small';
+  cancelar.textContent = 'Cancelar';
+  cancelar.addEventListener('click', () => { fundo.hidden = true; });
+  caixa.appendChild(cancelar);
+  fundo.onclick = ev => { if (ev.target === fundo) fundo.hidden = true; };
+  fundo.hidden = false;
 }
 
 /* ─────────── fusão de bancos (dois aparelhos, nenhum registro perdido) ───────────
@@ -3048,6 +3259,18 @@ async function puxarNuvem() {
   }
   renderConta();
   avisarVencimento();
+  /* plano grátis com mais de 6 acompanhadas (conta antiga, trial que acabou ou
+     passe vencido): pede a escolha uma vez; quem fugir fica com as 6 do ranking */
+  if (excedeLimite() && !sheetAberto()) conferirLimiteAcompanhadas(
+    ehPlanoRecemVencido() ? 'Seu teste do Essencial acabou 👋' : null);
+}
+
+const sheetAberto = () => !document.getElementById('sheetd-fundo').hidden;
+function ehPlanoRecemVencido() {
+  const ate = localStorage.getItem('controleFaltas.validoAte');
+  if (!ate) return false;
+  const dias = (Date.now() - new Date(ate)) / 864e5;
+  return dias >= 0 && dias <= 3;
 }
 
 function traduzErroAuth(error) {
