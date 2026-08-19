@@ -14,9 +14,8 @@
 -- Confirma os emails de quem criou conta mas nunca recebeu o email
 -- de confirmacao (o servidor embutido tem limite de ~2/hora e travou
 -- no lancamento). Essas contas nao conseguiam logar.
--- IMPORTANTE: a outra metade do conserto e um BOTAO no painel, nao SQL:
---   Authentication > Sign In / Providers > Email > DESLIGAR 'Confirm email'
--- (religa depois de configurar o SMTP do Resend, ultimo item do checklist)
+-- DECISAO DE PRODUTO (18/08): 'Confirm email' fica DESLIGADO em definitivo -
+-- cadastro sem atrito. Este update confirma retroativamente quem ficou preso.
 update auth.users set email_confirmed_at = now() where email_confirmed_at is null;
 
 -- [1] PUSH ------------------------------------------------------
@@ -94,7 +93,9 @@ on conflict (user_id) do nothing;
 -- ( ) Publicar 3 funcoes (Edge Functions > Deploy):
 --     enviar-push (Verify JWT OFF) · gerar-ativacao (JWT ON) · resgatar-ativacao (JWT ON)
 -- ( ) Re-publicar mercadopago-webhook (agora grava plano_origem='pagamento')
--- ( ) Auth > SMTP: configurar Resend (destrava o rate limit do cadastro)
+-- ( ) Auth > SMTP: configurar Resend - NAO e pra religar confirmacao (fica
+--     desligada em definitivo); e pro RESET DE SENHA funcionar sem o limite
+--     de 2 emails/hora do servidor embutido (hoje 'esqueci a senha' trava igual)
 -- Para adicionar um coletivo parceiro depois:
 --   insert into public.parceiros (user_id, rotulo)
 --   select id, 'da-ponte-pra-ca' from auth.users where email = 'EMAIL_DO_COLETIVO';
