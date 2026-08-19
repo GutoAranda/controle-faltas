@@ -14,8 +14,11 @@
 -- Confirma os emails de quem criou conta mas nunca recebeu o email
 -- de confirmacao (o servidor embutido tem limite de ~2/hora e travou
 -- no lancamento). Essas contas nao conseguiam logar.
--- DECISAO DE PRODUTO (18/08): 'Confirm email' fica DESLIGADO em definitivo -
--- cadastro sem atrito. Este update confirma retroativamente quem ficou preso.
+-- PLANO: a confirmacao de email VOLTA a ficar LIGADA assim que o SMTP do
+-- Resend estiver configurado (checklist abaixo) - o problema nunca foi a
+-- confirmacao, era o servidor embutido de ~2 emails/hora. O toggle esta
+-- desligado só como medida de emergencia do lancamento.
+-- Este update confirma retroativamente quem ficou preso no limbo.
 update auth.users set email_confirmed_at = now() where email_confirmed_at is null;
 
 -- [1] PUSH ------------------------------------------------------
@@ -93,9 +96,11 @@ on conflict (user_id) do nothing;
 -- ( ) Publicar 3 funcoes (Edge Functions > Deploy):
 --     enviar-push (Verify JWT OFF) · gerar-ativacao (JWT ON) · resgatar-ativacao (JWT ON)
 -- ( ) Re-publicar mercadopago-webhook (agora grava plano_origem='pagamento')
--- ( ) Auth > SMTP: configurar Resend - NAO e pra religar confirmacao (fica
---     desligada em definitivo); e pro RESET DE SENHA funcionar sem o limite
---     de 2 emails/hora do servidor embutido (hoje 'esqueci a senha' trava igual)
+-- ( ) Auth > SMTP: configurar Resend (host smtp.resend.com, porta 465,
+--     usuario 'resend', senha = API key do Resend, remetente suporte@faltae.com.br)
+-- ( ) Auth > Rate Limits: subir emails para 100/hora (so libera com SMTP proprio)
+-- ( ) Auth > Sign In / Providers > Email: RELIGAR 'Confirm email'
+--     (cadastro volta a exigir confirmacao - agora com email que chega)
 -- Para adicionar um coletivo parceiro depois:
 --   insert into public.parceiros (user_id, rotulo)
 --   select id, 'da-ponte-pra-ca' from auth.users where email = 'EMAIL_DO_COLETIVO';
