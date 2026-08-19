@@ -5539,8 +5539,32 @@ document.getElementById('btn-excluir-conta').addEventListener('click', async () 
   localStorage.removeItem(CHAVE_DONO);
   localStorage.removeItem(CHAVE_GUARDADO);
   renderConta();
-  toast('Conta excluída. Seus dados continuam salvos neste aparelho.');
   mostrarAuth('entrar');
+  /* Exclusão não tem volta e é um direito sendo exercido (LGPD). Confirmar isso num
+     toast que some em segundos é fraco: a pessoa sai da conta e fica com uma tela de
+     login, sem prova nenhuma de que os dados dela foram apagados. Aqui ela lê o que
+     saiu da nuvem, o que ainda existe, e decide sobre a cópia local — que nenhum
+     servidor consegue apagar por ela. O sheetd fica acima da tela de login (320 > 300). */
+  const aindaTemLocal = !bancoVazio(db);
+  abrirSheet({
+    titulo: 'Conta excluída',
+    texto: 'Foram apagados da nuvem: seu login, os dados sincronizados e as grades que você publicou. Isso não tem volta.'
+      + (aindaTemLocal ? ' A cópia das suas anotações neste aparelho ainda está aqui — só você pode apagá-la.' : ''),
+    botoes: aindaTemLocal
+      ? [
+          { txt: 'Apagar também deste aparelho', classe: 'primary', cb: () => {
+            db = novoBanco();
+            salvarLocal();
+            ['controleFaltas.antesDaSync', 'controleFaltas.antesDaSyncQuando',
+              'controleFaltas.planoOrigem', 'controleFaltas.turmasSeguidas']
+              .forEach(k => localStorage.removeItem(k));
+            renderTudo();
+            toast('Pronto: nada seu ficou neste aparelho.');
+          } },
+          { txt: 'Manter as anotações neste aparelho', classe: 'small' },
+        ]
+      : [{ txt: 'Entendi', classe: 'primary' }],
+  });
 });
 
 /* descadastro do relatório quinzenal via link do email (?relatorio=sair) */
