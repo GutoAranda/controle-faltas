@@ -139,6 +139,16 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   }
   h2 .extra { margin-left: auto; font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 12px; color: var(--ink-3); }
   h2:first-child { margin-top: 8px; }
+  /* ação da seção: vive na linha do título, nunca disputa espaço com filtro/lista */
+  h2 .acao-h2 {
+    margin: -5px -8px -5px auto; padding: 9px 8px; min-height: 38px;
+    border: 0; background: none; border-radius: 9px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .01em; text-transform: none;
+    color: var(--accent); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  h2 .acao-h2:hover { background: var(--accent-soft); }
+  h2 .acao-h2:active { transform: scale(.96); }
 
   .card {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
@@ -395,6 +405,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     header.app .contexto { font-size: 13px; }
 
     h2 { font-size: 12.5px; margin-top: 30px; }
+    h2 .acao-h2 { font-size: 13.5px; padding: 9px 10px; }
+    /* filtro sozinho não precisa esticar 760px numa tela grande */
+    #filtro-agenda select { max-width: 400px; }
     .card { padding: 18px; border-radius: 16px; }
     .card h3 { font-size: 17px; }
     .muted { font-size: 14px; }
@@ -926,10 +939,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
       </div>
     </details>
 
-    <h2>Próximas</h2>
-    <div class="filtro" style="display:flex; gap:8px; align-items:stretch">
-      <select id="filtro-evento" aria-label="Filtrar agenda por matéria" style="flex:1"></select>
-      <button class="small" id="btn-compartilhar-provas" type="button" style="flex:none; white-space:nowrap">📤 Compartilhar</button>
+    <h2>Próximas<button class="acao-h2" id="btn-compartilhar-provas" type="button">📤 Compartilhar</button></h2>
+    <div class="filtro" id="filtro-agenda">
+      <select id="filtro-evento" aria-label="Filtrar agenda por matéria"></select>
     </div>
     <div id="lista-eventos"></div>
 
@@ -2138,7 +2150,10 @@ function renderAgenda() {
   preencherFiltroFaltas(document.getElementById('filtro-evento'), filtroEventoMat);
   const alvo = document.getElementById('lista-eventos');
   const hoje = hojeISO();
-  document.querySelector('#aba-agenda .filtro').style.display = db.eventos.length ? '' : 'none';
+  /* esconder por atributo, não por style.display — style inline apagava o layout do CSS */
+  const temEvento = db.eventos.length > 0;
+  document.getElementById('filtro-agenda').hidden = !temEvento;
+  document.getElementById('btn-compartilhar-provas').hidden = !temEvento;
   if (!db.eventos.length) {
     alvo.innerHTML = '<div class="vazio">Nenhuma prova ou atividade cadastrada.</div>';
     return;
@@ -3453,12 +3468,15 @@ function renderConta() {
       mpSelo.textContent = vencido ? 'VENCIDO' : (ehTrial ? `TESTE · ${Math.max(diasRestantes, 0)}d` : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO'));
       mpSelo.style.background = vencido ? 'var(--danger-soft)' : ((vencendo || ehTrial) ? 'var(--warn-soft)' : 'var(--ok-soft)');
       mpSelo.style.color = vencido ? 'var(--danger)' : ((vencendo || ehTrial) ? 'var(--warn)' : 'var(--ok)');
-      const ateTxt = validoAte ? new Date(validoAte).toLocaleDateString('pt-BR') : '—';
-      mpDet.textContent = ehTrial
-        ? `Teste grátis do Essencial até ${ateTxt} — depois o app continua seu no plano grátis, sem perder nada`
-        : (assinatura
-          ? `Renovação automática ativa · R$ 15/mês no cartão · próxima em ${ateTxt}`
-          : `Válido até ${ateTxt}${diasRestantes !== null && diasRestantes >= 0 ? ` (${diasRestantes} dia${diasRestantes === 1 ? '' : 's'})` : ''} · sem renovação automática — os dias que você somar nunca se perdem`);
+      const ateTxt = validoAte ? new Date(validoAte).toLocaleDateString('pt-BR') : '';
+      mpDet.textContent = !ateTxt
+        /* acesso sem data (liberação manual/cortesia): não mostrar "válido até —" */
+        ? 'Acesso liberado, sem data de vencimento. Tudo sincronizado e os relatórios à sua disposição.'
+        : ehTrial
+          ? `Teste grátis do Essencial até ${ateTxt} — depois o app continua seu no plano grátis, sem perder nada`
+          : (assinatura
+            ? `Renovação automática ativa · R$ 15/mês no cartão · próxima em ${ateTxt}`
+            : `Válido até ${ateTxt}${diasRestantes !== null && diasRestantes >= 0 ? ` (${diasRestantes} dia${diasRestantes === 1 ? '' : 's'})` : ''} · sem renovação automática — os dias que você somar nunca se perdem`);
     }
     mpAcoes.innerHTML = '';
     const botao = (txt, classe, cb) => {
