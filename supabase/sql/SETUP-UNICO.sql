@@ -53,6 +53,18 @@ alter table public.dados_usuario add column if not exists plano_origem text;
 update public.dados_usuario set plano_origem = 'promo-manual'
  where plano <> 'gratis' and plano_origem is null;
 
+-- [2b] TRAVA ANTI-COBRANCA-DUPLICADA ---------------------------
+-- O Mercado Pago reenvia a mesma notificacao (retry / payment+merchant_order).
+-- Sem esta tabela, um pagamento credita dias 2x (prejuizo). O id do pagamento
+-- e a chave primaria: repetido = conflito = webhook ignora.
+create table if not exists public.pagamentos_processados (
+  pagamento_id text primary key,
+  user_id      uuid references auth.users(id) on delete set null,
+  criado_em    timestamptz not null default now()
+);
+alter table public.pagamentos_processados enable row level security;
+-- sem policies: so o webhook (service role) acessa
+
 -- [3] PARCERIAS: ativacoes nominais ----------------------------
 create table if not exists public.parceiros (
   user_id   uuid primary key references auth.users(id) on delete cascade,

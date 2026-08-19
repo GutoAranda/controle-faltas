@@ -178,7 +178,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   }
   button:active { transform: scale(.97); }
   button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
-  button.small { padding: 6px 12px; font-size: 13px; border-radius: 9px; min-height: 36px; }
+  button.small { padding: 7px 13px; font-size: 13px; border-radius: 9px; min-height: 40px; }
   button.ghost-danger { color: var(--danger); border-color: var(--line); background: transparent; }
   button.icone { min-height: 36px; min-width: 36px; padding: 6px; display: inline-flex; align-items: center; justify-content: center; }
   button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-visible {
@@ -1037,6 +1037,10 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
             <button class="small" id="btn-importar">Importar backup</button>
             <input type="file" id="arquivo-backup" accept="application/json" hidden>
           </div>
+          <div id="resgate-sync" hidden style="margin-top:12px; padding-top:10px; border-top:1px solid var(--line)">
+            <p class="sutil" style="margin:0 0 8px">🛟 <strong>Faltou algo depois de sincronizar?</strong> <span id="resgate-quando"></span> guardei o que estava neste aparelho antes da última sincronização.</p>
+            <button class="small" id="btn-resgatar-sync" type="button">Restaurar o que estava aqui</button>
+          </div>
           <div style="border-top:1px solid var(--line); margin:14px 0 10px"></div>
           <button class="small ghost-danger" id="btn-zerar" type="button">Apagar todos os dados deste aparelho</button>
         </div>
@@ -1117,7 +1121,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
           <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Widget</strong> na tela do Android</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
           <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Provas no Google Calendar</strong>, atualizando sozinhas</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
           <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Relatório do semestre</strong> (PDF) + resumo quinzenal por email</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)">Matérias criadas à mão</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">até 6</td><td style="text-align:center; border-top:1px solid var(--line)">∞</td></tr>
+          <tr><td style="padding:7px 0; border-top:1px solid var(--line)">Criar matéria à mão (monitoria, curso de fora…)</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">até 6 no total</td><td style="text-align:center; border-top:1px solid var(--line)">∞</td></tr>
         </table>
       </div>
     </div>
@@ -2356,7 +2360,8 @@ function ligarEventosMaterias(alvo) {
 document.getElementById('form-materia').addEventListener('submit', ev => {
   ev.preventDefault();
   if (planoNuvem === 'gratis' && db.materias.length >= LIMITE_MATERIAS_GRATIS) {
-    toast(`O plano grátis vai até ${LIMITE_MATERIAS_GRATIS} matérias. O Essencial libera matérias ilimitadas + sincronização.`);
+    toast(`No grátis dá pra ter ${LIMITE_MATERIAS_GRATIS} matérias. O Essencial libera ilimitadas + backup na nuvem.`,
+      'Ver o Essencial', () => abrirTelaPlano());
     return;
   }
   db.materias.push({
@@ -2636,6 +2641,40 @@ function gerarRelatorio() {
   win.document.close();
 }
 
+/* resgate do estado local pré-sincronização (rede contra "última escrita vence") */
+function renderResgateSync() {
+  const wrap = document.getElementById('resgate-sync');
+  if (!wrap) return;
+  const guardado = localStorage.getItem('controleFaltas.antesDaSync');
+  wrap.hidden = !guardado;
+  if (!guardado) return;
+  const quando = localStorage.getItem('controleFaltas.antesDaSyncQuando');
+  document.getElementById('resgate-quando').textContent = quando
+    ? 'Em ' + new Date(quando).toLocaleString('pt-BR') + ','
+    : 'Na última sincronização,';
+}
+document.getElementById('btn-resgatar-sync').addEventListener('click', () => {
+  const guardado = localStorage.getItem('controleFaltas.antesDaSync');
+  if (!guardado) { toast('Não tenho nada guardado agora.'); return; }
+  abrirSheet({
+    titulo: 'Restaurar o que estava neste aparelho?',
+    texto: 'Volto a versão salva antes da última sincronização e mando ela pra nuvem. O que veio da nuvem depois disso é substituído — exporte um backup antes se estiver em dúvida.',
+    botoes: [
+      { txt: '🛟 Restaurar', classe: 'primary', cb: () => {
+        try {
+          db = { ...novoBanco(), ...JSON.parse(guardado) };
+          salvar(); renderTudo();
+          localStorage.removeItem('controleFaltas.antesDaSync');
+          localStorage.removeItem('controleFaltas.antesDaSyncQuando');
+          renderResgateSync();
+          toast('Restaurado ✓');
+        } catch { toast('Esse resgate está corrompido — use um backup exportado.'); }
+      } },
+      { txt: 'Cancelar', classe: 'small' },
+    ],
+  });
+});
+
 document.getElementById('btn-exportar').addEventListener('click', async () => {
   if (!(await baixarBackup('faltae-backup'))) { toast('Backup cancelado.'); return; }
   localStorage.setItem('controleFaltas.ultimoBackup', hojeISO());
@@ -2671,6 +2710,7 @@ function renderTudo() {
   renderMaterias();
   if (typeof renderGuiaPlanos === 'function') renderGuiaPlanos();
   if (typeof renderCesta === 'function') renderCesta();
+  if (typeof renderResgateSync === 'function') renderResgateSync();
   const sem = infoSemestre();
   document.getElementById('semana').textContent = sem ? `semana ${sem.atual} de ${sem.total}` : '';
 }
@@ -2784,11 +2824,27 @@ async function puxarNuvem() {
 
   const ultimaSync = localStorage.getItem('controleFaltas.ultimaSync') || '';
   if (!bancoVazio(data.dados) && (bancoVazio(db) || (data.atualizado_em && data.atualizado_em > ultimaSync))) {
+    /* a nuvem é mais nova e vence — mas o que estava AQUI pode conter marcações
+       feitas offline que nunca subiram. Guarda o estado local antes de trocar e
+       oferece Desfazer: sem isso, uma falta marcada sem sinal desaparece calada. */
+    const antes = JSON.stringify(db);
+    const tinhaCoisa = !bancoVazio(db);
     db = { ...novoBanco(), ...data.dados };
     salvarLocal();
     localStorage.setItem('controleFaltas.ultimaSync', data.atualizado_em);
     renderTudo();
-    toast('Dados sincronizados da nuvem');
+    if (tinhaCoisa) {
+      localStorage.setItem('controleFaltas.antesDaSync', antes);
+      localStorage.setItem('controleFaltas.antesDaSyncQuando', new Date().toISOString());
+      toast('Dados sincronizados da nuvem', 'Desfazer', () => {
+        db = { ...novoBanco(), ...JSON.parse(antes) };
+        salvar();
+        renderTudo();
+        toast('Voltei o que estava neste aparelho — vai subir pra nuvem.');
+      });
+    } else {
+      toast('Dados sincronizados da nuvem');
+    }
   } else {
     await empurrarNuvem();
   }
@@ -2870,7 +2926,7 @@ function renderConta() {
     if (planoNuvem === 'gratis') {
       mpSelo.textContent = 'GRÁTIS';
       mpSelo.style.background = 'var(--line)'; mpSelo.style.color = 'var(--ink-2)';
-      mpDet.textContent = 'Tudo neste aparelho · matérias manuais até 6 (importar a turma é livre)';
+      mpDet.textContent = 'Tudo neste aparelho · criar matéria à mão só até 6 no total (importar a turma é livre)';
     } else {
       mpSelo.textContent = vencido ? 'VENCIDO' : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO');
       mpSelo.style.background = vencido ? 'var(--danger-soft)' : (vencendo ? 'var(--warn-soft)' : 'var(--ok-soft)');
@@ -4248,6 +4304,10 @@ document.getElementById('btn-encerrar-semestre').addEventListener('click', async
   if (!db.materias.length && !db.faltas.length) { toast('Nada pra encerrar — o app já está zerado.'); return; }
   if (!confirm('Encerrar o semestre?\n\n1) Um backup completo será baixado agora (guarde-o!)\n2) Matérias, aulas, faltas, provas e notas serão zeradas')) return;
   if (!(await baixarBackup('faltae-semestre-encerrado'))) { toast('Backup cancelado — nada foi apagado.'); return; }
+  /* zerar também sobe pra nuvem (e portanto zera os outros aparelhos): guarda o
+     estado aqui pra dar um "Restaurar" de um toque, sem depender do arquivo baixado */
+  localStorage.setItem('controleFaltas.antesDaSync', JSON.stringify(db));
+  localStorage.setItem('controleFaltas.antesDaSyncQuando', new Date().toISOString());
   db = novoBanco();
   salvar(); renderTudo();
   toast('Semestre encerrado. Bora pro próximo! 🎓');
