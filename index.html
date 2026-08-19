@@ -3623,7 +3623,6 @@ function selecionarProvas(intencao) {
     porMateria.get(e.materiaId).push(e);
   });
   const materias = [...porMateria.keys()];
-  const primeira = materias[0];
   abrirSeletor({
     titulo: intencao === 'uma' ? 'Qual você vai mandar?' : 'O que vai no pacote?',
     sub: intencao === 'uma'
@@ -3638,7 +3637,10 @@ function selecionarProvas(intencao) {
         rotulo: mat ? mat.nome : 'Matéria',
         sub: `${evs.length} futura${evs.length === 1 ? '' : 's'}`,
         colapsavel: true,
-        aberto: intencao === 'todas' || matId === primeira,
+        /* todas as gavetas FECHADAS ao abrir: assim a lista de matérias aparece
+           inteira de cara e você escolhe onde entrar. Só o modo 'todas' abre, porque
+           lá os itens já vêm marcados e esconder isso seria pior. */
+        aberto: intencao === 'todas',
         itens: evs.map(e => ({
           id: e.id,
           titulo: e.titulo,
