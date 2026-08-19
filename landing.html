@@ -187,6 +187,35 @@
   footer { padding: 44px 0 60px; font-size: 14px; color: var(--tinta-3); }
   footer a { color: var(--indigo); text-decoration: none; }
   footer .container { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+
+  /* ── proporções por tamanho de tela ── */
+  @media (max-width: 760px) {
+    /* celular: respiros de celular, não de desktop */
+    .hero { padding: 38px 0 20px; }
+    .hero p { margin-bottom: 22px; }
+    .hero .btn { display: block; max-width: 340px; margin: 0 auto; }
+    .btn.claro-hero { margin: 10px auto 0; }
+    .mock { margin-top: 34px; }
+    section.bloco { padding: 46px 0 8px; }
+    .bloco .lede { margin-bottom: 22px; }
+    .recurso-vivo { padding: 24px 0; }
+    .cta-final { margin-top: 52px; padding: 42px 20px; border-radius: 22px; }
+    .plano { padding: 20px 18px; }
+    footer .container { flex-direction: column; align-items: flex-start; gap: 10px; }
+  }
+  @media (min-width: 761px) and (max-width: 1024px) {
+    /* tablet: colunas mais folgadas que o desktop espremido */
+    .container { padding: 0 32px; }
+    .hero { padding: 54px 0 26px; }
+    .recurso-vivo { gap: 32px; }
+    .tela { max-width: 350px; }
+  }
+  @media (min-width: 1200px) {
+    /* telão: ar proporcional */
+    .hero { padding: 88px 0 36px; }
+    section.bloco { padding: 88px 0 10px; }
+    .recurso-vivo { gap: 64px; padding: 52px 0; }
+  }
 </style>
 </head>
 <body>
