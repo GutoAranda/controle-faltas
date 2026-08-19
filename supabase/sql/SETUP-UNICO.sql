@@ -100,6 +100,47 @@ insert into public.parceiros (user_id, rotulo)
 select id, 'fundador' from auth.users where email = 'contato.gustavoaranda@gmail.com'
 on conflict (user_id) do nothing;
 
+
+-- [6] MEDICAO DE CONVERSAO (anonima e agregada) ----------------
+-- Guarda SO contadores por dia+evento. Nao ha user_id, nao ha como
+-- reconstruir quem fez o que. RPC com SECURITY DEFINER para o app somar 1.
+create table if not exists public.metricas_diarias (
+  dia    date not null default (now() at time zone 'America/Sao_Paulo')::date,
+  evento text not null,
+  total  int  not null default 0,
+  primary key (dia, evento)
+);
+alter table public.metricas_diarias enable row level security;
+-- sem policies: ninguem le nem escreve direto; so a funcao abaixo
+
+create or replace function public.registrar_metrica(p_evento text)
+returns void language plpgsql security definer set search_path = public as $fn$
+begin
+  if p_evento is null or length(p_evento) > 40 then return; end if;
+  insert into public.metricas_diarias (dia, evento, total)
+  values ((now() at time zone 'America/Sao_Paulo')::date, p_evento, 1)
+  on conflict (dia, evento) do update set total = public.metricas_diarias.total + 1;
+end $fn$;
+revoke all on function public.registrar_metrica(text) from public;
+grant execute on function public.registrar_metrica(text) to authenticated;
+
+-- [7] TRIAL DE 7 DIAS EM CONTA NOVA ---------------------------
+-- O app so consegue inserir (user_id, dados) - nao tem grant nas colunas de
+-- plano - entao o DEFAULT do banco e quem concede o teste. Seguro por construcao.
+alter table public.dados_usuario alter column plano set default 'essencial';
+alter table public.dados_usuario alter column plano_valido_ate set default (now() + interval '7 days');
+alter table public.dados_usuario alter column plano_origem set default 'trial';
+
+-- [8] REBAIXAMENTO DE PLANO VENCIDO (o que faz o trial acabar) -
+-- roda 03:15 todo dia: quem venceu volta pro gratis
+do $$ begin perform cron.unschedule('rebaixar-planos-vencidos'); exception when others then null; end $$;
+select cron.schedule('rebaixar-planos-vencidos', '15 3 * * *',
+  $cron$ update public.dados_usuario set plano = 'gratis'
+          where plano <> 'gratis' and plano_valido_ate is not null and plano_valido_ate < now() $cron$);
+
+-- CONSULTAS UTEIS (rode quando quiser ver o funil)
+-- select * from public.metricas_diarias order by dia desc, total desc;
+-- select plano_origem, count(*) from public.dados_usuario where plano <> 'gratis' group by 1;
 -- ================================================================
 -- CHECKLIST DO QUE O SQL NAO FAZ (painel, uma vez so):
 -- ( ) Secrets em Edge Functions > Secrets: VAPID_PUBLIC_KEY,
