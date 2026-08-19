@@ -550,6 +550,69 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   .sheetd-botoes .primary { width: 100%; }
   .sheetd-botoes .small { align-self: center; }
 
+  /* ─── tela do plano (vendas) — desenhada pra celular, tablet e PC ─── */
+  #tela-plano {
+    position: fixed; inset: 0; z-index: 285; background: var(--bg); overflow-y: auto;
+  }
+  #tela-plano[hidden] { display: none; }
+  .tp-topo {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    max-width: 1120px; margin: 0 auto; padding: 16px 18px 0;
+  }
+  #tp-selo { font-size: 10.5px; font-weight: 800; letter-spacing: .04em; border-radius: 999px; padding: 4px 11px; flex: none; }
+  .tp-grade { max-width: 1120px; margin: 0 auto; padding: 8px 18px 70px; display: grid; gap: 22px; }
+  .tp-olho {
+    font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); margin: 10px 0 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .tp-olho::before { content: ''; width: 18px; height: 3px; border-radius: 2px; background: var(--faisca); }
+  .tp-h1 {
+    font-family: var(--fonte-display); font-weight: 800; letter-spacing: -.025em;
+    font-size: clamp(25px, 3.4vw, 34px); line-height: 1.18; margin: 0 0 12px; color: var(--ink);
+    text-wrap: balance; overflow-wrap: break-word; max-width: 22ch;
+  }
+  .tp-h1 em {
+    font-style: normal; color: var(--ink);
+    background: linear-gradient(transparent 62%, var(--faisca) 62%);
+    /* o grifo acompanha a palavra sem esticar a caixa da linha */
+    padding: 0 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone;
+  }
+  .tp-lede { color: var(--ink-2); font-size: 15.5px; margin: 0 0 20px; max-width: 60ch; }
+  .tp-beneficios { display: grid; gap: 12px; }
+  .tp-b { display: flex; gap: 13px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 13px 15px; }
+  .tp-b .tp-ico { flex: none; font-size: 20px; line-height: 1.3; }
+  .tp-b b { font-size: 15px; display: block; color: var(--ink); }
+  .tp-b p { margin: 3px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+  .tp-ancora {
+    margin-top: 16px; background: var(--accent-soft); border: 1px solid var(--line);
+    border-radius: 14px; padding: 14px 16px;
+  }
+  .tp-ancora p { margin: 0; font-size: 14px; color: var(--ink); line-height: 1.6; }
+  .tp-caixa { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); }
+  .tp-oferta-titulo { font-family: var(--fonte-display); font-weight: 800; font-size: 16px; margin: 0 0 10px; }
+  .tp-pagamento { font-size: 13px; color: var(--ink-2); margin: 12px 0 0; text-align: center; }
+  .tp-garantias { list-style: none; margin: 12px 0 0; padding: 0; }
+  .tp-garantias li { font-size: 12.5px; color: var(--ink-2); padding: 3px 0 3px 20px; position: relative; line-height: 1.45; }
+  .tp-garantias li::before { content: '✓'; position: absolute; left: 2px; color: var(--ok); font-weight: 800; }
+  .tp-codigo { margin-top: 14px; }
+  .tp-codigo summary { cursor: pointer; padding: 8px 0; }
+
+  @media (min-width: 700px) {
+    .tp-topo, .tp-grade { padding-left: 28px; padding-right: 28px; }
+    .tp-grade { padding-bottom: 80px; }
+    .tp-beneficios { grid-template-columns: 1fr 1fr; }
+    .tp-b:first-child { grid-column: 1 / -1; }
+    .tp-lede { font-size: 16.5px; }
+  }
+  @media (min-width: 1000px) {
+    /* PC: argumento à esquerda, oferta fixa à direita — sem coluna estreita perdida na tela */
+    .tp-grade { grid-template-columns: minmax(0, 1.35fr) minmax(330px, .85fr); gap: 40px; align-items: start; padding-top: 14px; }
+    .tp-oferta { position: sticky; top: 20px; }
+    .tp-beneficios { grid-template-columns: 1fr; }
+    .tp-b:first-child { grid-column: auto; }
+    .tp-b b { font-size: 15.5px; }
+  }
+
   /* cesta da grade: nada grava até confirmar */
   .cesta-caixa { background: var(--surface); border: 1.5px solid var(--accent); border-radius: 12px; padding: 10px 12px; }
   .cesta-chip {
@@ -1102,76 +1165,99 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
 
 <div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-acao" hidden type="button">Desfazer</button></div>
 
-<div id="tela-plano" hidden style="position:fixed; inset:0; z-index:285; background:var(--bg); overflow-y:auto">
-  <div style="max-width:560px; margin:0 auto; padding:20px 18px 60px">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
-      <button class="small" id="tp-voltar" type="button">← Voltar</button>
-      <span id="tp-selo" class="num" style="font-size:10.5px; font-weight:800; letter-spacing:.04em; border-radius:999px; padding:4px 11px"></span>
-    </div>
+<div id="tela-plano" hidden>
+  <div class="tp-topo">
+    <button class="small" id="tp-voltar" type="button">← Voltar</button>
+    <span id="tp-selo" class="num"></span>
+  </div>
 
-    <div id="tp-hero-gratis">
-      <h2 style="font-size:26px; letter-spacing:-.5px; margin:14px 0 6px">Seu semestre inteiro protegido<br>por <span style="color:var(--ok)">um Pix de R$ 59,90</span></h2>
-      <p class="muted" style="margin:0 0 16px">Você já usa o Faltaê todo dia. O Essencial garante que nada se perde — e libera o resto.</p>
-      <div class="painel" style="padding:14px 16px; margin-bottom:14px">
-        <table style="width:100%; border-collapse:collapse; font-size:13.5px">
-          <tr><th style="text-align:left; padding:6px 0; font-size:11px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em">O que você tem</th><th style="width:64px; font-size:11px; color:var(--ink-3)">Grátis</th><th style="width:64px; font-size:11px; color:var(--ok)">Essencial</th></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)">Faltas, provas, notas e agenda</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Backup na nuvem</strong> — quebrou/perdeu o celular, seus dados sobrevivem</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Sincronização</strong> — celular + computador, sempre iguais</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Widget</strong> na tela do Android</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Provas no Google Calendar</strong>, atualizando sozinhas</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)"><strong>Relatório do semestre</strong> (PDF) + resumo quinzenal por email</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">—</td><td style="text-align:center; border-top:1px solid var(--line)">✓</td></tr>
-          <tr><td style="padding:7px 0; border-top:1px solid var(--line)">Criar matéria à mão (monitoria, curso de fora…)</td><td style="text-align:center; border-top:1px solid var(--line); color:var(--ink-3)">até 6 no total</td><td style="text-align:center; border-top:1px solid var(--line)">∞</td></tr>
-        </table>
+  <div class="tp-grade">
+    <!-- ARGUMENTO -->
+    <div class="tp-argumento">
+      <div id="tp-hero-gratis">
+        <p class="tp-olho">Plano Essencial</p>
+        <h2 class="tp-h1">Seu semestre não pode depender de <em>um celular</em>.</h2>
+        <p class="tp-lede">O Faltaê grátis conta suas faltas. O Essencial garante que essa conta não se perca — e te encontra em qualquer tela, com a próxima prova sempre na sua frente.</p>
+
+        <div class="tp-beneficios">
+          <div class="tp-b"><span class="tp-ico">🛟</span><div><b>Perdeu o celular? Não perdeu o semestre.</b><p>Todo o histórico — faltas, notas, conteúdos das aulas — fica guardado na nuvem. Celular novo, você entra e está tudo lá.</p></div></div>
+          <div class="tp-b"><span class="tp-ico">🔄</span><div><b>Marcou no celular, aparece no computador.</b><p>Estuda no note, marca a falta no corredor: as duas telas contam a mesma história, sempre.</p></div></div>
+          <div class="tp-b"><span class="tp-ico">📲</span><div><b>A próxima prova na tela inicial.</b><p>Widget no Android e suas provas dentro do Google Calendar, se atualizando sozinhas. Você não precisa abrir o app pra lembrar.</p></div></div>
+          <div class="tp-b"><span class="tp-ico">📄</span><div><b>Relatório pra comprovar frequência.</b><p>PDF do semestre inteiro (útil pra bolsa, coordenação ou pra você mesmo) e um resumo a cada quinze dias no email.</p></div></div>
+          <div class="tp-b"><span class="tp-ico">∞</span><div><b>Matéria à mão sem limite.</b><p>Monitoria, curso de fora, disciplina que não está no catálogo: no grátis são 6 no total, no Essencial não tem conta pra fazer.</p></div></div>
+        </div>
+
+        <div class="tp-ancora">
+          <p><b>Faz a conta que importa:</b> uma matéria repetida custa um semestre da sua vida — e o valor de refazê-la é muitas vezes o que o Essencial custa. <b>R$ 59,90 pelo semestre inteiro</b> sai a <b>R$ 9,98 por mês</b>: menos que dois cafés na cantina.</p>
+        </div>
+      </div>
+
+      <div id="tp-hero-essencial" hidden>
+        <p class="tp-olho">Plano Essencial 💚</p>
+        <h2 class="tp-h1" style="font-size:clamp(24px,4.4vw,34px)">Seu semestre está protegido.</h2>
+        <p class="tp-lede num" id="tp-status-essencial"></p>
+        <div class="tp-beneficios">
+          <div class="tp-b"><span class="tp-ico">🛟</span><div><b>Backup automático ativo</b><p>Cada falta e nota que você marca sobe pra nuvem em segundos.</p></div></div>
+          <div class="tp-b"><span class="tp-ico">🔄</span><div><b>Sincronizando entre seus aparelhos</b><p>Entre com a mesma conta em qualquer celular ou computador.</p></div></div>
+          <div class="tp-b"><span class="tp-ico">📄</span><div><b>Relatórios liberados</b><p>Gere o PDF do semestre em Menu → Relatório, quando quiser.</p></div></div>
+        </div>
       </div>
     </div>
 
-    <div id="tp-hero-essencial" hidden>
-      <h2 style="font-size:24px; letter-spacing:-.5px; margin:14px 0 6px">Seu plano Essencial 💚</h2>
-      <p class="muted num" id="tp-status-essencial" style="margin:0 0 16px"></p>
-    </div>
-
-    <div id="conta-assinatura" hidden>
-      <p class="muted" style="margin:0 0 8px">🔁 Renovação automática <strong>ativa</strong> — R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</p>
-      <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
-      <div style="border-top:1px solid var(--line); margin:12px 0 10px"></div>
-    </div>
-
-    <div id="conta-upgrade" hidden>
-      <div class="passes">
-        <button class="passe heroi" type="button" data-assinar="semestral">
-          <span class="passe-selo">🏆 Semestre inteiro</span>
-          <span class="passe-preco num">R$ 59,90</span>
-          <span class="passe-eq num">sai a R$ 9,98/mês · um Pix e acabou</span>
-        </button>
-        <button class="passe" type="button" data-assinar="mensal">
-          <span class="passe-selo">30 dias</span>
-          <span class="passe-preco num">R$ 15</span>
-          <span class="passe-eq">pra experimentar</span>
-        </button>
+    <!-- OFERTA (sticky no PC) -->
+    <div class="tp-oferta">
+      <div id="conta-assinatura" hidden>
+        <div class="tp-caixa">
+          <p class="muted" style="margin:0 0 10px">🔁 <strong>Renovação automática ativa</strong><br><span class="sutil">R$ 15/mês no cartão. Os dias já pagos nunca se perdem.</span></p>
+          <button class="small" id="btn-cancelar-assinatura" type="button">Cancelar renovação automática</button>
+        </div>
       </div>
-      <button class="passe" type="button" data-assinar-rec style="margin-top:8px; max-width:420px">
-        <span class="passe-selo">🔁 Renovação automática</span>
-        <span class="passe-preco num">R$ 15<small style="font-size:12px; font-weight:600; color:var(--ink-3)">/mês</small></span>
-        <span class="passe-eq">no cartão · cancele quando quiser</span>
-      </button>
-      <p class="sutil" style="margin:12px 0 0">✓ Pix aprovado, plano ativo na hora &nbsp;·&nbsp; ✓ sem cadastro de cartão &nbsp;·&nbsp; ✓ dias somam, nunca se perdem &nbsp;·&nbsp; ✓ seus dados são seus, com ou sem plano</p>
-      <div class="acoes-dados" style="margin-top:10px">
-        <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
-      </div>
-    </div>
 
-    <details style="margin-top:16px">
-      <summary class="sutil" style="cursor:pointer">🎟️ Tenho um código promocional</summary>
-      <div class="campos-2" style="margin-top:8px; max-width:420px">
-        <label class="campo">Código
-          <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: ATV-XXXXXX" maxlength="24" style="text-transform:uppercase">
-        </label>
-        <label class="campo">&nbsp;
-          <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
-        </label>
+      <div id="conta-upgrade" hidden>
+        <div class="tp-caixa">
+          <p class="tp-oferta-titulo">Escolha como usar</p>
+          <div class="passes">
+            <button class="passe heroi" type="button" data-assinar="semestral">
+              <span class="passe-selo">🏆 Semestre inteiro · mais escolhido</span>
+              <span class="passe-preco num">R$ 59,90</span>
+              <span class="passe-eq num">R$ 9,98/mês · pagamento único, acabou</span>
+            </button>
+            <button class="passe" type="button" data-assinar="mensal">
+              <span class="passe-selo">30 dias</span>
+              <span class="passe-preco num">R$ 15</span>
+              <span class="passe-eq">pra experimentar sem compromisso</span>
+            </button>
+            <button class="passe" type="button" data-assinar-rec>
+              <span class="passe-selo">🔁 Mensal automático</span>
+              <span class="passe-preco num">R$ 15<small>/mês</small></span>
+              <span class="passe-eq">no cartão · cancele com um toque</span>
+            </button>
+          </div>
+          <p class="tp-pagamento">💳 <b>Cartão, Pix ou boleto</b> — pelo Mercado Pago, na tela seguinte.</p>
+          <ul class="tp-garantias">
+            <li>Aprovou o pagamento, o plano ativa na hora</li>
+            <li>Sem assinatura obrigatória: os passes acabam sozinhos</li>
+            <li>Renovou antes de vencer? Os dias somam, nada se perde</li>
+            <li>Seus dados continuam seus com ou sem plano</li>
+          </ul>
+          <div class="acoes-dados" style="margin-top:10px">
+            <button class="small" id="btn-ja-paguei" type="button" hidden>Já paguei — atualizar</button>
+          </div>
+        </div>
       </div>
-    </details>
+
+      <details class="tp-codigo">
+        <summary class="sutil">🎟️ Tenho um código promocional</summary>
+        <div class="campos-2" style="margin-top:8px">
+          <label class="campo">Código
+            <input type="text" id="codigo-resgate" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Ex.: ATV-XXXXXX" maxlength="24" style="text-transform:uppercase">
+          </label>
+          <label class="campo">&nbsp;
+            <button class="primary" id="btn-resgatar" type="button" style="height:45px">Resgatar</button>
+          </label>
+        </div>
+      </details>
+    </div>
   </div>
 </div>
 
@@ -4414,7 +4500,7 @@ document.querySelectorAll('[data-assinar]').forEach(btn => btn.addEventListener(
     }
     document.getElementById('btn-ja-paguei').hidden = false;
     window.open(data.url, '_blank', 'noopener');
-    toast('Pague pelo Mercado Pago (Pix ou cartão) e volte aqui — seu plano ativa sozinho.');
+    toast('Pague pelo Mercado Pago (cartão, Pix ou boleto) e volte aqui — seu plano ativa sozinho.');
   } finally {
     todos.forEach(b => b.disabled = false);
   }
@@ -4456,7 +4542,7 @@ document.getElementById('btn-cancelar-assinatura').addEventListener('click', asy
 document.getElementById('btn-ja-paguei').addEventListener('click', async () => {
   await puxarNuvem();
   toast(planoNuvem === 'gratis'
-    ? 'Pagamento ainda não confirmado — o Pix leva alguns segundos. Tente de novo já já.'
+    ? 'Pagamento ainda não confirmado — costuma levar alguns segundos. Tente de novo já já.'
     : 'Plano Essencial ativo. Bem-vindo! 💚');
 });
 
