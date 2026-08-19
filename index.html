@@ -3548,13 +3548,16 @@ function renderConta() {
       mpDet.textContent = 'Tudo neste aparelho · criar matéria à mão só até 6 no total (importar a turma é livre)';
     } else {
       const ehTrial = ehPlanoDeTeste();
-      mpSelo.textContent = vencido ? 'VENCIDO' : (ehTrial ? `TESTE · ${Math.max(diasRestantes, 0)}d` : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO'));
+      const ehCortesia = ehPlanoDeCortesia();
+      mpSelo.textContent = vencido ? 'VENCIDO' : (ehTrial ? `TESTE · ${Math.max(diasRestantes, 0)}d` : (ehCortesia ? 'PARCERIA' : (vencendo ? `VENCE EM ${diasRestantes}d` : 'ATIVO')));
       mpSelo.style.background = vencido ? 'var(--danger-soft)' : ((vencendo || ehTrial) ? 'var(--warn-soft)' : 'var(--ok-soft)');
       mpSelo.style.color = vencido ? 'var(--danger)' : ((vencendo || ehTrial) ? 'var(--warn)' : 'var(--ok)');
       const ateTxt = validoAte ? new Date(validoAte).toLocaleDateString('pt-BR') : '';
       mpDet.textContent = !ateTxt
         /* acesso sem data (liberação manual/cortesia): não mostrar "válido até —" */
         ? 'Acesso liberado, sem data de vencimento. Tudo sincronizado e os relatórios à sua disposição.'
+        : ehCortesia
+          ? `Acesso de cortesia da parceria até ${ateTxt}. Depois o app continua seu no plano grátis, sem perder nada — e se quiser seguir com tudo aberto, é só escolher um passe.`
         : ehTrial
           ? `Teste grátis do Essencial até ${ateTxt} — depois o app continua seu no plano grátis, sem perder nada`
           : (assinatura
@@ -3791,6 +3794,14 @@ function processarPacotePendente() {
    Manda só o nome do evento. O banco soma por dia (dia + evento + total) — não
    guarda quem, nem quando exatamente, nem nada que ligue a uma pessoa. */
 /* o plano atual é o teste de boas-vindas? (o app guarda a origem que o banco definiu) */
+/* Cortesia (parceria/bolsa ou liberação manual) NAO e a mesma coisa que plano pago:
+   quem recebeu nunca comprou, entao falar em "renovar" com essa pessoa nao faz
+   sentido - e, pior, esconde que o acesso dela tem fim e por que ele existe. */
+function ehPlanoDeCortesia() {
+  const o = localStorage.getItem('controleFaltas.planoOrigem') || '';
+  return planoNuvem !== 'gratis' && (o.indexOf('parceria') === 0 || o === 'promo-manual');
+}
+
 function ehPlanoDeTeste() {
   return localStorage.getItem('controleFaltas.planoOrigem') === 'trial' && planoNuvem !== 'gratis';
 }
@@ -3838,6 +3849,15 @@ function avisarVencimento() {
   const hoje = new Date().toISOString().slice(0, 10);
   if (localStorage.getItem('controleFaltas.avisoVencimento') === hoje) return;
   localStorage.setItem('controleFaltas.avisoVencimento', hoje);
+  /* quem ganhou o acesso nao 'renova' nada: a mensagem tem que dizer que a cortesia
+     esta acabando e que os dados ficam, em vez de cobrar uma renovacao que nunca houve */
+  if (ehPlanoDeCortesia()) {
+    toast(
+      dias <= 0 ? 'Seu acesso pela parceria termina hoje — o app continua seu no plano grátis, sem perder nada.'
+        : `Seu acesso pela parceria termina em ${dias} dia${dias === 1 ? '' : 's'} — o app continua seu no plano grátis, sem perder nada.`,
+      'Ver planos', () => abrirTelaPlano());
+    return;
+  }
   toast(
     dias <= 0 ? 'Seu Essencial vence hoje — renovar antes soma os dias, nada se perde.'
       : `Seu Essencial vence em ${dias} dia${dias === 1 ? '' : 's'} — renovar antes soma os dias, nada se perde.`,
