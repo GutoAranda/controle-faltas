@@ -4497,14 +4497,20 @@ document.getElementById('pc-gerar').addEventListener('click', async () => {
 async function processarAtivacaoPendente() {
   const codigo = localStorage.getItem('controleFaltas.ativarPendente');
   if (!codigo || !usuarioNuvem || !nuvemDisponivel()) return;
-  localStorage.removeItem('controleFaltas.ativarPendente');
   const { data, error } = await nuvem.functions.invoke('resgatar-ativacao', { body: { codigo } });
   if (error || !data || !data.ok) {
     let msg = 'Não deu pra ativar esse código.';
-    try { const c = error && error.context ? await error.context.json() : data; if (c && c.erro) msg = c.erro; } catch { }
+    let respondeu = !!data;
+    try { const c = error && error.context ? await error.context.json() : data; if (c && c.erro) { msg = c.erro; respondeu = true; } } catch { }
+    /* So descarta o codigo quando o servidor de fato RESPONDEU (usado, expirado,
+       email errado...). Se a requisicao nem chegou — sem rede, servico fora —
+       o codigo fica guardado e tenta de novo na proxima abertura, em vez de o
+       aluno perder a ativacao por causa de uma oscilacao de conexao. */
+    if (respondeu) localStorage.removeItem('controleFaltas.ativarPendente');
     toast(msg);
     return;
   }
+  localStorage.removeItem('controleFaltas.ativarPendente');
   await puxarNuvem();
   abrirSheet({
     titulo: 'Plano ativado! 🎉',
@@ -5710,6 +5716,13 @@ if (retornoPagamento) {
       tentarConectarWidget();
       aplicarSairRelatorio();
       if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
+      /* Links pendentes tambem precisam rodar AQUI. Antes eles so eram processados
+         depois de preencher o formulario de login — ou seja, quem ja estava logado
+         e abria o link de ativacao (?ativar=) ou de provas (?provas=) nao resgatava
+         NADA, em silencio. E esse e o caminho que a propria mensagem manda seguir:
+         'crie sua conta e DEPOIS abra o link'. */
+      if (typeof processarAtivacaoPendente === 'function') processarAtivacaoPendente();
+      if (typeof processarPacotePendente === 'function') processarPacotePendente();
       if (veioRecovery) mostrarAuth('novaSenha');
       else if (!(usuarioNuvem.user_metadata && usuarioNuvem.user_metadata.nome)) {
         /* conta veio do Google (ou perfil incompleto): completa o perfil antes de seguir */
