@@ -2717,6 +2717,17 @@ document.getElementById('btn-lembretes').addEventListener('click', async () => {
   if (p !== 'granted') { toast('Permissão negada — o destaque no Início continua funcionando.'); return; }
   dispararLembretes();
   const comPush = await ativarPush();
+  /* O aviso com o app FECHADO sai do servidor, que monta a mensagem lendo os dados
+     na nuvem. Aluno gratis nao sincroniza: a nuvem dele nao tem prova nenhuma, e o
+     push nunca teria o que enviar. Prometer 'ate com o app fechado' pra ele era
+     mentira - e mentira que so aparece no dia da prova que nao foi avisada.
+     A inscricao do aparelho fica gravada de qualquer forma: se ele assinar depois,
+     o push comeca a funcionar sem precisar pedir permissao de novo. */
+  if (planoNuvem === 'gratis') {
+    toast('Lembretes ativados! 🔔 No plano grátis o aviso aparece quando você abre o app. Com o Essencial ele chega no aparelho mesmo com o app fechado.',
+      'Ver planos', () => abrirTelaPlano());
+    return;
+  }
   toast(comPush
     ? 'Lembretes ativados! 🔔 Você recebe aviso de prova até com o app fechado.'
     : 'Lembretes ativados com o app aberto! 🔔');
