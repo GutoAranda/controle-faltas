@@ -2756,17 +2756,16 @@ function gerarRelatorio() {
   const hoje = hojeISO();
   const DIA_NOME = { seg: 'seg', ter: 'ter', qua: 'qua', qui: 'qui', sex: 'sex', 'sáb': 'sáb' };
   const mats = [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome));
-  const presencas = [];
-  let emRisco = 0, faltasTotais = 0;
+  let emRisco = 0, faltasTotais = 0, aulasDadasTotal = 0;
 
   const dados = mats.map(mat => {
     const r = resumoMateria(mat);
     const rp = resumoPUC(mat);
     const dadas = db.aulas.filter(a => a.materiaId === mat.id && a.data <= hoje).length;
     const faltas = db.faltas.filter(f => f.materiaId === mat.id).sort((a, b) => a.data.localeCompare(b.data));
-    // presença só depois de 5 aulas dadas — antes disso a % distorce (1 falta em 2 aulas = 50%)
+    // por matéria o corte de 5 aulas continua: com 2 aulas dadas, 1 falta viraria 50%
     const presenca = dadas >= 5 ? Math.max(0, Math.round((dadas - r.usadas) / dadas * 100)) : null;
-    if (presenca != null) presencas.push(presenca);
+    aulasDadasTotal += dadas;
     if (r.nivel === 'danger') emRisco++;
     faltasTotais += r.usadas;
     return { mat, r, rp, dadas, faltas, presenca };
@@ -2817,7 +2816,17 @@ function gerarRelatorio() {
       </tr>`).join('')}
     </table>` : '';
 
-  const mediaPresenca = presencas.length ? Math.round(presencas.reduce((s, p) => s + p, 0) / presencas.length) : null;
+  /* O TOTAL usa todas as aulas dadas do semestre, sem exigir 5 por matéria: no
+     começo do semestre nenhuma matéria isolada chega a 5, mas a soma passa fácil
+     de 20 aulas — e era isso que deixava o cartão principal vazio no primeiro mês.
+     Ponderar pelo número de aulas também é o certo: média de percentuais de
+     matérias com contagens diferentes não é a presença real. */
+  const mediaPresenca = aulasDadasTotal >= 5
+    ? Math.round(Math.max(0, aulasDadasTotal - faltasTotais) / aulasDadasTotal * 100)
+    : null;
+  const presencaFracao = aulasDadasTotal > 0 && aulasDadasTotal < 5
+    ? Math.max(0, aulasDadasTotal - faltasTotais) + ' de ' + aulasDadasTotal
+    : null;
   const faltasDisponiveis = dados.reduce((s, d) => s + d.r.restam, 0);
   const mbs = dados.flatMap(d => [d.rp.mb1, d.rp.mb2]).filter(v => v != null);
   const mediaNotas = mbs.length ? arred1(mbs.reduce((s, v) => s + v, 0) / mbs.length) : null;
@@ -2885,7 +2894,7 @@ function gerarRelatorio() {
   </div>
   <div class="miolo">
     <div class="cartoes">
-      <div class="cartao destaque"><div class="valor">${mediaPresenca != null ? mediaPresenca + '%' : '—'}</div><div class="rotulo">Presença média</div></div>
+      <div class="cartao destaque"><div class="valor">${mediaPresenca != null ? mediaPresenca + '%' : (presencaFracao || '—')}</div><div class="rotulo">Presença média</div></div>
       <div class="cartao"><div class="valor">${mediaNotas != null ? nf(mediaNotas) : '—'}</div><div class="rotulo">Média das notas</div></div>
       <div class="cartao"><div class="valor" style="color:${emRisco ? '#A30F33' : '#3F5F0A'}">${emRisco}</div><div class="rotulo">Matérias em atenção</div></div>
       <div class="cartao"><div class="valor">${faltasTotais}</div><div class="rotulo">Falta${faltasTotais === 1 ? '' : 's'} usada${faltasTotais === 1 ? '' : 's'}</div></div>
