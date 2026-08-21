@@ -49,7 +49,7 @@ function montarEmail(nome: string, dados: any) {
   const faltas = dados.faltas || []
   const eventos = dados.eventos || []
   const aulas = dados.aulas || []
-  const presencas: number[] = []
+  let aulasDadasTotal = 0
   let usadasTotal = 0, restamTotal = 0, emRisco = 0
   const mbs: number[] = []
 
@@ -61,7 +61,7 @@ function montarEmail(nome: string, dados: any) {
     const r = resumoFreq(mat, faltas)
     const rn = resumoNotas(mat)
     const dadas = aulas.filter((a: any) => a.materiaId === mat.id && a.data <= hoje).length
-    if (dadas >= 5) presencas.push(Math.max(0, Math.round((dadas - r.usadas) / dadas * 100)))
+    aulasDadasTotal += dadas
     usadasTotal += r.usadas; restamTotal += r.restam
     if (r.nivel === 'danger') emRisco++
     if (rn.mb1 != null) mbs.push(rn.mb1)
@@ -77,7 +77,14 @@ function montarEmail(nome: string, dados: any) {
     </tr>`
   }).join('')
 
-  const mediaPres = presencas.length ? Math.round(presencas.reduce((s, p) => s + p, 0) / presencas.length) + '%' : '—'
+  /* Presenca sobre o TOTAL de aulas dadas, nao media dos percentuais por materia.
+     O corte antigo (>=5 aulas POR MATERIA) deixava o cartao vazio durante todo o
+     primeiro mes de aula: 11 materias x 2 aulas = 22 aulas dadas, e nenhuma materia
+     chegando a 5. Somar percentuais de materias com contagens diferentes tambem
+     estava errado estatisticamente - o certo e ponderar pelo numero de aulas. */
+  const mediaPres = aulasDadasTotal >= 5
+    ? Math.round(Math.max(0, aulasDadasTotal - usadasTotal) / aulasDadasTotal * 100) + '%'
+    : (aulasDadasTotal > 0 ? Math.max(0, aulasDadasTotal - usadasTotal) + ' de ' + aulasDadasTotal : '—')
   const mediaNotas = mbs.length ? nf(arred1(mbs.reduce((s, v) => s + v, 0) / mbs.length)) : '—'
   const provas = eventos.filter((e: any) => e.tipo === 'prova' && e.data >= hoje).length
   const primeirAula = aulas.length ? aulas.map((a: any) => a.data).sort()[0] : hoje
@@ -159,10 +166,35 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
-  const { data: linhas, error } = await admin
+  /* FILA EM VEZ DE RAJADA (roda todo dia)
+     TETO: quanto o relatório pode gastar por dia. O resto da cota do Resend fica
+     reservado pros emails de cadastro e senha — sem eles um aluno novo não entra,
+     enquanto um relatório que chega amanhã não machuca ninguém.
+     ESPERA: só entra na fila quem está há 14+ dias sem receber.
+     INATIVIDADE: quem não abre o app há semanas não recebe — não adianta gastar
+     cota (e reputação de domínio) com email que ninguém abre. Volta sozinho ao
+     usar o app, porque a sincronização atualiza a data. */
+  const TETO_DIARIO = 60
+  const ESPERA_DIAS = 14
+  const INATIVO_DIAS = 21
+
+  const agora = new Date()
+  const desde = (d: number) => new Date(agora.getTime() - d * 86400000).toISOString()
+
+  let consulta = admin
     .from('dados_usuario')
-    .select('user_id, dados, plano')
+    .select('user_id, dados, plano, relatorio_em, atualizado_em')
     .eq('plano', 'essencial')
+
+  if (!soTeste) {
+    consulta = consulta
+      .or(`relatorio_em.is.null,relatorio_em.lt.${desde(ESPERA_DIAS)}`)
+      .gte('atualizado_em', desde(INATIVO_DIAS))
+      .order('relatorio_em', { ascending: true, nullsFirst: true })
+      .limit(TETO_DIARIO)
+  }
+
+  const { data: linhas, error } = await consulta
   if (error) return new Response('erro ao ler assinantes: ' + error.message, { status: 500 })
 
   let enviados = 0, pulados = 0, falhas = 0
@@ -181,10 +213,33 @@ Deno.serve(async (req) => {
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: REMETENTE, to: usuario.email, subject: assunto, html }),
     })
-    if (r.ok) enviados++
-    else { falhas++; console.error('falha ao enviar pra', usuario.email, r.status, await r.text()) }
+    if (r.ok) {
+      enviados++
+      // marca a vez dele na fila; sem isto ele voltaria amanhã e os outros nunca chegariam
+      if (!soTeste) {
+        await admin.from('dados_usuario')
+          .update({ relatorio_em: agora.toISOString() })
+          .eq('user_id', linha.user_id)
+      }
+    } else {
+      falhas++
+      console.error('falha ao enviar pra', usuario.email, r.status, await r.text())
+    }
   }
 
-  console.log(`Relatórios: ${enviados} enviados, ${pulados} pulados, ${falhas} falhas${soTeste ? ' (modo teste)' : ''}`)
-  return Response.json({ enviados, pulados, falhas })
+  /* quantos ficaram esperando: sem este número, um teto que corta metade da base
+     parece "tudo enviado" no log */
+  let naFila = 0
+  if (!soTeste) {
+    const { count } = await admin
+      .from('dados_usuario')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('plano', 'essencial')
+      .or(`relatorio_em.is.null,relatorio_em.lt.${desde(ESPERA_DIAS)}`)
+      .gte('atualizado_em', desde(INATIVO_DIAS))
+    naFila = count || 0
+  }
+
+  console.log(`Relatórios: ${enviados} enviados, ${pulados} pulados, ${falhas} falhas, ${naFila} ainda na fila (teto ${TETO_DIARIO}/dia)${soTeste ? ' (modo teste)' : ''}`)
+  return Response.json({ enviados, pulados, falhas, naFila })
 })
