@@ -2043,6 +2043,7 @@ function renderInicio() {
 /* ─────────── render: faltas ─────────── */
 let filtroFaltaMat = '';
 let filtroEventoMat = '';
+var edEventoId = null; // prova/atividade em edição inline na agenda (var: boot renderiza antes)
 
 function preencherSelectMaterias(sel) {
   sel.innerHTML = db.materias.length
@@ -2169,9 +2170,43 @@ function renderAgenda() {
   const futuros = visiveis.filter(e => !e.feita && e.data >= hoje).sort((a, b) => a.data.localeCompare(b.data));
   const passados = visiveis.filter(e => e.feita || e.data < hoje).sort((a, b) => b.data.localeCompare(a.data));
 
+  const opcoesMat = sel => db.materias.map(m =>
+    `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
+
   const cartao = (e, apagado) => {
     const mat = materiaPorId(e.materiaId);
     const prazo = !apagado ? chipPrazo(e.data) : null;
+    if (e.id === edEventoId) {
+      /* edição inline no próprio cartão — mesmo idioma do editor de aula do plano */
+      return `<div class="card">
+        <form class="painel" data-form-ed-evento="${e.id}">
+          <div class="campos-2">
+            <label class="campo">Tipo
+              <select name="tipo">
+                <option value="prova" ${e.tipo === 'prova' ? 'selected' : ''}>Prova</option>
+                <option value="atividade" ${e.tipo !== 'prova' ? 'selected' : ''}>Atividade</option>
+              </select>
+            </label>
+            <label class="campo">Data
+              <input type="date" name="data" value="${e.data}" required>
+            </label>
+          </div>
+          <label class="campo">Matéria
+            <select name="materia" required>${opcoesMat(e.materiaId)}</select>
+          </label>
+          <label class="campo">Título
+            <input type="text" name="titulo" value="${esc(e.titulo)}" required>
+          </label>
+          <label class="campo">Descrição (opcional)
+            <textarea name="descricao">${esc(e.descricao || '')}</textarea>
+          </label>
+          <div class="acoes-dados">
+            <button class="small primary" type="submit">Salvar</button>
+            <button class="small" type="button" data-cancel-ed-evento>Cancelar</button>
+          </div>
+        </form>
+      </div>`;
+    }
     return `<div class="card">
       <div class="row">
         <span class="pill lisa ${e.tipo === 'prova' ? 'danger' : 'accent'}">${e.tipo === 'prova' ? 'PROVA' : 'ATIV.'}</span>
@@ -2184,6 +2219,7 @@ function renderAgenda() {
       ${e.descricao ? `<div class="muted" style="margin-top:8px; background:var(--surface-2); border-radius:9px; padding:8px 10px">${esc(e.descricao)}</div>` : ''}
       <div class="acoes-dados">
         <button class="small" data-feito="${e.id}">${e.feita ? 'Reabrir' : 'Concluído'}</button>
+        <button class="small" data-ed-evento="${e.id}">Editar</button>
         <button class="small ghost-danger" data-del-evento="${e.id}">Excluir</button>
       </div>
     </div>`;
@@ -2204,6 +2240,27 @@ function renderAgenda() {
     excluirComDesfazer('Item excluído da agenda', () => {
       db.eventos = db.eventos.filter(e => e.id !== b.dataset.delEvento);
     });
+  }));
+  alvo.querySelectorAll('[data-ed-evento]').forEach(b => b.addEventListener('click', () => {
+    edEventoId = b.dataset.edEvento; renderAgenda();
+  }));
+  alvo.querySelectorAll('[data-cancel-ed-evento]').forEach(b => b.addEventListener('click', () => {
+    edEventoId = null; renderAgenda();
+  }));
+  alvo.querySelectorAll('[data-form-ed-evento]').forEach(f => f.addEventListener('submit', ev => {
+    ev.preventDefault();
+    const e = db.eventos.find(x => x.id === f.dataset.formEdEvento);
+    if (!e) { edEventoId = null; renderAgenda(); return; }
+    const materiaId = f.materia.value;
+    if (bloqueadaParaRegistro(materiaId, 'evento')) return;
+    e.tipo = f.tipo.value;
+    e.materiaId = materiaId;
+    e.data = f.data.value;
+    e.titulo = f.titulo.value.trim();
+    e.descricao = f.descricao.value.trim();
+    edEventoId = null;
+    salvar(); renderTudo();
+    toast('Prova/atividade atualizada');
   }));
 }
 
