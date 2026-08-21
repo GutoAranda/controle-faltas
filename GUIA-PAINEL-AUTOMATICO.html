@@ -1,0 +1,425 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ligar o painel automático</title>
+<style>
+  :root{
+    --bg:#F4F5F9; --card:#FFFFFF; --linha:#E5E7F0;
+    --ink:#14172B; --ink2:#565C74; --ink3:#7A8096;
+    --indigo:#4056C7; --indigo-t:#34479F; --indigo-soft:#EEF1FB;
+    --lima:#A3E635; --lima-ink:#14172B; --ok:#47720E; --ok-soft:#F0F7E0; --ok-linha:#D6EBAD;
+    --warn-soft:#FBEEDB; --warn-linha:#F0D9B0; --code-bg:#14172B; --code-ink:#D9F99D;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0F1120; --card:#181B2E; --linha:#2E3350; --ink:#EDEEF6; --ink2:#A6ABC2; --ink3:#8A90AC;
+    --indigo:#4E62CE; --indigo-t:#A9B6F5; --indigo-soft:#242B4D; --ok:#A9D45C; --ok-soft:#1E2A16;
+    --ok-linha:#37502A; --warn-soft:#2E2417; --warn-linha:#4D3D24; --code-bg:#0A0C17;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0F1120; --card:#181B2E; --linha:#2E3350; --ink:#EDEEF6; --ink2:#A6ABC2; --ink3:#8A90AC;
+    --indigo:#4E62CE; --indigo-t:#A9B6F5; --indigo-soft:#242B4D; --ok:#A9D45C; --ok-soft:#1E2A16;
+    --ok-linha:#37502A; --warn-soft:#2E2417; --warn-linha:#4D3D24; --code-bg:#0A0C17;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:30px 18px 90px}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{font-size:26px;line-height:1.15;margin:0 0 6px;letter-spacing:-.015em}
+  h1 .e{color:var(--lima)}
+  .sub{color:var(--ink2);font-size:14.5px;margin:0 0 20px;max-width:64ch}
+  .barra{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;margin:0 0 8px;border-bottom:1px solid var(--linha)}
+  .barra .txt{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink2);margin-bottom:7px}
+  .barra .n{font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);font-variant-numeric:tabular-nums}
+  .trilho{height:7px;border-radius:99px;background:var(--linha);overflow:hidden}
+  .trilho i{display:block;height:100%;width:0;border-radius:99px;background:var(--lima);transition:width .3s ease}
+  h2{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin:34px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--linha);display:flex;align-items:center;gap:9px}
+  h2::before{content:'';width:16px;height:3px;border-radius:2px;background:var(--lima);flex:none}
+  .passo{background:var(--card);border:1px solid var(--linha);border-radius:13px;padding:15px 17px;margin-bottom:10px;transition:opacity .2s ease}
+  .passo.feito{opacity:.55}
+  .passo.feito .cab > div > b{text-decoration:line-through}
+  .passo .cab{display:flex;gap:12px;align-items:flex-start}
+  .passo input{width:22px;height:22px;flex:none;margin:2px 0 0;accent-color:var(--lima);cursor:pointer}
+  .passo .cab > div{min-width:0}
+  .onde{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--indigo-t);background:var(--indigo-soft);border-radius:6px;padding:3px 9px;margin-bottom:8px}
+  .passo .cab > div > b{display:block;font-size:15.5px;line-height:1.35;margin-bottom:4px}
+  .como{color:var(--ink2);font-size:14px}
+  .como b{font-weight:700;color:var(--ink)}
+  .como code{background:var(--indigo-soft);border-radius:5px;padding:1.5px 6px;font-size:12.5px;color:var(--indigo-t)}
+  details.cod{margin:12px 0 0 34px}
+  @media (max-width:560px){details.cod{margin-left:0}}
+  details.cod summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--indigo-t);list-style:none;padding:6px 0;min-height:34px;display:flex;align-items:center}
+  details.cod summary::-webkit-details-marker{display:none}
+  details.cod summary::before{content:'▸';margin-right:7px}
+  details.cod[open] summary::before{content:'▾'}
+  .copiar{display:inline-block;background:var(--lima);color:var(--lima-ink);border:0;border-radius:9px;padding:9px 18px;font-weight:800;font-size:13px;cursor:pointer;margin:4px 0 8px;min-height:38px}
+  .copiar.feito{background:var(--ok);color:#FFF}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:11px;padding:12px 14px;font-size:12px;line-height:1.5;overflow:auto;max-height:340px;margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .dica{background:var(--ok-soft);border:1px solid var(--ok-linha);border-radius:11px;padding:12px 15px;font-size:14px;margin:16px 0}
+  .alerta{background:var(--warn-soft);border:1px solid var(--warn-linha);border-radius:11px;padding:12px 15px;font-size:14px;margin:8px 0 16px}
+</style>
+<script>
+  addEventListener('DOMContentLoaded', () => {
+    const passos = [...document.querySelectorAll('.passo')];
+    const caixas = passos.map(p => p.querySelector('input')).filter(Boolean);
+    function atualizar(){
+      const f = caixas.filter(c => c.checked).length;
+      document.getElementById('contador').textContent = f + ' de ' + caixas.length;
+      document.getElementById('trilho').style.width = (caixas.length ? f/caixas.length*100 : 0) + '%';
+      passos.forEach(p => { const c = p.querySelector('input'); p.classList.toggle('feito', !!(c && c.checked)); });
+    }
+    caixas.forEach((c,i) => {
+      const b = c.parentElement.querySelector('b');
+      const chave = 'guia-painel-' + (b ? b.textContent.trim() : i);
+      c.checked = localStorage.getItem(chave) === '1';
+      c.addEventListener('change', () => { localStorage.setItem(chave, c.checked ? '1':'0'); atualizar(); });
+    });
+    atualizar();
+    document.querySelectorAll('.copiar').forEach(b => b.addEventListener('click', async () => {
+      const pre = b.parentElement.querySelector('pre');
+      try { await navigator.clipboard.writeText(pre.textContent); b.textContent='✓ Copiado!'; b.classList.add('feito');
+        setTimeout(()=>{ b.textContent='📋 Copiar'; b.classList.remove('feito'); }, 2500);
+      } catch { const r=document.createRange(); r.selectNodeContents(pre); const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+    }));
+  });
+</script>
+</head><body><div class="wrap">
+<h1>Ligar o painel automático do falta<span class="e">ê</span></h1>
+<p class="sub">Depois disto, o painel de negócio chega no seu e-mail todo dia às 08:00 e você não roda mais SQL. São 5 passos, todos dentro do painel do Supabase (<b>supabase.com/dashboard</b> → projeto Faltaê). O que você marcar fica salvo — pode fechar e voltar.</p>
+
+<div class="barra">
+  <div class="txt"><span>Progresso</span><span class="n" id="contador">0 de 7</span></div>
+  <div class="trilho"><i id="trilho"></i></div>
+</div>
+
+<h2>Ligar o painel diário</h2>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">SQL Editor</span><b>Criar a função e o cron</b>
+        <div class="como">No menu esquerdo do Supabase, abra <code>SQL Editor</code> → <b>New query</b> → cole o código abaixo → <code>Run</code> (ou Ctrl+Enter). Deve terminar em <b>Success</b>. Isso cria a função <code>painel_semanal()</code> e agenda o disparo diário das 08:00. Rodar de novo não quebra nada.</div></div>
+    </div>
+    <details class="cod"><summary>AUTOMATIZAR-PAINEL.sql</summary>
+      <button class="copiar" type="button">📋 Copiar</button>
+      <pre>-- ═══════════════════════════════════════════════════════════════════════════
+-- FALTAÊ · AUTOMATIZAR O PAINEL DE NEGÓCIO (e-mail diário, sem rodar SQL)
+-- Cole tudo no SQL Editor e rode uma vez. Cria:
+--   1. a função painel_semanal() que devolve TODO o painel como um JSON
+--   2. o cron que dispara a função de borda 'painel-semanal' TODO DIA às 08:00 BRT
+-- Depois falta só publicar a função de borda (passo no PLANO). Reusa o segredo
+-- relatorio_cron_chave que você já criou — nenhum segredo novo.
+-- Idempotente: rodar 2x não quebra.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+create or replace function public.painel_semanal()
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $fn$
+  select jsonb_build_object(
+    'gerado_em', to_char(now() at time zone 'America/Sao_Paulo', 'DD/MM/YYYY HH24:MI'),
+
+    -- [A] pulso
+    'contas_total',    (select count(*) from auth.users),
+    'novas_7d',        (select count(*) from auth.users where created_at &gt;= now() - interval '7 days'),
+    'novas_24h',       (select count(*) from auth.users where created_at &gt;= now() - interval '24 hours'),
+    'ativaram',        (select count(*) from dados_usuario
+                          where jsonb_typeof(dados-&gt;'materias')='array' and jsonb_array_length(dados-&gt;'materias')&gt;0),
+    'push',            (select count(*) from push_inscricoes),
+    'essencial',       (select count(*) from dados_usuario where plano &lt;&gt; 'gratis'),
+    'pagantes',        (select count(distinct user_id) from pagamentos_processados),
+    'pagamentos_7d',   (select count(*) from pagamentos_processados where criado_em &gt;= now() - interval '7 days'),
+
+    -- [B] funil de ativação (do jsonb)
+    'funil', (select jsonb_build_object(
+        'nuvem', count(*),
+        'grade', count(*) filter (where jsonb_typeof(dados-&gt;'materias')='array' and jsonb_array_length(dados-&gt;'materias')&gt;0),
+        'falta', count(*) filter (where jsonb_typeof(dados-&gt;'faltas')='array'   and jsonb_array_length(dados-&gt;'faltas')&gt;0),
+        'prova', count(*) filter (where jsonb_typeof(dados-&gt;'eventos')='array'  and jsonb_array_length(dados-&gt;'eventos')&gt;0)
+      ) from dados_usuario),
+
+    -- [C] retenção (só Essencial sincroniza)
+    'ret', (select jsonb_build_object(
+        'd1',   count(*) filter (where atualizado_em &gt;= now() - interval '24 hours'),
+        'd7',   count(*) filter (where atualizado_em &gt;= now() - interval '7 days'),
+        'd30',  count(*) filter (where atualizado_em &gt;= now() - interval '30 days'),
+        'base', count(*)
+      ) from dados_usuario where plano &lt;&gt; 'gratis'),
+
+    -- [D] monetização por origem
+    'origem', (select coalesce(jsonb_agg(jsonb_build_object('origem', origem, 'contas', contas) order by contas desc), '[]'::jsonb)
+      from (select coalesce(plano_origem,'sem registro') as origem, count(*) as contas
+            from dados_usuario where plano &lt;&gt; 'gratis' group by 1) o),
+
+    -- [E] intenção de compra (métricas dos últimos 7 dias)
+    'conv', (select jsonb_build_object(
+        'viu',   coalesce(sum(total) filter (where evento='plano_tela_gratis'),0),
+        'tocou', coalesce(sum(total) filter (where evento like 'passe_toque_%'),0)
+      ) from metricas_diarias where dia &gt;= current_date - 7),
+
+    -- [I] janela: vencendo nos próximos 7 dias
+    'vencendo', (select coalesce(jsonb_agg(jsonb_build_object(
+          'email', u.email,
+          'origem', d.plano_origem,
+          'dias', (d.plano_valido_ate::date - current_date)
+        ) order by d.plano_valido_ate), '[]'::jsonb)
+      from dados_usuario d join auth.users u on u.id = d.user_id
+      where d.plano &lt;&gt; 'gratis' and d.plano_valido_ate is not null
+        and d.plano_valido_ate between now() and now() + interval '7 days'),
+
+    -- gatilhos que mais levaram à oferta (7 dias)
+    'gatilhos', (select coalesce(jsonb_agg(jsonb_build_object('evento', evento, 'n', n) order by n desc), '[]'::jsonb)
+      from (select evento, sum(total) as n from metricas_diarias
+            where dia &gt;= current_date - 7
+              and (evento like '%_upgrade' or evento like 'bloqueio_%' or evento='trial_iniciado')
+            group by evento order by n desc limit 5) g)
+  );
+$fn$;
+
+revoke all on function public.painel_semanal() from public, anon, authenticated;
+-- só o service role (função de borda) executa; ninguém acessa pela API pública
+
+-- cron: todo dia às 08:00 BRT (11:00 UTC)
+do $$ begin perform cron.unschedule('faltae-painel-diario'); exception when others then null; end $$;
+select cron.schedule('faltae-painel-diario', '0 11 * * *',
+  $cron$
+  select net.http_post(
+    url := 'https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/painel-semanal',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-painel-chave', (select decrypted_secret from vault.decrypted_secrets where name = 'relatorio_cron_chave')
+    ),
+    body := '{}'::jsonb
+  );
+  $cron$);
+
+-- pra testar agora: rode e veja o JSON completo
+-- select public.painel_semanal();</pre>
+    </details>
+  </div>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">SQL Editor</span><b>Testar a função na hora</b>
+        <div class="como">Ainda no <code>SQL Editor</code>, rode só esta linha. Ela deve devolver <b>um JSON</b> com os números (contas, funil, origem…). Se vier JSON, a função está de pé.</div></div>
+    </div>
+    <details class="cod"><summary>testar a função</summary>
+      <button class="copiar" type="button">📋 Copiar</button>
+      <pre>select public.painel_semanal();</pre>
+    </details>
+  </div>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">Edge Functions › Deploy a new function</span><b>Publicar a função de e-mail</b>
+        <div class="como">No menu, <code>Edge Functions</code> → <b>Deploy a new function</b> (ou "Create a new function"). Nome <b>exato</b>: <code>painel-semanal</code>. Apague o exemplo, cole o código abaixo e faça o <b>Deploy</b>. <b>Importante:</b> em <code>Settings</code> da função, deixe <b>Verify JWT = OFF</b> — quem chama é o cron, não um usuário logado. Ela reusa o segredo <code>RELATORIO_CRON_CHAVE</code> que você já tem; nenhum segredo novo.</div></div>
+    </div>
+    <details class="cod"><summary>painel-semanal / index.ts</summary>
+      <button class="copiar" type="button">📋 Copiar</button>
+      <pre>// Faltaê — PAINEL DE NEGÓCIO por e-mail (diário, 08:00 BRT).
+// Lê a função painel_semanal() no banco e manda um resumo pro fundador. Assim
+// você não roda SQL: o painel chega no e-mail todo dia de manhã.
+// Publicar com "Verify JWT" DESLIGADO — a proteção é o header x-painel-chave,
+// que precisa bater com o segredo RELATORIO_CRON_CHAVE (reusado; nenhum segredo novo).
+// Segredos necessários: RESEND_API_KEY, RELATORIO_CRON_CHAVE.
+// Teste manual: POST com corpo {"teste": true} devolve o HTML sem enviar e-mail.
+import { createClient } from 'npm:@supabase/supabase-js@2'
+
+const DESTINO = 'contato.gustavoaranda@gmail.com'   // troque aqui se quiser outro inbox
+const REMETENTE = 'Faltaê Painel &lt;relatorio@faltae.com.br&gt;'
+const LOGO = 'https://cdn.jsdelivr.net/gh/GutoAranda/controle-faltas@main/icon-192.png'
+
+const n = (v: unknown) =&gt; Number(v ?? 0)
+const pct = (a: number, b: number) =&gt; b &gt; 0 ? Math.round(100 * a / b) + '%' : '—'
+
+function montarEmail(d: any): { assunto: string; html: string } {
+  const funil = d.funil || {}, ret = d.ret || {}, conv = d.conv || {}
+  const origem: any[] = d.origem || [], vencendo: any[] = d.vencendo || [], gatilhos: any[] = d.gatilhos || []
+  const baseFunil = n(funil.nuvem)
+
+  // um cartão grande do topo
+  const cartao = (valor: string, rotulo: string, tom: 'i'|'v'|'g' = 'i') =&gt; {
+    const c = { i: ['#EEF1FB','#26317E','#565C74'], v: ['#E8F4D5','#33520A','#4A6B14'], g: ['#F4F5F9','#14172B','#565C74'] }[tom]
+    return `&lt;td width="25%" style="padding:5px"&gt;&lt;table width="100%" cellpadding="0" cellspacing="0" bgcolor="${c[0]}" style="background:${c[0]};border-radius:12px"&gt;&lt;tr&gt;&lt;td align="center" style="padding:14px 4px"&gt;
+      &lt;div style="font-size:26px;font-weight:800;color:${c[1]};font-family:'Bricolage Grotesque','DM Sans',Arial,sans-serif"&gt;${valor}&lt;/div&gt;
+      &lt;div style="font-size:10px;font-weight:700;color:${c[2]};text-transform:uppercase;letter-spacing:.05em;margin-top:2px"&gt;${rotulo}&lt;/div&gt;
+    &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/td&gt;`
+  }
+
+  // linha do funil de ativação com barra
+  const linhaFunil = (rot: string, val: number) =&gt; {
+    const p = baseFunil &gt; 0 ? Math.round(100 * val / baseFunil) : 0
+    return `&lt;tr&gt;
+      &lt;td style="padding:7px 0;font-size:14px;color:#14172B;width:180px"&gt;${rot}&lt;/td&gt;
+      &lt;td style="padding:7px 0;width:100%"&gt;&lt;table cellpadding="0" cellspacing="0" width="100%"&gt;&lt;tr&gt;
+        &lt;td bgcolor="#EFF0F6" style="background:#EFF0F6;border-radius:6px"&gt;&lt;table cellpadding="0" cellspacing="0" width="${Math.max(p,2)}%"&gt;&lt;tr&gt;&lt;td bgcolor="#4056C7" style="background:#4056C7;border-radius:6px;height:12px;font-size:0"&gt;&amp;nbsp;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/td&gt;
+      &lt;/tr&gt;&lt;/table&gt;&lt;/td&gt;
+      &lt;td style="padding:7px 0 7px 12px;font-size:14px;font-weight:700;color:#14172B;white-space:nowrap"&gt;${val} · ${p}%&lt;/td&gt;
+    &lt;/tr&gt;`
+  }
+
+  const linhasOrigem = origem.length
+    ? origem.map(o =&gt; `&lt;tr&gt;&lt;td style="padding:5px 0;font-size:13px;color:#14172B"&gt;${o.origem}&lt;/td&gt;&lt;td align="right" style="padding:5px 0;font-size:13px;font-weight:700;color:#14172B"&gt;${o.contas}&lt;/td&gt;&lt;/tr&gt;`).join('')
+    : '&lt;tr&gt;&lt;td style="font-size:13px;color:#8A90AC;padding:5px 0"&gt;nenhum Essencial ainda&lt;/td&gt;&lt;/tr&gt;'
+
+  const linhasVencendo = vencendo.length
+    ? vencendo.map(v =&gt; {
+        const tom = v.origem === 'trial' ? '#965009' : (String(v.origem||'').startsWith('parceria') ? '#565C74' : '#B31138')
+        const nota = v.origem === 'trial' ? 'teste → converter' : (String(v.origem||'').startsWith('parceria') ? 'cortesia → só avisar' : 'pagante → renovar')
+        return `&lt;tr&gt;&lt;td style="padding:5px 0;font-size:13px;color:#14172B"&gt;${v.email}&lt;/td&gt;&lt;td style="padding:5px 0;font-size:12px;color:${tom}"&gt;${v.dias}d · ${nota}&lt;/td&gt;&lt;/tr&gt;`
+      }).join('')
+    : '&lt;tr&gt;&lt;td style="font-size:13px;color:#8A90AC;padding:5px 0"&gt;ninguém vencendo nos próximos 7 dias 👍&lt;/td&gt;&lt;/tr&gt;'
+
+  const linhasGatilhos = gatilhos.length
+    ? gatilhos.map(g =&gt; `&lt;tr&gt;&lt;td style="padding:4px 0;font-size:13px;color:#14172B"&gt;${g.evento}&lt;/td&gt;&lt;td align="right" style="padding:4px 0;font-size:13px;font-weight:700;color:#14172B"&gt;${g.n}&lt;/td&gt;&lt;/tr&gt;`).join('')
+    : '&lt;tr&gt;&lt;td style="font-size:13px;color:#8A90AC;padding:4px 0"&gt;sem gatilhos registrados nos últimos 7 dias&lt;/td&gt;&lt;/tr&gt;'
+
+  const intencao = pct(n(conv.tocou), n(conv.viu))
+
+  const html = `&lt;!doctype html&gt;&lt;html lang="pt-BR"&gt;&lt;head&gt;&lt;meta charset="utf-8"&gt;
+&lt;meta name="color-scheme" content="light"&gt;&lt;meta name="supported-color-schemes" content="light"&gt;
+&lt;style&gt;@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&amp;family=DM+Sans:wght@400;500;700&amp;display=swap');&lt;/style&gt;&lt;/head&gt;
+&lt;body style="margin:0;padding:0;background:#E9EBF2"&gt;
+&lt;div style="background:#E9EBF2;padding:20px 8px;font-family:'DM Sans','Segoe UI',system-ui,Arial,sans-serif"&gt;
+  &lt;table width="100%" cellpadding="0" cellspacing="0" bgcolor="#FFFFFF" style="max-width:600px;margin:0 auto;background:#FFFFFF;border-radius:16px;overflow:hidden"&gt;
+    &lt;tr&gt;&lt;td bgcolor="#14172B" style="background:#14172B;padding:22px 26px"&gt;
+      &lt;table cellpadding="0" cellspacing="0"&gt;&lt;tr&gt;
+        &lt;td width="40" valign="middle"&gt;&lt;img src="${LOGO}" width="40" height="40" alt="" style="display:block;border-radius:11px"&gt;&lt;/td&gt;
+        &lt;td style="padding-left:13px"&gt;
+          &lt;div style="font-family:'Bricolage Grotesque',Arial,sans-serif;color:#FFFFFF;font-size:15px;font-weight:800"&gt;falta&lt;span style="color:#A3E635"&gt;ê&lt;/span&gt; · painel&lt;/div&gt;
+          &lt;div style="color:#A6ABC2;font-size:12px"&gt;${d.gerado_em}&lt;/div&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;&lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td style="padding:22px 22px 4px"&gt;
+      &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:8px"&gt;Pulso&lt;/div&gt;
+      &lt;table cellpadding="0" cellspacing="0" width="100%"&gt;&lt;tr&gt;
+        ${cartao(String(n(d.contas_total)), 'contas', 'g')}
+        ${cartao('+' + n(d.novas_7d), 'novas 7d', 'g')}
+        ${cartao(String(n(d.essencial)), 'essencial', 'i')}
+        ${cartao(String(n(d.pagantes)), 'pagantes', n(d.pagantes) &gt; 0 ? 'v' : 'g')}
+      &lt;/tr&gt;&lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td style="padding:18px 22px 4px"&gt;
+      &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:6px"&gt;Ativação — de conta a uso real&lt;/div&gt;
+      &lt;table cellpadding="0" cellspacing="0" width="100%"&gt;
+        ${linhaFunil('Tem dados na nuvem', baseFunil)}
+        ${linhaFunil('Montou a grade', n(funil.grade))}
+        ${linhaFunil('Marcou ≥1 falta', n(funil.falta))}
+        ${linhaFunil('Cadastrou prova', n(funil.prova))}
+      &lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td style="padding:14px 22px 4px"&gt;
+      &lt;table cellpadding="0" cellspacing="0" width="100%"&gt;&lt;tr&gt;
+        &lt;td width="50%" valign="top" style="padding-right:8px"&gt;
+          &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:6px"&gt;Uso recente (Essencial)&lt;/div&gt;
+          &lt;div style="font-size:13px;color:#14172B;line-height:1.7"&gt;
+            Ontem: &lt;b&gt;${n(ret.d1)}&lt;/b&gt;&lt;br&gt;7 dias: &lt;b&gt;${n(ret.d7)}&lt;/b&gt;&lt;br&gt;30 dias: &lt;b&gt;${n(ret.d30)}&lt;/b&gt; de ${n(ret.base)}
+          &lt;/div&gt;
+        &lt;/td&gt;
+        &lt;td width="50%" valign="top" style="padding-left:8px"&gt;
+          &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:6px"&gt;Intenção de compra (7d)&lt;/div&gt;
+          &lt;div style="font-size:13px;color:#14172B;line-height:1.7"&gt;
+            Viu o plano: &lt;b&gt;${n(conv.viu)}&lt;/b&gt;&lt;br&gt;Tocou num passe: &lt;b&gt;${n(conv.tocou)}&lt;/b&gt;&lt;br&gt;Taxa: &lt;b style="color:#4056C7"&gt;${intencao}&lt;/b&gt;
+          &lt;/div&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;&lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td style="padding:14px 22px 4px"&gt;
+      &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:6px"&gt;Essencial por origem&lt;/div&gt;
+      &lt;table cellpadding="0" cellspacing="0" width="100%"&gt;${linhasOrigem}&lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td style="padding:14px 22px 4px"&gt;
+      &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:6px"&gt;⚡ Vencendo em 7 dias — janela de ação&lt;/div&gt;
+      &lt;table cellpadding="0" cellspacing="0" width="100%"&gt;${linhasVencendo}&lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td style="padding:14px 22px 22px"&gt;
+      &lt;div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A90AC;margin-bottom:6px"&gt;Gatilhos que levaram à oferta (7d)&lt;/div&gt;
+      &lt;table cellpadding="0" cellspacing="0" width="100%"&gt;${linhasGatilhos}&lt;/table&gt;
+    &lt;/td&gt;&lt;/tr&gt;
+
+    &lt;tr&gt;&lt;td bgcolor="#F4F5F9" style="background:#F4F5F9;padding:14px 22px;font-size:11px;color:#8A90AC;line-height:1.5"&gt;
+      Valores em R$ ficam no Mercado Pago (aqui é contagem). Uso recente só enxerga Essencial (o grátis não sincroniza).
+      Painel completo em SQL: PAINEL-NEGOCIO.sql.
+    &lt;/td&gt;&lt;/tr&gt;
+  &lt;/table&gt;
+&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;`
+
+  return { assunto: `Faltaê · painel de ${d.gerado_em?.slice(0, 10) || 'hoje'}`, html }
+}
+
+Deno.serve(async (req) =&gt; {
+  const corpo = await req.json().catch(() =&gt; ({}))
+  const soTeste = corpo?.teste === true
+
+  const chave = Deno.env.get('RELATORIO_CRON_CHAVE')
+  if (!soTeste &amp;&amp; (!chave || req.headers.get('x-painel-chave') !== chave)) {
+    return new Response('não autorizado', { status: 401 })
+  }
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendKey) return new Response('sem RESEND_API_KEY', { status: 503 })
+
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  const { data, error } = await admin.rpc('painel_semanal')
+  if (error) return new Response('erro ao ler painel: ' + error.message, { status: 500 })
+
+  const { assunto, html } = montarEmail(data)
+
+  // modo teste: devolve o HTML pra inspeção, não envia
+  if (soTeste) return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: REMETENTE, to: DESTINO, subject: assunto, html }),
+  })
+  if (!r.ok) {
+    const txt = await r.text()
+    console.error('Resend recusou o painel:', r.status, txt)
+    return new Response('falha no envio: ' + txt, { status: 502 })
+  }
+  console.log('Painel enviado para', DESTINO)
+  return Response.json({ ok: true, enviado_para: DESTINO })
+})</pre>
+    </details>
+  </div>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">Edge Functions › painel-semanal</span><b>Ver o e-mail antes de mandar pra valer</b>
+        <div class="como">Abra a função <code>painel-semanal</code> → aba <b>Invoke</b> (ou "Test"). No corpo (body) coloque <code>{"teste": true}</code> e envie. Em vez de mandar e-mail, ela <b>devolve o HTML do e-mail</b> — confira se os números fazem sentido. É o ensaio seguro.</div></div>
+    </div>
+    <details class="cod"><summary>corpo do teste</summary>
+      <button class="copiar" type="button">📋 Copiar</button>
+      <pre>{ "teste": true }</pre>
+    </details>
+  </div>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">no próprio código</span><b>Conferir pra qual e-mail vai</b>
+        <div class="como">O painel é enviado pro endereço na linha <code>const DESTINO</code>, no topo do código da função — está como <code>contato.gustavoaranda@gmail.com</code>. Se quiser outro inbox, troque ali e faça o Deploy de novo. É pra <b>você</b>, não pros alunos.</div></div>
+    </div>
+  </div>
+
+<div class="dica">💚 Depois do passo 4 dar certo (o teste devolveu o HTML), está tudo pronto — o cron cuida do resto sozinho, todo dia. Não precisa fazer mais nada aqui.</div>
+
+<h2>Já que você está aí — 2 pendências rápidas</h2>
+<div class="alerta">⚠️ Não são do painel, mas ficaram para trás e são de um clique cada. Se quiser, resolva agora que você já está logado no Supabase.</div>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">SQL Editor</span><b>Fechar o delete anônimo (segurança)</b>
+        <div class="como">Aquele item que não pegou da última vez. Um <code>delete</code> anônimo em <code>dados_usuario</code> só era barrado pela trava de linha, não pela permissão. Nada foi apagado, mas isto devolve a segunda camada. Nem o app nem as funções usam esse delete pelo cliente.</div></div>
+    </div>
+    <details class="cod"><summary>revogar delete</summary>
+      <button class="copiar" type="button">📋 Copiar</button>
+      <pre>revoke delete on public.dados_usuario from anon, authenticated;</pre>
+    </details>
+  </div>
+<div class="passo"><div class="cab">
+      <input type="checkbox">
+      <div><span class="onde">Authentication › Sign In / Providers</span><b>Religar a confirmação de e-mail</b>
+        <div class="como">Você desligou como emergência quando o e-mail não saía. O Resend está de pé e testado, então a razão acabou. <code>Authentication</code> → <code>Sign In / Providers</code> → <b>Email</b> → ligue <b>Confirm email</b> → Save. Depois crie uma conta descartável pra ver o e-mail novo chegando.</div></div>
+    </div>
+  </div>
+
+</div></body></html>
