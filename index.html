@@ -2763,7 +2763,7 @@ async function desativarPushDoAparelho() {
   } catch { /* melhor sair do que travar o logout */ }
 }
 
-document.getElementById('btn-lembretes').addEventListener('click', async () => {
+async function ativarLembretes() {
   if (!('Notification' in window)) {
     toast(ehIphoneInstalado() || !/iPhone|iPad|iPod/.test(navigator.userAgent)
       ? 'Este navegador não suporta notificações.'
@@ -2788,7 +2788,29 @@ document.getElementById('btn-lembretes').addEventListener('click', async () => {
   toast(comPush
     ? 'Lembretes ativados! 🔔 Você recebe aviso de prova até com o app fechado.'
     : 'Lembretes ativados com o app aberto! 🔔');
-});
+}
+document.getElementById('btn-lembretes').addEventListener('click', ativarLembretes);
+
+/* convite único de notificações, depois do onboarding: explica o valor ANTES do
+   prompt do sistema (negativa no prompt nativo é quase irreversível no Android).
+   Pergunta UMA vez por aparelho; quem recusar ativa depois pela Agenda. */
+function convidarNotificacoes(atraso = 900) {
+  if (!('Notification' in window) || Notification.permission !== 'default') return;
+  if (localStorage.getItem('controleFaltas.pushConvite')) return;
+  if (!db.materias.length) return; // onboarding ainda não terminou
+  localStorage.setItem('controleFaltas.pushConvite', '1');
+  setTimeout(() => {
+    registrarMetrica('push_convite_mostrado');
+    abrirSheet({
+      titulo: 'Quer aviso de prova? 🔔',
+      texto: 'O Faltaê te avisa quando uma prova ou atividade está chegando — no dia e na véspera. Toque em ativar e aceite a permissão que o aparelho vai pedir.',
+      botoes: [
+        { txt: '🔔 Ativar lembretes', classe: 'primary', cb: () => { registrarMetrica('push_convite_aceito'); ativarLembretes(); } },
+        { txt: 'Agora não', classe: 'small', cb: () => toast('Tranquilo — dá pra ativar quando quiser, na Agenda. 😉') },
+      ],
+    });
+  }, atraso);
+}
 
 /* ─────────── backup ─────────── */
 function infoBackup() {
@@ -3950,6 +3972,7 @@ async function aposLogin(user) {
   tentarConectarWidget();
   aplicarSairRelatorio();
   if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
+  convidarNotificacoes(2500); // convite único pós-onboarding (não repete: flag por aparelho)
   if (typeof processarAtivacaoPendente === 'function') processarAtivacaoPendente(); // link de parceria (?ativar=) sobrevive ao cadastro
   if (typeof processarPacotePendente === 'function') processarPacotePendente();     // link de provas (?provas=) idem
 }
@@ -4599,7 +4622,7 @@ function momentoAha() {
     texto: 'Tudo isso vive só neste aparelho. O Essencial guarda na nuvem, põe suas faltas na tela inicial, joga as provas no seu calendário e gera o relatório do semestre — a partir de R$ 9,98/mês.',
     botoes: [
       { txt: '💚 Ver o que o Essencial faz', classe: 'primary', cb: () => { registrarMetrica('aha_clique'); abrirTelaPlano(); } },
-      { txt: 'Seguir no grátis', classe: 'small', cb: () => toast('Fechado — o grátis é seu pelo tempo que quiser. 💚') },
+      { txt: 'Seguir no grátis', classe: 'small', cb: () => { toast('Fechado — o grátis é seu pelo tempo que quiser. 💚'); convidarNotificacoes(700); } },
     ],
   });
   return true;
@@ -4610,7 +4633,7 @@ function perguntarPlanos() {
   const pend = materiasSemConteudo();
   if (!pend.length) {
     irParaAba('inicio');
-    if (!momentoAha()) toast('Grade completa e com conteúdo — seu semestre tá no controle! 🎉');
+    if (!momentoAha()) { toast('Grade completa e com conteúdo — seu semestre tá no controle! 🎉'); convidarNotificacoes(1200); }
     return;
   }
   abrirSheet({
@@ -4618,7 +4641,7 @@ function perguntarPlanos() {
     texto: `Envie o plano de ensino de cada professor (PDF, ou cole o texto) e o app preenche o que cai em cada aula — toda falta passa a mostrar o conteúdo perdido — e ainda coloca as provas na agenda. ${pend.length === 1 ? '1 matéria está' : pend.length + ' matérias estão'} sem conteúdo.`,
     botoes: [
       { txt: '📄 Preencher agora', classe: 'primary', cb: guiarPlanos },
-      { txt: 'Deixar pra depois', classe: 'small', cb: () => { db.planosLembrar = true; salvar(); irParaAba('inicio'); renderInicio(); toast('Deixei um atalho na tela inicial pra quando os planos chegarem. 😉'); } },
+      { txt: 'Deixar pra depois', classe: 'small', cb: () => { db.planosLembrar = true; salvar(); irParaAba('inicio'); renderInicio(); toast('Deixei um atalho na tela inicial pra quando os planos chegarem. 😉'); convidarNotificacoes(1400); } },
     ],
     aoFechar: () => { db.planosLembrar = true; salvar(); irParaAba('inicio'); renderInicio(); },
   });
@@ -5782,6 +5805,7 @@ if (retornoPagamento) {
       tentarConectarWidget();
       aplicarSairRelatorio();
       if ('Notification' in window && Notification.permission === 'granted') ativarPush(); // renova a inscrição (endpoints expiram)
+  convidarNotificacoes(2500); // convite único pós-onboarding (não repete: flag por aparelho)
       /* Links pendentes tambem precisam rodar AQUI. Antes eles so eram processados
          depois de preencher o formulario de login — ou seja, quem ja estava logado
          e abria o link de ativacao (?ativar=) ou de provas (?provas=) nao resgatava
