@@ -1572,10 +1572,18 @@ function infoSemestre() {
    Regra do produto: semanas perfeitas ACUMULAM no semestre (o total nunca zera);
    só a sequência de semanas consecutivas reinicia quando há falta não abonada.
    Só semanas já fechadas entram nos contadores; a semana atual aparece nos dias. */
+function temAulaEm(data) {
+  if (db.aulas.some(a => a.data === data)) return true;
+  const dia = diaSemana(data);
+  /* matéria com dia fixo e sem datas cadastradas conta como aula semanal;
+     feriado sem cronograma vira "presente" — erro a favor do aluno */
+  return db.materias.some(m => m.diaSemana === dia);
+}
 function calcOfensiva() {
   const hoje = hojeISO();
   const segAtual = inicioDaSemana(hoje);
   const primeira = db.aulas.length ? db.aulas.map(a => a.data).sort()[0] : hoje;
+  const temMateriaSemanal = db.materias.some(m => m.diaSemana);
   let total = 0;
   let sequencia = 0;
   let contando = true;
@@ -1583,7 +1591,7 @@ function calcOfensiva() {
     const seg = somarDias(segAtual, -7 * i);
     const dom = somarDias(seg, 6);
     if (dom < primeira) break;
-    const temAulas = db.aulas.some(a => a.data >= seg && a.data <= dom);
+    const temAulas = temMateriaSemanal || db.aulas.some(a => a.data >= seg && a.data <= dom);
     const temFalta = db.faltas.some(f => !f.abonada && f.data >= seg && f.data <= dom);
     if (temFalta) { contando = false; continue; }
     if (temAulas) { total++; if (contando) sequencia++; }
@@ -1593,7 +1601,7 @@ function calcOfensiva() {
 
   const dias = ['seg', 'ter', 'qua', 'qui', 'sex'].map((rotulo, i) => {
     const data = somarDias(segAtual, i);
-    const temAula = db.aulas.some(a => a.data === data);
+    const temAula = temAulaEm(data);
     const falta = db.faltas.some(f => !f.abonada && f.data === data);
     let estado;
     if (falta) estado = 'falta';
@@ -1944,8 +1952,8 @@ function renderInicio() {
 
   /* sequência: semana em foco */
   const alvoOf = document.getElementById('inicio-ofensiva');
-  if (!db.aulas.length) {
-    alvoOf.innerHTML = '<p class="muted" style="margin:0">Cadastre seus cronogramas para acompanhar sua sequência de presença semanal.</p>';
+  if (!db.aulas.length && !db.materias.some(m => m.diaSemana)) {
+    alvoOf.innerHTML = '<p class="muted" style="margin:0">Cadastre suas matérias (com o dia da semana) para acompanhar sua sequência de presença.</p>';
   } else {
     const of = calcOfensiva();
     let msg;
@@ -1953,7 +1961,7 @@ function renderInicio() {
     else if (!of.temAulaNaSemana) msg = 'Semana sem aulas no plano — sua sequência está protegida.';
     else if (of.restantes > 0) msg = `Mais ${of.restantes} dia${of.restantes === 1 ? '' : 's'} de aula e a semana fecha perfeita.`;
     else msg = 'Semana perfeita garantida! 🎉';
-    const marca = d => d.estado === 'presente' ? '✓' : (d.estado === 'falta' ? '✕' : (d.estado === 'hoje' ? 'hoje' : ''));
+    const marca = d => d.estado === 'presente' ? '✓' : (d.estado === 'falta' ? '✕' : (d.estado === 'hoje' ? 'hoje' : (d.estado === 'livre' ? '—' : '')));
     const nomeEstado = { presente: 'presente', falta: 'falta', hoje: 'hoje', futuro: 'aula futura', livre: 'sem aula' };
     alvoOf.innerHTML = `
       <div class="semana-foco" aria-label="Sua semana: ${of.dias.map(d => d.rotulo + ' ' + nomeEstado[d.estado]).join(', ')}">
