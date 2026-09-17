@@ -2048,7 +2048,7 @@ var edEventoId = null; // prova/atividade em edição inline na agenda (var: boo
 
 function preencherSelectMaterias(sel) {
   sel.innerHTML = db.materias.length
-    ? [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('')
+    ? [...db.materias].sort((a, b) => a.nome.localeCompare(b.nome)).map(m => `<option value="${m.id}">${esc(m.nome)}${ehAtiva(m) ? '' : ' 🔒 guardada'}</option>`).join('')
     : '<option value="">— cadastre uma matéria primeiro —</option>';
 }
 function preencherFiltroFaltas(sel, valorAtual) {
@@ -2715,9 +2715,9 @@ function ligarEventosMaterias(alvo) {
 
 document.getElementById('form-materia').addEventListener('submit', ev => {
   ev.preventDefault();
-  if (planoNuvem === 'gratis' && db.materias.length >= LIMITE_MATERIAS_GRATIS) {
-    toast(`No grátis dá pra ter ${LIMITE_MATERIAS_GRATIS} matérias. O Essencial libera ilimitadas + backup na nuvem.`,
-      'Ver o Essencial', () => abrirTelaPlano());
+  const nomeNovo = document.getElementById('materia-nome').value.trim();
+  if (db.materias.some(m => m.nome.trim().toLowerCase() === nomeNovo.toLowerCase())) {
+    toast('Você já tem uma matéria com esse nome — edite a existente em Minha grade.');
     return;
   }
   db.materias.push({
@@ -2735,6 +2735,8 @@ document.getElementById('form-materia').addEventListener('submit', ev => {
   ev.target.reset();
   document.getElementById('materia-limite').value = 25;
   toast('Matéria criada');
+  /* grátis acompanhando mais de 6: o aluno escolhe quais ficam ativas (a nova entra na lista) */
+  if (excedeLimite()) sheetEscolherAtivas('Nova matéria! Quais 6 você acompanha de perto?');
 });
 
 /* ─────────── lembretes de prova ─────────── */
@@ -3137,8 +3139,6 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 /* ─────────── conta e sincronização (nuvem) ─────────── */
 const NUVEM_URL = 'https://ejdvolbpqrvtuemunzto.supabase.co';
 const NUVEM_CHAVE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZHZvbGJwcXJ2dHVlbXVuenRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODc5NjcsImV4cCI6MjEwMjE2Mzk2N30.yNVdaz0cxJ06rPuxFIGxqVMztx-CKLe6Q8qw1Vc2NcY';
-const LIMITE_MATERIAS_GRATIS = 6;
-
 /* var (não let) de propósito: renderTudo() do boot roda antes deste módulo e as
    funções de limite/métrica consultam estas variáveis — com let elas caem em TDZ
    e o app morre no carregamento. Com var, valem undefined até aqui (sem travar). */
@@ -4547,8 +4547,10 @@ document.getElementById('btn-confirmar-cesta').addEventListener('click', () => {
   }
   cestaEstado = null; cestaSalvar(); renderCesta();
   db.gradeOk = true; salvar();
+  const passouDoLimite = excedeLimite();
+  if (passouDoLimite) garantirLimiteProvisorio(); // no grátis: 6 mais usadas seguem ativas, escolha formal no próximo boot
   toast(r.materias || r.aulas || r.eventos
-    ? `Grade confirmada: +${r.materias} matérias e +${r.aulas} datas de aula${r.eventos ? ` (+${r.eventos} provas)` : ''} 🎉`
+    ? `Grade confirmada: +${r.materias} matérias e +${r.aulas} datas de aula${r.eventos ? ` (+${r.eventos} provas)` : ''} 🎉${passouDoLimite ? ' No grátis acompanho 6 de perto — ajuste em Minha grade.' : ''}`
     : 'Você já tinha tudo — nada foi duplicado.');
   perguntarPlanos();
 });
