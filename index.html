@@ -1771,6 +1771,7 @@ function abrirSheetMateria(matId) {
       document.getElementById('faltas-add').open = true;
       document.getElementById('falta-materia').value = matId;
       document.getElementById('falta-data').value = hojeISO();
+      aplicarTravaFalta(false);
     }},
     { ico: '🗂', rotulo: 'Ver faltas desta matéria', fn: () => {
       filtroFaltaMat = matId; renderFaltas(); irParaAba('faltas');
@@ -2132,6 +2133,39 @@ document.getElementById('filtro-falta').addEventListener('change', ev => {
   filtroFaltaMat = ev.target.value; renderFaltas();
 });
 
+/* ── trava de dia da semana na falta ──
+   Não faz sentido marcar falta de terça numa aula de quarta. Os dias válidos
+   vêm da união: diaSemana da grade + dias reais do cronograma (db.aulas).
+   Matéria sem grade e sem cronograma fica livre (não temos como saber). */
+function diasDaMateria(materiaId) {
+  const dias = new Set();
+  const m = materiaPorId(materiaId);
+  if (m && m.diaSemana) dias.add(m.diaSemana);
+  db.aulas.forEach(a => { if (a.materiaId === materiaId) dias.add(diaSemana(a.data)); });
+  return dias;
+}
+function ultimoDiaValido(aPartirDe, dias) {
+  let d = aPartirDe;
+  for (let i = 0; i < 7; i++) { if (dias.has(diaSemana(d))) return d; d = somarDias(d, -1); }
+  return aPartirDe;
+}
+function aplicarTravaFalta(avisar) {
+  const campo = document.getElementById('falta-data');
+  const dias = diasDaMateria(document.getElementById('falta-materia').value);
+  campo.removeAttribute('min'); campo.removeAttribute('step');
+  if (!dias.size) return;
+  if (!campo.value) campo.value = hojeISO();
+  if (!dias.has(diaSemana(campo.value))) {
+    const certo = ultimoDiaValido(campo.value, dias);
+    campo.value = certo;
+    if (avisar) toast('Essa matéria tem aula ' + [...dias].join(', ') + ' — ajustei pra ' + diaSemana(certo) + ', ' + formatarData(certo) + '.');
+  }
+  /* um dia só por semana: o seletor nativo do navegador consegue travar de verdade (step 7) */
+  if (dias.size === 1) { campo.min = somarDias(campo.value, -364); campo.step = 7; }
+}
+document.getElementById('falta-materia').addEventListener('change', () => aplicarTravaFalta(false));
+document.getElementById('falta-data').addEventListener('change', () => aplicarTravaFalta(true));
+
 document.getElementById('form-falta').addEventListener('submit', ev => {
   ev.preventDefault();
   const materiaId = document.getElementById('falta-materia').value;
@@ -2140,6 +2174,12 @@ document.getElementById('form-falta').addEventListener('submit', ev => {
   const abonada = document.getElementById('falta-abonada').checked;
   if (!materiaId) { toast('Cadastre uma matéria primeiro, no Menu.'); return; }
   if (bloqueadaParaRegistro(materiaId, 'falta')) return;
+  const diasOk = diasDaMateria(materiaId);
+  if (diasOk.size && !diasOk.has(diaSemana(data))) {
+    toast('Essa matéria não tem aula ' + diaSemana(data) + ' — os dias dela: ' + [...diasOk].join(', ') + '.');
+    aplicarTravaFalta(false);
+    return;
+  }
   db.faltas.push({ id: uid(), materiaId, data, qtd, recuperada: false, abonada });
   if (!filtroFaltaMat) filtroFaltaMat = materiaId;
   salvar(); renderTudo();
