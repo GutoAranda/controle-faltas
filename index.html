@@ -247,7 +247,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
 
   /* ── sequência: semana em foco (seg–sex) ── */
   .semana-foco { display: flex; gap: 8px; }
-  .semana-foco .dia { flex: 1; max-width: 58px; text-align: center; }
+  .semana-foco .dia { flex: 1; max-width: 58px; text-align: center; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; }
+  .semana-foco .dia:active .quadro { transform: scale(.94); }
+  .semana-foco .quadro { transition: transform .1s ease; }
   .semana-foco .quadro {
     height: 44px; border-radius: 11px; background: var(--surface-2);
     display: flex; align-items: center; justify-content: center;
@@ -1754,6 +1756,43 @@ function montarSheet(titulo, sub, acoes) {
   document.getElementById('sheet-fundo').classList.add('on');
 }
 
+/* aulas de um dia qualquer: toque no quadradinho da sequência (ou deep link
+   ?faltar=DATA, que o widget semanal do APK vai usar) — marca/desfaz falta
+   por matéria sem sair da tela. Reabre após cada toque pra marcar várias. */
+function abrirDiaSheet(data) {
+  const dia = diaSemana(data);
+  const ids = new Set(db.aulas.filter(a => a.data === data).map(a => a.materiaId));
+  db.materias.forEach(m => { if (m.diaSemana === dia) ids.add(m.id); });
+  const mats = [...ids].map(id => materiaPorId(id)).filter(Boolean)
+    .sort((a, b) => String(a.horario || '99').localeCompare(String(b.horario || '99')));
+  const titulo = 'Aulas de ' + dia + ', ' + formatarData(data).slice(0, 5);
+  if (!mats.length) {
+    montarSheet(titulo, 'Nenhuma matéria tem aula neste dia.', [{ ico: '✕', rotulo: 'Fechar', fn: () => {} }]);
+    return;
+  }
+  const acoes = mats.map(mat => {
+    const existente = db.faltas.find(f => f.materiaId === mat.id && f.data === data);
+    return {
+      ico: existente ? '↩' : '✗',
+      perigo: !existente,
+      rotulo: (existente ? 'Desfazer falta — ' : 'Faltei — ') + mat.nome + (mat.horario ? ' · ' + mat.horario : ''),
+      fn: () => {
+        if (existente) {
+          db.faltas = db.faltas.filter(f => f.id !== existente.id);
+          toast('Falta desfeita — ' + mat.nome);
+        } else {
+          if (bloqueadaParaRegistro(mat.id, 'falta')) return; // toast oferece ativar; não reabre por cima
+          db.faltas.push({ id: uid(), materiaId: mat.id, data, qtd: 1, recuperada: false, abonada: false });
+          toast('Falta registrada — ' + mat.nome);
+        }
+        salvar(); renderTudo();
+        abrirDiaSheet(data); // continua no dia pra marcar outras
+      },
+    };
+  });
+  montarSheet(titulo, 'Toque pra marcar ou desfazer a falta do dia.', acoes);
+}
+
 function abrirSheetMateria(matId) {
   const mat = materiaPorId(matId);
   if (!mat) return;
@@ -1965,7 +2004,7 @@ function renderInicio() {
     const nomeEstado = { presente: 'presente', falta: 'falta', hoje: 'hoje', futuro: 'aula futura', livre: 'sem aula' };
     alvoOf.innerHTML = `
       <div class="semana-foco" aria-label="Sua semana: ${of.dias.map(d => d.rotulo + ' ' + nomeEstado[d.estado]).join(', ')}">
-        ${of.dias.map(d => `<div class="dia ${d.estado}"><div class="quadro" aria-hidden="true">${marca(d)}</div><div class="rotulo">${d.rotulo}</div></div>`).join('')}
+        ${of.dias.map(d => `<button type="button" class="dia ${d.estado}" data-dia-abre="${d.data}" aria-label="aulas de ${d.rotulo}, ${nomeEstado[d.estado]}"><div class="quadro" aria-hidden="true">${marca(d)}</div><div class="rotulo">${d.rotulo}</div></button>`).join('')}
       </div>
       <div class="selos">
         <span class="pill lisa warn num">🔥 ${of.sequencia} semana${of.sequencia === 1 ? '' : 's'} seguida${of.sequencia === 1 ? '' : 's'}</span>
@@ -1973,6 +2012,7 @@ function renderInicio() {
         ${of.sequencia > 0 || of.total > 0 ? '<button class="icone" id="btn-brag" type="button" title="Compartilhar sequência" aria-label="Compartilhar sequência" style="margin-left:auto">📤</button>' : ''}
       </div>
       <div class="muted" style="margin-top:8px">${msg}</div>`;
+    alvoOf.querySelectorAll('[data-dia-abre]').forEach(b => b.addEventListener('click', () => abrirDiaSheet(b.dataset.diaAbre)));
     const btnBrag = document.getElementById('btn-brag');
     if (btnBrag) btnBrag.addEventListener('click', () => {
       const texto = `🔥 ${of.sequencia} semana${of.sequencia === 1 ? '' : 's'} seguida${of.sequencia === 1 ? '' : 's'} sem faltar e 🏆 ${of.total} semana${of.total === 1 ? '' : 's'} perfeita${of.total === 1 ? '' : 's'} no semestre — controlando tudo no Faltaê.\nhttps://faltae.com.br/`;
@@ -3129,6 +3169,13 @@ renderTudo();
 infoBackup();
 dispararLembretes();
 
+const faltarParam = new URLSearchParams(location.search).get('faltar');
+if (faltarParam && localStorage.getItem('controleFaltas.contaOk')) {
+  const dataFaltar = (faltarParam.length === 10 && !isNaN(new Date(faltarParam + 'T12:00:00'))) ? faltarParam : hojeISO();
+  irParaAba('inicio');
+  setTimeout(() => abrirDiaSheet(dataFaltar), 350);
+  history.replaceState(null, '', location.pathname);
+}
 const abaAtalho = new URLSearchParams(location.search).get('aba');
 if (abaAtalho && document.getElementById('aba-' + abaAtalho)) {
   irParaAba(abaAtalho);
