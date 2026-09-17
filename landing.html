@@ -38,7 +38,13 @@
   .acoes-topo { display: flex; align-items: center; gap: 14px; }
   .link-entrar { color: var(--tinta); font-weight: 700; font-size: 15px; text-decoration: none; }
   .link-entrar:hover { color: var(--indigo); }
-  @media (max-width: 720px) { nav.menu { display: none; } }
+  @media (max-width: 720px) {
+    nav.menu { display: none; }
+    .acoes-topo { gap: 10px; }
+    .acoes-topo .btn.mini { white-space: nowrap; padding: 8px 14px; font-size: 13.5px; }
+    .marca { font-size: 21px; }
+    .marca svg { width: 30px; height: 30px; }
+  }
   .marca { display: flex; align-items: center; gap: 10px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -.04em; text-decoration: none; color: var(--tinta); }
   .marca .e { color: var(--indigo); }
   .marca svg { width: 34px; height: 34px; }
@@ -50,7 +56,7 @@
   .btn:hover { background: var(--indigo-escuro); transform: translateY(-1px); }
   .btn.mini { padding: 9px 18px; font-size: 14px; }
 
-  .hero { padding: 64px 0 30px; text-align: center; }
+  .hero { padding-top: 64px; padding-bottom: 30px; text-align: center; }
   .hero h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; margin: 0 auto 18px; max-width: 15ch; }
   .hero h1 em { font-style: normal; background: linear-gradient(transparent 66%, var(--lima) 66%); }
   .hero p { font-size: clamp(17px, 2.6vw, 21px); color: var(--tinta-2); max-width: 44ch; margin: 0 auto 30px; }
@@ -87,7 +93,7 @@
   .barra-prog { height: 6px; border-radius: 99px; background: var(--linha); margin-top: 9px; overflow: hidden; }
   .barra-prog span { display: block; height: 100%; border-radius: 99px; }
 
-  section.bloco { padding: 76px 0 10px; }
+  section.bloco { padding-top: 76px; padding-bottom: 10px; }
   .bloco h2 { font-size: clamp(28px, 4.6vw, 40px); margin: 0 0 10px; }
   .bloco .lede { color: var(--tinta-2); max-width: 56ch; margin: 0 0 34px; }
   /* ── recursos demonstrados com o app de verdade ── */
@@ -191,12 +197,12 @@
   /* ── proporções por tamanho de tela ── */
   @media (max-width: 760px) {
     /* celular: respiros de celular, não de desktop */
-    .hero { padding: 38px 0 20px; }
+    .hero { padding-top: 38px; padding-bottom: 20px; }
     .hero p { margin-bottom: 22px; }
     .hero .btn { display: block; max-width: 340px; margin: 0 auto; }
     .btn.claro-hero { margin: 10px auto 0; }
     .mock { margin-top: 34px; }
-    section.bloco { padding: 46px 0 8px; }
+    section.bloco { padding-top: 46px; padding-bottom: 8px; }
     .bloco .lede { margin-bottom: 22px; }
     .recurso-vivo { padding: 24px 0; }
     .cta-final { margin-top: 52px; padding: 42px 20px; border-radius: 22px; }
@@ -206,7 +212,7 @@
   @media (min-width: 761px) and (max-width: 1024px) {
     /* tablet: colunas mais folgadas que o desktop espremido */
     .container { padding: 0 32px; }
-    .hero { padding: 54px 0 26px; }
+    .hero { padding-top: 54px; padding-bottom: 26px; }
     .recurso-vivo { gap: 32px; }
     .tela { max-width: 350px; }
   }
@@ -243,6 +249,7 @@
   <h1>Seu semestre <em>sem sustos</em>.</h1>
   <p>Faltas, provas e notas na palma da mão — com a resposta pronta antes do problema: quanto ainda pode faltar, o que caiu na aula que você perdeu e quanto precisa tirar pra passar.</p>
   <a class="btn" href="index.html?criar=1">Criar conta grátis</a>
+  <a class="btn claro-hero" id="cta-app" href="https://github.com/GutoAranda/controle-faltas/releases/latest/download/faltae.apk">⬇ Baixar o app <small style="font-weight:700">(Android)</small></a>
   <a class="btn claro-hero" href="index.html?entrar=1">Já tenho conta</a>
   <span class="aviso">Grátis pra começar · funciona offline · vira app na tela inicial do celular</span>
 
@@ -522,5 +529,12 @@
   </div>
 </footer>
 
+<script>
+  // iPhone não instala APK — o botão do herói leva ao passo a passo do Safari
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    var b = document.getElementById('cta-app');
+    if (b) { b.href = '#instalar'; b.innerHTML = '📲 Instalar no iPhone'; }
+  }
+</script>
 </body>
 </html>
