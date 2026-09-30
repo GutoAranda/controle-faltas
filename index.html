@@ -284,6 +284,13 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   details.passadas > summary { list-style: none; cursor: pointer; color: var(--ink-3); font-size: 13px; font-weight: 600; padding: 10px 2px; min-height: 40px; display: flex; align-items: center; }
   details.passadas > summary::-webkit-details-marker { display: none; }
   details.passadas .card { opacity: .55; }
+  /* estado da falta em cor (antes era gaveta que escondia as recuperadas) */
+  .card.falta-rec { border-left: 4px solid var(--danger); }
+  .card.falta-ok { border-left: 4px solid var(--faisca); }
+  .card.falta-neutra { border-left: 4px solid var(--line); }
+  .selo-falta { font-size: 10px; font-weight: 800; letter-spacing: .04em; border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+  .selo-falta.rec { background: var(--danger-soft); color: var(--danger); }
+  .selo-falta.ok { background: var(--faisca); color: var(--faisca-ink); }
 
   .filtro { margin: 0 0 10px; }
   .filtro select { min-height: 42px; font-size: 14px; }
@@ -1558,7 +1565,8 @@ function resumoMateria(mat) {
 }
 
 function conteudosDaFalta(f) {
-  return db.aulas.filter(a => a.materiaId === f.materiaId && a.data === f.data);
+  // só conta como conteúdo a recuperar se a aula daquele dia tem conteúdo preenchido
+  return db.aulas.filter(a => a.materiaId === f.materiaId && a.data === f.data && a.conteudo && a.conteudo.trim());
 }
 
 function infoSemestre() {
@@ -2114,10 +2122,13 @@ function cardFalta(f) {
          Conteúdo recuperado
        </label>`
     : `<div class="sutil" style="margin-top:6px">Sem plano de aula nesta data — cadastre o plano no Menu → Minhas matérias.</div>`;
-  return `<div class="card">
+  const estado = f.recuperada ? 'ok' : (conteudos.length ? 'rec' : 'neutra');
+  const selo = estado === 'ok' ? '<span class="selo-falta ok">RECUPERADA ✓</span>'
+             : estado === 'rec' ? '<span class="selo-falta rec">A RECUPERAR</span>' : '';
+  return `<div class="card falta-${estado}">
     <div class="row">
       <div class="grow">
-        <h3 style="font-size:15px">${esc(mat ? mat.nome : 'Matéria removida')} ${f.abonada ? '<span class="pill lisa ok">ABONADA</span>' : ''}</h3>
+        <h3 style="font-size:15px">${esc(mat ? mat.nome : 'Matéria removida')} ${selo} ${f.abonada ? '<span class="pill lisa ok">ABONADA</span>' : ''}</h3>
         <div class="muted num">${diaSemana(f.data)}, ${formatarData(f.data)} · ${f.qtd} aula${f.qtd === 1 ? '' : 's'}</div>
       </div>
       <button class="small" data-abonar="${f.id}">${f.abonada ? 'Remover abono' : 'Abonar'}</button>
@@ -2146,17 +2157,12 @@ function renderFaltas() {
     return;
   }
   const pendentes = visiveis.filter(f => !f.recuperada && conteudosDaFalta(f).length).sort((a, b) => a.data.localeCompare(b.data));
-  const semConteudo = visiveis.filter(f => !f.recuperada && !conteudosDaFalta(f).length).sort((a, b) => b.data.localeCompare(a.data));
-  const recuperadas = visiveis.filter(f => f.recuperada).sort((a, b) => b.data.localeCompare(a.data));
+  const demais = visiveis.filter(f => f.recuperada || !conteudosDaFalta(f).length).sort((a, b) => b.data.localeCompare(a.data));
 
   alvo.innerHTML =
     (pendentes.length ? `<h2 style="margin-top:4px">A recuperar <span class="extra">mais antigos primeiro</span></h2>` + pendentes.map(cardFalta).join('') : '') +
-    (semConteudo.length ? `<h2>Outras faltas</h2>` + semConteudo.map(cardFalta).join('') : '') +
-    (!pendentes.length && !semConteudo.length ? '<div class="vazio">Tudo recuperado por aqui. 👏</div>' : '') +
-    (recuperadas.length ? `<details class="passadas">
-        <summary>Recuperados (${recuperadas.length}) ▾</summary>
-        ${recuperadas.map(cardFalta).join('')}
-      </details>` : '');
+    (!pendentes.length ? '<div class="vazio">Nenhum conteúdo pendente — tudo em dia. 👏</div>' : '') +
+    (demais.length ? `<h2>Histórico</h2>` + demais.map(cardFalta).join('') : '');
 
   alvo.querySelectorAll('[data-del-falta]').forEach(b => b.addEventListener('click', () => {
     excluirComDesfazer('Falta excluída', () => {
