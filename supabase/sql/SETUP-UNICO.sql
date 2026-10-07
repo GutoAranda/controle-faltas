@@ -4,9 +4,15 @@
 -- Cobre TODO o SQL pendente ate 19/08/2026:
 --   [1] Push (tabela + RLS + cron das 07:30)
 --   [2] Origem do plano (pagamento x parceria x promo manual)
+--  [2b] Trava anti-cobranca-duplicada (pagamentos_processados)
 --   [3] Parcerias: ativacoes nominais + tabela de parceiros
---   [4] Faxinas automaticas (ativacoes vencidas)
+--   [4] Faxina automatica (ativacoes vencidas)
 --   [5] Voce como primeiro parceiro
+--   [6] Medicao de conversao (metricas_diarias + registrar_metrica)
+--   [7] Teste gratis de 7 dias por DEFAULT na tabela
+--   [8] Rebaixamento de plano vencido
+--   [9] Compartilhar provas/atividades (eventos_compartilhados + faxina)
+--  [10] Fila do relatorio quinzenal (coluna relatorio_em + cron diario)
 -- DEPOIS de rodar, faltam 3 coisas que SQL nao faz (checklist no fim).
 -- ================================================================
 
@@ -164,7 +170,36 @@ grant insert (codigo, dados, criado_por) on public.eventos_compartilhados to aut
 do $$ begin perform cron.unschedule('faltae-faxina-eventos'); exception when others then null; end $$;
 select cron.schedule('faltae-faxina-eventos', '20 7 * * *',
   $cron$ delete from public.eventos_compartilhados where expira_em < now() $cron$);
+-- [10] RELATORIO QUINZENAL: FILA EM VEZ DE RAJADA ---------------
+-- O envio era nos dias 1 e 15, todos de uma vez. Com teto de 100 emails/dia
+-- no Resend, a rajada estourava a cota e derrubava JUNTO os emails de cadastro
+-- (que sao os que impedem um aluno novo de entrar).
+-- Agora o cron roda TODO DIA e a funcao manda so para quem esta ha 14+ dias sem
+-- receber, dos mais antigos para os mais novos, ate um teto diario. Efeito: a
+-- populacao se distribui sozinha pelos dias e ninguem fica sem - so espera mais.
+-- A coluna abaixo e a memoria dessa fila.
+alter table public.dados_usuario add column if not exists relatorio_em timestamptz;
+-- so o servidor escreve nela (o app nao tem grant): o aluno nao adianta a propria fila
+create index if not exists dados_usuario_relatorio_idx
+  on public.dados_usuario (relatorio_em nulls first) where plano <> 'gratis';
+
+do $$ begin perform cron.unschedule('faltae-relatorio-quinzenal'); exception when others then null; end $$;
+select cron.schedule('faltae-relatorio-quinzenal', '40 11 * * *',
+  $cron$
+  select net.http_post(
+    url := 'https://ejdvolbpqrvtuemunzto.supabase.co/functions/v1/enviar-relatorios',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-relatorio-chave', (select decrypted_secret from vault.decrypted_secrets where name = 'relatorio_cron_chave')
+    ),
+    body := '{}'::jsonb
+  );
+  $cron$);
+
 -- CONSULTAS UTEIS (rode quando quiser ver o funil)
+-- select count(*) filter (where relatorio_em is null) as nunca,
+--        count(*) filter (where relatorio_em < now() - interval '14 days') as na_fila
+--   from public.dados_usuario where plano <> 'gratis';
 -- select * from public.metricas_diarias order by dia desc, total desc;
 -- select plano_origem, count(*) from public.dados_usuario where plano <> 'gratis' group by 1;
 -- ================================================================

@@ -40,6 +40,8 @@ Deno.serve(async (req) => {
         currency_id: 'BRL',
       },
       back_url: 'https://faltae.com.br/?assinatura=ok',
+      // sem isto, os avisos de cada cobrança mensal dependem só do webhook geral do painel
+      notification_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/mercadopago-webhook`,
       status: 'pending', // o aluno aprova na página do Mercado Pago
     }),
   })
