@@ -25,13 +25,25 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
   )
 
-  // apaga na ordem: dados sincronizados, grades publicadas, e por fim a conta em si
-  await admin.from('dados_usuario').delete().eq('user_id', user.id)
-  await admin.from('grades_compartilhadas').delete().eq('criado_por', user.id)
+  /* apaga tudo que é do titular antes da conta em si. As tabelas com "on delete cascade"
+     sairiam sozinhas, mas limpar explicitamente é o que garante que uma tabela nova sem
+     cascade não derrube a exclusão inteira lá na frente. Tabela que não existe é ignorada. */
+  const limpar = async (tabela: string, coluna: string) => {
+    const { error } = await admin.from(tabela).delete().eq(coluna, user.id)
+    if (error && error.code !== '42P01') console.log(`aviso ao limpar ${tabela}: ${error.message}`)
+  }
+  await limpar('dados_usuario', 'user_id')
+  await limpar('grades_compartilhadas', 'criado_por')
+  await limpar('push_inscricoes', 'user_id')
+  await limpar('widget_aparelhos', 'user_id')
+  await limpar('eventos_compartilhados', 'criado_por')
+  await limpar('parceiros', 'user_id')
+
   const { error } = await admin.auth.admin.deleteUser(user.id)
   if (error) {
     console.error('Falha ao excluir conta', user.id, error.message)
-    return Response.json({ erro: 'não foi possível concluir agora' }, { status: 500, headers: cors })
+    // devolve a razão: sem ela o app só consegue dizer "tente mais tarde" e ninguém diagnostica
+    return Response.json({ erro: error.message }, { status: 500, headers: cors })
   }
 
   console.log(`Conta ${user.id} excluída a pedido do titular (LGPD)`)

@@ -1,0 +1,8 @@
+# credenciais nunca vao pro repo publico
+SEGREDOS*
+*.keystore
+*.jks
+keystore.properties
+local.properties
+apk-senha*
+.env*

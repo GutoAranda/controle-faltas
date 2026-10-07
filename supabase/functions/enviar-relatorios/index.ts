@@ -8,6 +8,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const REMETENTE = 'Faltaê <relatorio@faltae.com.br>'
+// respostas do aluno caem no suporte (redirecionado pra caixa pessoal do fundador)
+const RESPOSTA = 'suporte@faltae.com.br'
 
 /* ── cálculos portados do app (mesmas regras da PUC) ── */
 const arred1 = (v: number) => Math.round(v * 10) / 10
@@ -211,7 +213,7 @@ Deno.serve(async (req) => {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: REMETENTE, to: usuario.email, subject: assunto, html }),
+      body: JSON.stringify({ from: REMETENTE, to: usuario.email, reply_to: RESPOSTA, subject: assunto, html }),
     })
     if (r.ok) {
       enviados++

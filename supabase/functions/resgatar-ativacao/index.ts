@@ -3,10 +3,22 @@
 // nunca usado, e o email da conta TEM que ser o email pra quem foi emitido.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
+/* CORS: o app chama esta funcao pelo NAVEGADOR, e com corpo JSON + Authorization o
+   navegador manda um preflight OPTIONS antes. Sem estes cabecalhos (e sem responder ao
+   OPTIONS), o preflight falha, o POST nunca chega a sair e o app so ve
+   "Failed to send a request" - a funcao parece morta mesmo estando publicada. */
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 const resposta = (corpo: unknown, status = 200) =>
-  new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json' } })
+  new Response(JSON.stringify(corpo), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+
   const supaUser = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') || '' } },
   })
