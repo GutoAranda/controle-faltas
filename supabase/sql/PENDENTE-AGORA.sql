@@ -195,3 +195,14 @@ revoke execute on function public.registrar_metrica(text) from anon;
 -- a exclusao de conta roda com service role, que ignora grant. Entao
 -- revogar nao tira funcionalidade nenhuma e devolve a segunda camada.
 revoke delete on public.dados_usuario from anon, authenticated;
+
+
+-- [H] LINK DE PROVAS VALENDO ATE A ULTIMA PROVA -------------------
+-- O app passa a escolher a validade do link de provas: dia seguinte a ultima
+-- prova do pacote, minimo 7 dias. Teto de 120 dias pra ninguem criar link
+-- eterno. Enquanto isto nao rodar, o app publica com o padrao antigo de
+-- 7 dias - nada quebra, so o link dura menos.
+grant insert (codigo, dados, criado_por, expira_em) on public.eventos_compartilhados to authenticated;
+alter table public.eventos_compartilhados drop constraint if exists ev_validade_teto;
+alter table public.eventos_compartilhados add constraint ev_validade_teto
+  check (expira_em <= criado_em + interval '120 days');

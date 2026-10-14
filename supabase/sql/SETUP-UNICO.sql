@@ -165,7 +165,10 @@ create policy ev_leitura on public.eventos_compartilhados for select to anon, au
 create policy ev_criar on public.eventos_compartilhados for insert to authenticated
   with check (auth.uid() = criado_por);
 grant select on public.eventos_compartilhados to anon, authenticated;
-grant insert (codigo, dados, criado_por) on public.eventos_compartilhados to authenticated;
+grant insert (codigo, dados, criado_por, expira_em) on public.eventos_compartilhados to authenticated;
+alter table public.eventos_compartilhados drop constraint if exists ev_validade_teto;
+alter table public.eventos_compartilhados add constraint ev_validade_teto
+  check (expira_em <= criado_em + interval '120 days');
 
 do $$ begin perform cron.unschedule('faltae-faxina-eventos'); exception when others then null; end $$;
 select cron.schedule('faltae-faxina-eventos', '20 7 * * *',
