@@ -3999,7 +3999,7 @@ async function abrirPacoteProvas(codigo) {
       history.replaceState(null, '', location.pathname);
       const partes = [];
       if (entraram) partes.push(`${entraram} ${entraram === 1 ? 'item' : 'itens'} na sua agenda — com lembrete e contagem regressiva ✓`);
-      if (remarcadas) partes.push(`${remarcadas} ${remarcadas === 1 ? 'data atualizada' : 'datas atualizadas'}`);
+      if (remarcadas) partes.push(`${remarcadas} ${remarcadas === 1 ? 'item atualizado' : 'itens atualizados'}`);
       toast(partes.length
         ? partes.join(' · ') + (travadas ? ` (${travadas} em matéria guardada)` : '')
         : 'Você já tinha tudo isso na agenda.');
