@@ -3863,11 +3863,24 @@ async function publicarPacoteProvas(ids) {
   if (!escolhidos.length) return;
   const itens = escolhidos.map(e => {
     const mat = materiaPorId(e.materiaId);
-    return { titulo: e.titulo, tipo: e.tipo, data: e.data, peso: e.peso || null, descricao: e.descricao || null, materia: mat ? mat.nome : 'Matéria' };
+    /* ref segue a prova entre links (inclusive reencaminhados): um link novo da mesma prova remarca a data em vez de duplicar */
+    return { ref: e.ref || e.id, titulo: e.titulo, tipo: e.tipo, data: e.data, peso: e.peso || null, descricao: e.descricao || null, materia: mat ? mat.nome : 'Matéria' };
   });
   const codigo = codigoNovo(6);
-  const { error } = await nuvem.from('eventos_compartilhados')
-    .insert({ codigo, dados: { itens }, criado_por: usuarioNuvem.id });
+  /* postado no grupo da sala, o link precisa durar a temporada de provas inteira:
+     vale até o dia seguinte à última prova do pacote (mínimo 7 dias; o banco limita a 120) */
+  const hoje = hojeISO();
+  let ateISO = somarDias(itens.map(i => i.data).sort().pop(), 1);
+  if (ateISO < somarDias(hoje, 7)) ateISO = somarDias(hoje, 7);
+  if (ateISO > somarDias(hoje, 119)) ateISO = somarDias(hoje, 119);
+  let { error } = await nuvem.from('eventos_compartilhados')
+    .insert({ codigo, dados: { itens }, criado_por: usuarioNuvem.id, expira_em: new Date(ateISO + 'T23:59:00-03:00').toISOString() });
+  if (error && error.code === '42501') {
+    /* banco ainda sem permissão pra escolher a validade: publica com o padrão de 7 dias */
+    ({ error } = await nuvem.from('eventos_compartilhados').insert({ codigo, dados: { itens }, criado_por: usuarioNuvem.id }));
+    ateISO = somarDias(hoje, 7);
+  }
+  const ate = formatarData(ateISO).slice(0, 5);
   if (error) {
     console.error('Falha ao publicar pacote de provas:', error);
     /* 'tente de novo' so faz sentido se tentar de novo puder funcionar. Tabela ausente
@@ -3887,10 +3900,10 @@ async function publicarPacoteProvas(ids) {
     : (materias.length === 1
       ? `${itens.length} provas/atividades de ${materias[0]}`
       : `${itens.length} provas e atividades de ${materias.length} matérias`);
-  const msg = `📅 ${resumo} — adiciona na sua agenda do Faltaê em 2 toques:\n${link}\n(vale por 7 dias)`;
+  const msg = `📅 ${resumo} — adiciona na sua agenda do Faltaê em 2 toques:\n${link}\n(vale até ${ate})`;
   abrirSheet({
     titulo: 'Pacote pronto 📤',
-    texto: `${resumo}. Quem abrir escolhe o que entra. O link vale por 7 dias.`,
+    texto: `${resumo}. Quem abrir escolhe o que entra. O link vale até ${ate}.`,
     botoes: [
       { txt: 'Compartilhar 📲', classe: 'primary', cb: async () => {
         if (navigator.share) { try { await navigator.share({ text: msg }); return; } catch { /* cancelou */ } }
@@ -3907,8 +3920,9 @@ async function publicarPacoteProvas(ids) {
 /* passo 4: quem recebe — revisa item a item, com destino explícito */
 async function abrirPacoteProvas(codigo) {
   if (!nuvemDisponivel()) { toast('Sem conexão — abra o link quando estiver online.'); return; }
+  if (!db.materias.length) { guardarPacoteParaDepois(codigo); return; }
   const { data, error } = await nuvem.from('eventos_compartilhados').select('dados, expira_em').eq('codigo', codigo).maybeSingle();
-  if (error || !data) { toast('Esse link venceu (dura 7 dias) — peça um novo pra quem te mandou. 😉'); return; }
+  if (error || !data) { toast('Esse link venceu — peça um novo pra quem te mandou. 😉'); return; }
   const itens = (data.dados && data.dados.itens) || [];
   if (!itens.length) { toast('Esse pacote está vazio.'); return; }
   registrarMetrica('pacote_aberto');
@@ -3956,24 +3970,40 @@ async function abrirPacoteProvas(codigo) {
     contador: n => n ? `<b>${n}</b> ${n === 1 ? 'item entra' : 'itens entram'} na sua agenda` : 'Nada selecionado',
     rotulo: n => n ? `Adicionar ${n} à agenda` : 'Escolha o que entra',
     aoConfirmar: ids => {
-      let entraram = 0, travadas = 0;
+      let entraram = 0, travadas = 0, remarcadas = 0;
       ids.map(Number).forEach(idx => {
         const i = itens[idx];
         const destino = grupos.get(i.materia).destino;
         if (!destino) return;
         const mat = materiaPorId(destino);
         if (mat && !ehAtiva(mat)) { travadas++; return; }
+        /* mesma prova de um link anterior: a data nova substitui a antiga */
+        const anterior = i.ref ? db.eventos.find(e => e.ref === i.ref) : null;
+        if (anterior) {
+          if (anterior.data !== i.data || anterior.titulo !== String(i.titulo)) {
+            anterior.data = i.data;
+            anterior.titulo = String(i.titulo);
+            if (i.descricao) anterior.descricao = i.descricao;
+            if (i.peso) anterior.peso = i.peso;
+            remarcadas++;
+          }
+          return;
+        }
         const jaTem = db.eventos.some(e => e.materiaId === destino && e.data === i.data && chave(e.titulo) === chave(i.titulo));
         if (jaTem) return;
-        db.eventos.push({ id: uid(), materiaId: destino, tipo: i.tipo === 'prova' ? 'prova' : 'atividade', titulo: String(i.titulo), data: i.data, peso: i.peso || null, descricao: i.descricao || null, feita: false });
+        db.eventos.push({ id: uid(), ref: i.ref || null, materiaId: destino, tipo: i.tipo === 'prova' ? 'prova' : 'atividade', titulo: String(i.titulo), data: i.data, peso: i.peso || null, descricao: i.descricao || null, feita: false });
         entraram++;
       });
       salvar(); renderTudo(); irParaAba('agenda');
       registrarMetrica('pacote_aplicado');
       history.replaceState(null, '', location.pathname);
-      toast(entraram
-        ? `${entraram} ${entraram === 1 ? 'item' : 'itens'} na sua agenda — com lembrete e contagem regressiva ✓${travadas ? ` (${travadas} em matéria guardada)` : ''}`
+      const partes = [];
+      if (entraram) partes.push(`${entraram} ${entraram === 1 ? 'item' : 'itens'} na sua agenda — com lembrete e contagem regressiva ✓`);
+      if (remarcadas) partes.push(`${remarcadas} ${remarcadas === 1 ? 'data atualizada' : 'datas atualizadas'}`);
+      toast(partes.length
+        ? partes.join(' · ') + (travadas ? ` (${travadas} em matéria guardada)` : '')
         : 'Você já tinha tudo isso na agenda.');
+      if (entraram) convidarNotificacoes(1600); // acabou de ganhar provas na agenda: o melhor momento pra oferecer o aviso
     },
     aoFechar: () => history.replaceState(null, '', location.pathname),
   });
@@ -3986,8 +4016,20 @@ async function abrirPacoteProvas(codigo) {
 function processarPacotePendente() {
   const cod = localStorage.getItem('controleFaltas.pacoteProvas');
   if (!cod || !usuarioNuvem || !nuvemDisponivel()) return;
+  if (!db.materias.length) { guardarPacoteParaDepois(cod); return; }
   localStorage.removeItem('controleFaltas.pacoteProvas');
   setTimeout(() => abrirPacoteProvas(cod), 700); // deixa o app assentar antes do sheet
+}
+/* quem chegou pelo link e acabou de criar a conta ainda não tem matérias pras provas
+   entrarem: o link fica guardado e reabre sozinho quando a grade for confirmada.
+   var (não let): processarPacotePendente pode rodar no boot antes desta linha. */
+var avisouPacoteGuardado;
+function guardarPacoteParaDepois(cod) {
+  localStorage.setItem('controleFaltas.pacoteProvas', cod);
+  if (avisouPacoteGuardado) return;
+  avisouPacoteGuardado = true;
+  toast('As provas que te mandaram estão guardadas 📅 Monte sua grade e elas entram na agenda em seguida.',
+    'Montar grade', () => abrirMinhaGrade('escolha'));
 }
 
 /* ─────────── medição de conversão: contador agregado, sem rastrear ninguém ───────────
@@ -4613,7 +4655,12 @@ document.getElementById('btn-confirmar-cesta').addEventListener('click', () => {
   toast(r.materias || r.aulas || r.eventos
     ? `Grade confirmada: +${r.materias} matérias e +${r.aulas} datas de aula${r.eventos ? ` (+${r.eventos} provas)` : ''} 🎉${passouDoLimite ? ' No grátis acompanho 6 de perto — ajuste em Minha grade.' : ''}`
     : 'Você já tinha tudo — nada foi duplicado.');
-  perguntarPlanos();
+  /* veio por um link de provas? elas entram agora — é o que a pessoa veio buscar.
+     O convite dos planos de ensino fica como atalho na tela inicial. */
+  if (localStorage.getItem('controleFaltas.pacoteProvas')) {
+    db.planosLembrar = true; salvar(); renderInicio();
+    processarPacotePendente();
+  } else perguntarPlanos();
 });
 
 document.getElementById('link-criar-zero').addEventListener('click', ev => {
