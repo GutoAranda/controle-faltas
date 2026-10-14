@@ -3917,6 +3917,24 @@ async function publicarPacoteProvas(ids) {
   });
 }
 
+/* nota de casamento entre a matéria de quem recebe e a do pacote: 2 = nome idêntico;
+   entre 0 e 1 = quanto do nome oficial o apelido cobre (toda palavra do apelido precisa bater);
+   0 = não casa. Ignora acento, pontuação e "direito/de/da/do/e". */
+var PALAVRAS_VAZIAS = new Set(['direito', 'de', 'da', 'do', 'das', 'dos', 'e']);
+var APELIDOS_MATERIA = { eca: ['infancia', 'crianca'] };
+function normNome(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }
+function notaCasamento(nomeAluno, nomePacote) {
+  if (normNome(nomeAluno) === normNome(nomePacote)) return 2;
+  const palavras = t => normNome(t).split(' ').filter(w => w && !PALAVRAS_VAZIAS.has(w));
+  const doAluno = palavras(nomeAluno), doPacote = palavras(nomePacote);
+  if (!doAluno.length || !doPacote.length) return 0;
+  const bate = (a, p) => a === p || (a.length >= 3 && p.startsWith(a))
+    || (a.length >= 6 && p.length >= 6 && a.slice(0, 6) === p.slice(0, 6))
+    || (APELIDOS_MATERIA[a] || []).includes(p);
+  if (!doAluno.every(a => doPacote.some(p => bate(a, p)))) return 0;
+  return doPacote.filter(p => doAluno.some(a => bate(a, p))).length / doPacote.length;
+}
+
 /* passo 4: quem recebe — revisa item a item, com destino explícito */
 async function abrirPacoteProvas(codigo) {
   if (!nuvemDisponivel()) { toast('Sem conexão — abra o link quando estiver online.'); return; }
@@ -3927,46 +3945,60 @@ async function abrirPacoteProvas(codigo) {
   if (!itens.length) { toast('Esse pacote está vazio.'); return; }
   registrarMetrica('pacote_aberto');
   const chave = t => String(t || '').trim().toLowerCase();
-  // agrupa por matéria de origem e tenta casar com a grade de quem recebe
   const grupos = new Map();
   itens.forEach(i => {
-    if (!grupos.has(i.materia)) {
-      const casada = db.materias.find(m => chave(m.nome) === chave(i.materia))
-        || db.materias.find(m => chave(m.nome).includes(chave(i.materia)) || chave(i.materia).includes(chave(m.nome)));
-      grupos.set(i.materia, { itens: [], destino: casada ? casada.id : '', exato: !!casada && chave(casada.nome) === chave(i.materia) });
-    }
+    if (!grupos.has(i.materia)) grupos.set(i.materia, { itens: [], destino: '' });
     grupos.get(i.materia).itens.push(i);
   });
-  const marcarInicial = i => !!grupos.get(i.materia).destino;
+  /* casa cada matéria do pacote com a grade de quem recebe, uma pra uma, pela maior nota:
+     nome idêntico vence; depois vale apelido ("Civil", "Trabalhista", "Proc. Civil", "ECA") */
+  const pares = [];
+  grupos.forEach((g, nomePacote) => db.materias.forEach(m => {
+    const nota = notaCasamento(m.nome, nomePacote);
+    if (nota > 0) pares.push({ g, m, nota });
+  }));
+  pares.sort((a, b) => b.nota - a.nota);
+  const usadas = new Set();
+  pares.forEach(p => { if (!p.g.destino && !usadas.has(p.m.id)) { p.g.destino = p.m.id; usadas.add(p.m.id); } });
   abrirSeletor({
     titulo: `${itens.length} ${itens.length === 1 ? 'item chegou' : 'itens chegaram'} pra você 📅`,
     sub: 'Enviados por um colega. Confira em qual matéria cada um entra e toque pra escolher o que aceita — suas faltas e notas não mudam.',
-    grupos: [...grupos.entries()].map(([nomeMat, g]) => ({
-      id: 'g-' + nomeMat,
-      rotulo: nomeMat,
-      controle: redesenhar => {
-        const cx = document.createElement('div');
-        cx.style.cssText = 'margin:2px 0 10px';
-        const rot = document.createElement('div');
-        rot.style.cssText = 'font-size:12px; color:var(--ink-2); margin-bottom:5px';
-        rot.textContent = g.destino ? 'entra na sua matéria:' : 'escolha em qual matéria entra:';
-        const sele = document.createElement('select');
-        sele.style.width = '100%';
-        sele.innerHTML = '<option value="">— escolher matéria —</option>' +
-          db.materias.map(m => `<option value="${m.id}" ${g.destino === m.id ? 'selected' : ''}>${esc(m.nome)}${ehAtiva(m) ? '' : ' (guardada)'}</option>`).join('');
-        sele.addEventListener('change', () => { g.destino = sele.value; redesenhar(); });
-        cx.appendChild(rot); cx.appendChild(sele);
-        return cx;
-      },
-      itens: g.itens.map(i => ({
+    grupos: [...grupos.entries()].map(([nomeMat, g]) => {
+      const itensDoGrupo = g.itens.map(i => ({
         id: String(itens.indexOf(i)),
         titulo: i.titulo,
         detalhe: `${i.tipo === 'prova' ? 'Prova' : 'Atividade'} · ${formatarData(i.data)}${i.peso ? ' · vale ' + i.peso : ''}`,
         etiqueta: g.destino ? null : 'escolha a matéria acima',
         travado: !g.destino,
-        marcado: marcarInicial(i),
-      })),
-    })),
+        marcado: !!g.destino,
+      }));
+      return {
+        id: 'g-' + nomeMat,
+        rotulo: nomeMat,
+        controle: (redesenhar, selecao) => {
+          const cx = document.createElement('div');
+          cx.style.cssText = 'margin:2px 0 10px';
+          const rot = document.createElement('div');
+          rot.style.cssText = 'font-size:12px; color:var(--ink-2); margin-bottom:5px';
+          rot.textContent = g.destino ? 'entra na sua matéria:' : 'escolha em qual matéria entra:';
+          const sele = document.createElement('select');
+          sele.style.width = '100%';
+          sele.innerHTML = '<option value="">— escolher matéria —</option>' +
+            db.materias.map(m => `<option value="${m.id}" ${g.destino === m.id ? 'selected' : ''}>${esc(m.nome)}${ehAtiva(m) ? '' : ' (guardada)'}</option>`).join('');
+          sele.addEventListener('change', () => {
+            g.destino = sele.value;
+            /* escolher a matéria destrava as provas do grupo e já marca; voltar pro vazio trava de novo */
+            itensDoGrupo.forEach(it => { it.travado = !g.destino; it.etiqueta = g.destino ? null : 'escolha a matéria acima'; });
+            const ids = itensDoGrupo.map(it => it.id);
+            if (g.destino) selecao.marcar(ids); else selecao.desmarcar(ids);
+            redesenhar();
+          });
+          cx.appendChild(rot); cx.appendChild(sele);
+          return cx;
+        },
+        itens: itensDoGrupo,
+      };
+    }),
     contador: n => n ? `<b>${n}</b> ${n === 1 ? 'item entra' : 'itens entram'} na sua agenda` : 'Nada selecionado',
     rotulo: n => n ? `Adicionar ${n} à agenda` : 'Escolha o que entra',
     aoConfirmar: ids => {
@@ -4474,7 +4506,7 @@ function abrirSeletor(cfg) {
         rot.innerHTML = `<span>${esc(g.rotulo)}</span>${marcadosNoGrupo ? `<span class="conta">${marcadosNoGrupo} de ${g.itens.length}</span>` : ''}`;
         bloco.appendChild(rot);
       }
-      if (g.controle) bloco.appendChild(g.controle(desenhar));
+      if (g.controle) bloco.appendChild(g.controle(desenhar, { marcar: ids => ids.forEach(id => sel.add(id)), desmarcar: ids => ids.forEach(id => sel.delete(id)) }));
       if (g.colapsavel && !abertos.has(g.id)) { corpo.appendChild(bloco); return; }
       const dentro = g.colapsavel ? document.createElement('div') : bloco;
       if (g.colapsavel) dentro.className = 'sel-corpo-grupo';
