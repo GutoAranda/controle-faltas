@@ -365,10 +365,12 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom));
     transform: translate(-50%, 16px); z-index: 20;
     background: var(--ink); color: var(--bg);
-    padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    padding: 10px 16px; border-radius: 18px; font-size: 14px; font-weight: 600; line-height: 1.35;
     box-shadow: 0 6px 20px rgba(0,0,0,.25);
     opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
-    max-width: min(92vw, 480px);
+    /* max-content: com left:50% o navegador só daria ao aviso a metade direita da tela,
+       e texto longo virava uma bolha estreita e alta */
+    width: max-content; max-width: min(92vw, 480px); box-sizing: border-box;
     display: flex; align-items: center; gap: 10px;
   }
   #toast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
