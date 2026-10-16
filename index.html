@@ -315,7 +315,9 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
   .dica-nota strong { color: var(--accent); }
 
   /* ── menu ── */
-  .menu-lista { display: grid; gap: 8px; }
+  /* minmax(0,1fr): sem isso a coluna cresce até o conteúdo mais largo e o Menu estoura a tela do celular */
+  .menu-lista { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+  .menu-lista > details.menu-sec { min-width: 0; }
   details.menu-sec { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
   details.menu-sec > summary {
     list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px;
@@ -445,7 +447,7 @@ try { var _t = localStorage.getItem('controleFaltas.tema'); if (_t === 'escuro')
     #sheet { border-radius: 18px; bottom: 20px; transform: translateY(calc(105% + 40px)); border: 1px solid var(--line); }
     #toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
 
-    .menu-lista { gap: 10px; grid-template-columns: 1fr 1fr; align-items: start; }
+    .menu-lista { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
     .menu-lista > details.menu-sec { min-width: 0; }
     details.menu-sec > summary { padding: 17px 18px; }
     details.menu-sec .corpo-menu { padding: 4px 18px 18px; }
