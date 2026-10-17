@@ -6,3 +6,11 @@ keystore.properties
 local.properties
 apk-senha*
 .env*
+
+# arquivo do portal e documentos internos ficam so na maquina do dono
+docs/portal-totvs.md
+supabase/portal-sync/
+supabase/functions/sincronizar-portal/
+GUIA-*.html
+PLANO-*.html
+RELATORIO-*.html

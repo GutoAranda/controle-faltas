@@ -43,7 +43,7 @@ function resumoNotas(mat: any) {
 /* ── email em HTML de tabela, blindado contra o modo escuro do Gmail:
    toda cor de texto é forte e explícita, todo fundo é declarado em bgcolor
    E em style, e o logo é o PNG oficial servido por CDN com certificado válido ── */
-const LOGO = 'https://cdn.jsdelivr.net/gh/GutoAranda/controle-faltas@main/icon-192.png'
+const LOGO = 'https://faltae.com.br/icon-192.png'
 
 function montarEmail(nome: string, dados: any) {
   const hoje = new Date().toISOString().slice(0, 10)

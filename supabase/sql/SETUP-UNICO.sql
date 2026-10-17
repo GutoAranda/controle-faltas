@@ -103,7 +103,7 @@ select cron.schedule('faltae-faxina-ativacoes', '15 7 * * *',
 
 -- [5] VOCE COMO PRIMEIRO PARCEIRO ------------------------------
 insert into public.parceiros (user_id, rotulo)
-select id, 'fundador' from auth.users where email = 'contato.gustavoaranda@gmail.com'
+select id, 'fundador' from auth.users where email = 'SEU_EMAIL_AQUI'
 on conflict (user_id) do nothing;
 
 
