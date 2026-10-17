@@ -7,9 +7,9 @@
 // Teste manual: POST com corpo {"teste": true} devolve o HTML sem enviar e-mail.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-const DESTINO = 'contato.gustavoaranda@gmail.com'   // troque aqui se quiser outro inbox
+const DESTINO = 'suporte@faltae.com.br'   // chega na caixa do fundador pelo redirecionamento do suporte@
 const REMETENTE = 'Faltaê Painel <relatorio@faltae.com.br>'
-const LOGO = 'https://cdn.jsdelivr.net/gh/GutoAranda/controle-faltas@main/icon-192.png'
+const LOGO = 'https://faltae.com.br/icon-192.png'
 
 const n = (v: unknown) => Number(v ?? 0)
 const pct = (a: number, b: number) => b > 0 ? Math.round(100 * a / b) + '%' : '—'

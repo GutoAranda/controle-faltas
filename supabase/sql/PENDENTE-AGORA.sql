@@ -154,7 +154,7 @@ select cron.schedule('rebaixar-planos-vencidos', '15 3 * * *',
 -- VOCE COMO PARCEIRO: troque pelo email da SUA conta do Faltae se nao for este.
 -- Sem esta linha a tela ?parcerias responde "area exclusiva das parcerias".
 insert into public.parceiros (user_id, rotulo)
-select id, 'fundador' from auth.users where email = 'contato.gustavoaranda@gmail.com'
+select id, 'fundador' from auth.users where email = 'SEU_EMAIL_AQUI'
 on conflict (user_id) do nothing;
 
 
